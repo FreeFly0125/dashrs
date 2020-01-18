@@ -320,11 +320,17 @@ impl<'a, 'de> Deserializer<'de> for &'a mut IndexedDeserializer<'de> {
         self.deserialize_str(visitor)
     }
 
-    fn deserialize_ignored_any<V>(self, _visitor: V) -> Result<<V as Visitor<'de>>::Value, Error<'de>>
+    fn deserialize_ignored_any<V>(self, visitor: V) -> Result<<V as Visitor<'de>>::Value, Error<'de>>
     where
         V: Visitor<'de>,
     {
-        unimplemented!("deserialize_ignored_any")
+        // We are still very much not self describing, however we do need to correctly handle unimplemented
+        // indices. By the time this is called, they key itself will already have been popped in out
+        // `MapAccess` implementation. This means we need to skip exactly one item! We'll feed a `None` to
+        // the visitor. Because idk what we really wanna do here otherwise
+        self.next_item()?;
+
+        visitor.visit_none()
     }
 }
 
@@ -409,5 +415,46 @@ impl<'a, 'de> de::MapAccess<'de> for MapAccess<'a, 'de> {
                 }),
             r => r,
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::{
+        de::indexed::IndexedDeserializer,
+        model::song::{raw::RawNewgroundsSong, NewgroundsSong},
+    };
+    use serde::Deserialize;
+
+    #[test]
+    fn deserialize_creo_dune() {
+        let song = NewgroundsSong {
+            song_id: 771277,
+            name: "Creo - Dune".to_string(),
+            index_3: 50531,
+            artist: "CreoMusic".to_owned(),
+            filesize: 9.03,
+            index_6: None,
+            index_7: Some("UCsCWA3Y3JppL6feQiMRgm6Q".to_string()),
+            index_8: "1".to_string(),
+            link: "https://audio.ngfiles.com/771000/771277_Creo---Dune.mp3?f1508708604".to_string(),
+        };
+
+        let mut deserializer = IndexedDeserializer::new(
+            "1~|~771277~|~2~|~Creo - \
+             Dune~|~3~|~50531~|~4~|~CreoMusic~|~5~|~9.03~|~6~|~~|~7~|~UCsCWA3Y3JppL6feQiMRgm6Q~|~8~|~1~|~10~|~https%3A%2F%2Faudio%\
+             2Engfiles%2Ecom%2F771000%2F771277%5FCreo%2D%2D%2DDune%2Emp3%3Ff1508708604",
+            "~|~",
+            true,
+        );
+
+        let deserialized = RawNewgroundsSong::deserialize(&mut deserializer);
+
+        assert!(deserialized.is_ok());
+
+        let mut deserialized = deserialized.unwrap();
+
+        assert!(deserialized.link.process().is_ok());
+        assert_eq!(deserialized, song.as_raw());
     }
 }

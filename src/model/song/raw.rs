@@ -70,7 +70,7 @@ impl<'a> RawNewgroundsSong<'a> {
 }
 
 impl NewgroundsSong {
-    pub fn to_raw(&self) -> RawNewgroundsSong {
+    pub fn as_raw(&self) -> RawNewgroundsSong {
         RawNewgroundsSong {
             song_id: self.song_id,
             name: Cow::Borrowed(self.name.as_ref()),
