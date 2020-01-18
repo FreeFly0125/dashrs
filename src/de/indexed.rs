@@ -220,7 +220,7 @@ impl<'a, 'de> Deserializer<'de> for &'a mut IndexedDeserializer<'de> {
 
         match self.peek_item() {
             Ok(None) | Err(Error::Eof) => {
-                self.next_item()?; // potentially skip the delimiter
+                let _ = self.next_item(); // potentially skip the delimiter. Explicitly ignore the return value in case we have Error::Eof
 
                 visitor.visit_none()
             },
