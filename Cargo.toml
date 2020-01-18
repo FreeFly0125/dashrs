@@ -10,3 +10,4 @@ edition = "2018"
 serde = {version = "1.0.104", features = ["derive"]}
 base64 = "0.11.0"
 log = "0.4.8"
+percent-encoding = "2.1.0"

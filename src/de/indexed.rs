@@ -26,9 +26,9 @@ impl Delimiter {
 
 /// Deserializer for RobTop's indexed data format
 ///
-/// This format is used in server responses and when storing level data. It is based around the idea
-/// to concatenate all fields of an object together, using a specific character sequence as a
-/// separator.
+/// This format is used in server responses and when storing model.level data. It is based around
+/// the idea to concatenate all fields of an object together, using a specific character sequence as
+/// a separator.
 ///
 /// There are two variants of this format:
 ///
