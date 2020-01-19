@@ -10,5 +10,6 @@
 //! The raw version can be converted into the owned version by cloning all the fields. The owned
 //! version can produce a raw version by borrowing all fields (roughly speaking).
 
+pub mod creator;
 pub mod level;
 pub mod song;
