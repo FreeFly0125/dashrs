@@ -54,7 +54,7 @@ pub struct RawNewgroundsSong<'a> {
 }
 
 impl<'a> RawNewgroundsSong<'a> {
-    pub fn to_owned(self) -> Result<NewgroundsSong, Utf8Error> {
+    pub fn into_owned(self) -> Result<NewgroundsSong, Utf8Error> {
         Ok(NewgroundsSong {
             song_id: self.song_id,
             name: self.name.into_owned(),

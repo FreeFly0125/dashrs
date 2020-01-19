@@ -23,7 +23,7 @@ pub struct RawCreator<'a> {
 
 
 impl<'a> RawCreator<'a> {
-    pub fn to_owned(self) -> Creator {
+    pub fn into_owned(self) -> Creator {
         Creator {
             user_id: self.user_id,
             name: self.name.into_owned(),
