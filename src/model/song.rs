@@ -16,10 +16,9 @@ pub fn from_str(input: &str) -> Result<NewgroundsSong, Error> {
     NewgroundsSong::deserialize(&mut deserializer)
 }
 
-/// Struct modelling a [`NewgroundsSong`] the way it is represented by the Geometry Dash servers
+/// Struct modelling a [`NewgroundsSong`]
 ///
-/// See [`NewgroundSong`] for an owned version.
-///
+/// ## GD Internals
 /// The Geometry Dash servers provide a list of the newgrounds songs of the
 /// levels in a `getGJLevels` response.
 ///

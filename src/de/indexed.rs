@@ -421,13 +421,9 @@ impl<'a, 'de> de::MapAccess<'de> for MapAccess<'a, 'de> {
 #[cfg(test)]
 mod test {
     use crate::{
-        de::{
-            indexed::IndexedDeserializer,
-            thunk::{PercentDecoded, Thunk},
-        },
+        de::thunk::{PercentDecoded, Thunk},
         model::song::NewgroundsSong,
     };
-    use serde::Deserialize;
 
     #[test]
     fn deserialize_creo_dune() {
@@ -445,15 +441,11 @@ mod test {
             )),
         };
 
-        let mut deserializer = IndexedDeserializer::new(
+        let deserialized = crate::model::song::from_str(
             "1~|~771277~|~2~|~Creo - \
              Dune~|~3~|~50531~|~4~|~CreoMusic~|~5~|~9.03~|~6~|~~|~7~|~UCsCWA3Y3JppL6feQiMRgm6Q~|~8~|~1~|~10~|~https%3A%2F%2Faudio%\
              2Engfiles%2Ecom%2F771000%2F771277%5FCreo%2D%2D%2DDune%2Emp3%3Ff1508708604",
-            "~|~",
-            true,
         );
-
-        let deserialized = NewgroundsSong::deserialize(&mut deserializer);
 
         assert!(deserialized.is_ok());
 

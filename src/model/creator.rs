@@ -1,41 +1,34 @@
-use crate::model::creator::Creator;
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 
-/// Struct modelling a [`Creator`] the way it is represented by the Geometry Dash servers
+/// Struct modelling a [`Creator`] of a level.
 ///
-/// See [`Creator`] for an owned version.
-///
+/// ## GD Internals
 /// The Geometry Dash servers provide a list of the creators of the
 /// levels in a `getGJLevels` response.
 ///
 /// Creators do not use the map-like representation, meaning the order of fields in the raw data
 /// must correspond to the order of fields in this struct.
 #[derive(Debug, Deserialize, Serialize)]
-pub struct RawCreator<'a> {
+pub struct Creator<'a> {
+    /// The [`Creator`]'s unique user ID
     pub user_id: u64,
 
+    /// The [`Creator`]'s name
     #[serde(borrow)]
     pub name: Cow<'a, str>,
 
+    /// The [`Creator`]'s unique account ID.
+    ///
+    /// This field is [`None`] if the creator hasn't registered for an account.
     pub account_id: Option<u64>,
 }
 
-impl<'a> RawCreator<'a> {
-    pub fn into_owned(self) -> Creator {
+impl<'a> Creator<'a> {
+    pub fn into_owned(self) -> Creator<'static> {
         Creator {
             user_id: self.user_id,
-            name: self.name.into_owned(),
-            account_id: self.account_id,
-        }
-    }
-}
-
-impl Creator {
-    pub fn as_raw(&self) -> RawCreator {
-        RawCreator {
-            user_id: self.user_id,
-            name: Cow::Borrowed(self.name.as_ref()),
+            name: Cow::Owned(self.name.into_owned()),
             account_id: self.account_id,
         }
     }
