@@ -1,12 +1,14 @@
-use crate::de::thunk::{PercentDecoded, Thunk};
+use crate::de::{
+    error::Error,
+    indexed::IndexedDeserializer,
+    thunk::{PercentDecoded, Thunk},
+};
 use serde::{Deserialize, Serialize};
 use std::{
     borrow::Cow,
     fmt::{Display, Formatter},
     str::Utf8Error,
 };
-use crate::de::indexed::IndexedDeserializer;
-use crate::de::error::Error;
 
 pub fn from_str(input: &str) -> Result<NewgroundsSong, Error> {
     let mut deserializer = IndexedDeserializer::new(input, "~|~", true);
