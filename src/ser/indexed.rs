@@ -1,16 +1,16 @@
 use crate::ser::error::Error;
+use dtoa::Floating;
 use itoa::Integer;
 use serde::{
-    ser::{Error as _, Impossible, SerializeSeq, SerializeStruct},
+    ser::{Error as _, Impossible, SerializeStruct},
     Serialize, Serializer,
 };
 use std::fmt::Display;
-use dtoa::Floating;
 
 #[allow(missing_debug_implementations)]
 pub struct IndexedSerializer {
-    delimiter: &'static str,
-    buffer: String,
+    delimiter: &'static [u8],
+    buffer: Vec<u8>,
     map_like: bool,
 
     /// Value indicating whether this serializer has already serialized something. This is used to
@@ -21,22 +21,43 @@ pub struct IndexedSerializer {
     /// empty string. In that case, a delimiter needs to be appended, but since the buffer would
     /// still be empty, no delimiter would be added.
     is_start: bool,
-
-    to_string_buf: [u8; 128], /* FIXME: what is longest possible string representation for a
-                               * float/int? */
 }
 
 impl IndexedSerializer {
+    pub fn new(delimiter: &'static str, map_like: bool) -> Self {
+        IndexedSerializer {
+            delimiter: delimiter.as_bytes(),
+            buffer: Vec::new(),
+            map_like,
+            is_start: true,
+        }
+    }
+
+    pub fn with_capacity(delimiter: &'static str, map_like: bool, capacity: usize) -> Self {
+        IndexedSerializer {
+            delimiter: delimiter.as_bytes(),
+            buffer: Vec::with_capacity(capacity),
+            map_like,
+            is_start: true,
+        }
+    }
+
+    pub fn finish(self) -> String {
+        debug_assert!(std::str::from_utf8(&self.buffer[..]).is_ok());
+
+        // We only ever put valid utf8 into the buffer
+
+        unsafe { String::from_utf8_unchecked(self.buffer) }
+    }
+
     fn append_integer<I: Integer>(&mut self, int: I) -> Result<(), Error> {
         if self.is_start {
             self.is_start = false;
         } else {
-            self.buffer += self.delimiter;
+            self.buffer.extend_from_slice(self.delimiter);
         }
 
-        let len = itoa::write(&mut self.to_string_buf[..], int).map_err(Error::custom)?;
-
-        self.buffer += unsafe { std::str::from_utf8_unchecked(&self.to_string_buf[..len]) };
+        itoa::write(&mut self.buffer, int).map_err(Error::custom)?;
 
         Ok(())
     }
@@ -45,12 +66,10 @@ impl IndexedSerializer {
         if self.is_start {
             self.is_start = false;
         } else {
-            self.buffer += self.delimiter;
+            self.buffer.extend_from_slice(self.delimiter);
         }
 
-        let len = dtoa::write(&mut self.to_string_buf[..], float).map_err(Error::custom)?;
-
-        self.buffer += unsafe { std::str::from_utf8_unchecked(&self.to_string_buf[..len]) };
+        dtoa::write(&mut self.buffer, float).map_err(Error::custom)?;
 
         Ok(())
     }
@@ -59,10 +78,10 @@ impl IndexedSerializer {
         if self.is_start {
             self.is_start = false;
         } else {
-            self.buffer += self.delimiter;
+            self.buffer.extend_from_slice(self.delimiter);
         }
 
-        self.buffer += s;
+        self.buffer.extend_from_slice(s.as_bytes());
 
         Ok(())
     }
@@ -72,7 +91,7 @@ impl<'a> Serializer for &'a mut IndexedSerializer {
     type Error = Error;
     type Ok = ();
     type SerializeMap = Impossible<(), Error>;
-    type SerializeSeq = Self;
+    type SerializeSeq = Impossible<(), Error>;
     type SerializeStruct = Self;
     type SerializeStructVariant = Impossible<(), Error>;
     type SerializeTuple = Impossible<(), Error>;
@@ -136,7 +155,7 @@ impl<'a> Serializer for &'a mut IndexedSerializer {
     }
 
     fn serialize_none(self) -> Result<Self::Ok, Self::Error> {
-        self.buffer += self.delimiter;
+        self.buffer.extend_from_slice(self.delimiter);
         Ok(())
     }
 
@@ -235,22 +254,6 @@ impl<'a> SerializeStruct for &'a mut IndexedSerializer {
     }
 }
 
-impl<'a> SerializeSeq for &'a mut IndexedSerializer {
-    type Error = Error;
-    type Ok = ();
-
-    fn serialize_element<T: ?Sized>(&mut self, _value: &T) -> Result<(), Self::Error>
-    where
-        T: Serialize,
-    {
-        Err(Error::Unsupported("SerializeSeq::serialize_element"))
-    }
-
-    fn end(self) -> Result<Self::Ok, Self::Error> {
-        Ok(())
-    }
-}
-
 #[cfg(test)]
 mod test {
     use crate::{model::song::NewgroundsSong, ser::indexed::IndexedSerializer};
@@ -270,20 +273,15 @@ mod test {
             link: "https://audio.ngfiles.com/771000/771277_Creo---Dune.mp3?f1508708604".to_string(),
         };
 
-        let mut serializer = IndexedSerializer {
-            delimiter: "~|~",
-            buffer: "".to_string(),
-            map_like: true,
-            is_start: true,
-            to_string_buf: [0; 128],
-        };
-
+        let mut serializer = IndexedSerializer::new("~|~", true);
         let ser_result = song.as_raw().serialize(&mut serializer);
 
         assert!(ser_result.is_ok(), "{:?}", ser_result);
-        println!("{}", serializer.buffer);
+
+        let serialized = serializer.finish();
+
         assert_eq!(
-            serializer.buffer,
+            serialized,
             "1~|~771277~|~2~|~Creo - \
              Dune~|~3~|~50531~|~4~|~CreoMusic~|~5~|~9.03~|~6~|~~|~7~|~UCsCWA3Y3JppL6feQiMRgm6Q~|~8~|~1~|~10~|~https%3A%2F%2Faudio%\
              2Engfiles%2Ecom%2F771000%2F771277%5FCreo%2D%2D%2DDune%2Emp3%3Ff1508708604"
