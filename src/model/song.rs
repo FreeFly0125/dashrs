@@ -5,6 +5,14 @@ use std::{
     fmt::{Display, Formatter},
     str::Utf8Error,
 };
+use crate::de::indexed::IndexedDeserializer;
+use crate::de::error::Error;
+
+pub fn from_str(input: &str) -> Result<NewgroundsSong, Error> {
+    let mut deserializer = IndexedDeserializer::new(input, "~|~", true);
+
+    NewgroundsSong::deserialize(&mut deserializer)
+}
 
 /// Struct modelling a [`NewgroundsSong`] the way it is represented by the Geometry Dash servers
 ///
