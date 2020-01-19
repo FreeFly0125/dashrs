@@ -3,7 +3,6 @@ use serde::{Deserialize, Serialize};
 pub mod raw;
 
 /// Struct representing a [`Level`]'s creator.
-///
 #[derive(Debug, Eq, PartialEq, Clone, Serialize, Deserialize)]
 pub struct Creator {
     /// The [`Creator`]'s unique user ID

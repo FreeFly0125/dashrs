@@ -1,6 +1,6 @@
+use crate::model::creator::Creator;
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
-use crate::model::creator::Creator;
 
 /// Struct modelling a [`Creator`] the way it is represented by the Geometry Dash servers
 ///
@@ -21,13 +21,12 @@ pub struct RawCreator<'a> {
     pub account_id: Option<u64>,
 }
 
-
 impl<'a> RawCreator<'a> {
     pub fn into_owned(self) -> Creator {
         Creator {
             user_id: self.user_id,
             name: self.name.into_owned(),
-            account_id: self.account_id
+            account_id: self.account_id,
         }
     }
 }

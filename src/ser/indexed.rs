@@ -1,19 +1,60 @@
 use crate::ser::error::Error;
+use itoa::Integer;
 use serde::{
-    ser::{Impossible, SerializeSeq, SerializeStruct},
+    ser::{Error as _, Impossible, SerializeSeq, SerializeStruct},
     Serialize, Serializer,
 };
 use std::fmt::Display;
+use dtoa::Floating;
 
-#[derive(Debug)]
+#[allow(missing_debug_implementations)]
 pub struct IndexedSerializer {
     delimiter: &'static str,
     buffer: String,
     map_like: bool,
+
+    /// Value indicating whether this serializer has already serialized something. This is used to
+    /// check if we need to prepend the delimiter to the next field.
+    ///
+    /// Note that this field cannot simply be replaced in favor of a `buffer.len() == 0` check. In
+    /// case of list-like serialization the first field could be `None`, which is serialized to the
+    /// empty string. In that case, a delimiter needs to be appended, but since the buffer would
+    /// still be empty, no delimiter would be added.
     is_start: bool,
+
+    to_string_buf: [u8; 128], /* FIXME: what is longest possible string representation for a
+                               * float/int? */
 }
 
 impl IndexedSerializer {
+    fn append_integer<I: Integer>(&mut self, int: I) -> Result<(), Error> {
+        if self.is_start {
+            self.is_start = false;
+        } else {
+            self.buffer += self.delimiter;
+        }
+
+        let len = itoa::write(&mut self.to_string_buf[..], int).map_err(Error::custom)?;
+
+        self.buffer += unsafe { std::str::from_utf8_unchecked(&self.to_string_buf[..len]) };
+
+        Ok(())
+    }
+
+    fn append_float<F: Floating>(&mut self, float: F) -> Result<(), Error> {
+        if self.is_start {
+            self.is_start = false;
+        } else {
+            self.buffer += self.delimiter;
+        }
+
+        let len = dtoa::write(&mut self.to_string_buf[..], float).map_err(Error::custom)?;
+
+        self.buffer += unsafe { std::str::from_utf8_unchecked(&self.to_string_buf[..len]) };
+
+        Ok(())
+    }
+
     fn append(&mut self, s: &str) -> Result<(), Error> {
         if self.is_start {
             self.is_start = false;
@@ -43,43 +84,43 @@ impl<'a> Serializer for &'a mut IndexedSerializer {
     }
 
     fn serialize_i8(self, v: i8) -> Result<Self::Ok, Self::Error> {
-        self.append(&v.to_string())
+        self.append_integer(v)
     }
 
     fn serialize_i16(self, v: i16) -> Result<Self::Ok, Self::Error> {
-        self.append(&v.to_string())
+        self.append_integer(v)
     }
 
     fn serialize_i32(self, v: i32) -> Result<Self::Ok, Self::Error> {
-        self.append(&v.to_string())
+        self.append_integer(v)
     }
 
     fn serialize_i64(self, v: i64) -> Result<Self::Ok, Self::Error> {
-        self.append(&v.to_string())
+        self.append_integer(v)
     }
 
     fn serialize_u8(self, v: u8) -> Result<Self::Ok, Self::Error> {
-        self.append(&v.to_string())
+        self.append_integer(v)
     }
 
     fn serialize_u16(self, v: u16) -> Result<Self::Ok, Self::Error> {
-        self.append(&v.to_string())
+        self.append_integer(v)
     }
 
     fn serialize_u32(self, v: u32) -> Result<Self::Ok, Self::Error> {
-        self.append(&v.to_string())
+        self.append_integer(v)
     }
 
     fn serialize_u64(self, v: u64) -> Result<Self::Ok, Self::Error> {
-        self.append(&v.to_string())
+        self.append_integer(v)
     }
 
     fn serialize_f32(self, v: f32) -> Result<Self::Ok, Self::Error> {
-        self.append(&v.to_string())
+        self.append_float(v)
     }
 
     fn serialize_f64(self, v: f64) -> Result<Self::Ok, Self::Error> {
-        self.append(&v.to_string())
+        self.append_float(v)
     }
 
     fn serialize_char(self, v: char) -> Result<Self::Ok, Self::Error> {
@@ -234,9 +275,12 @@ mod test {
             buffer: "".to_string(),
             map_like: true,
             is_start: true,
+            to_string_buf: [0; 128],
         };
 
-        assert!(song.as_raw().serialize(&mut serializer).is_ok());
+        let ser_result = song.as_raw().serialize(&mut serializer);
+
+        assert!(ser_result.is_ok(), "{:?}", ser_result);
         println!("{}", serializer.buffer);
         assert_eq!(
             serializer.buffer,
