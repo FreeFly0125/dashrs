@@ -256,25 +256,31 @@ impl<'a> SerializeStruct for &'a mut IndexedSerializer {
 
 #[cfg(test)]
 mod test {
-    use crate::{model::song::NewgroundsSong, ser::indexed::IndexedSerializer};
+    use crate::{
+        de::thunk::{PercentDecoded, Thunk},
+        model::song::NewgroundsSong,
+        ser::indexed::IndexedSerializer,
+    };
     use serde::Serialize;
 
     #[test]
     fn serialize_creo_dune() {
         let song = NewgroundsSong {
             song_id: 771277,
-            name: "Creo - Dune".to_string(),
+            name: "Creo - Dune".into(),
             index_3: 50531,
-            artist: "CreoMusic".to_owned(),
+            artist: "CreoMusic".into(),
             filesize: 9.03,
             index_6: None,
-            index_7: Some("UCsCWA3Y3JppL6feQiMRgm6Q".to_string()),
-            index_8: "1".to_string(),
-            link: "https://audio.ngfiles.com/771000/771277_Creo---Dune.mp3?f1508708604".to_string(),
+            index_7: Some("UCsCWA3Y3JppL6feQiMRgm6Q".into()),
+            index_8: "1".into(),
+            link: Thunk::Processed(PercentDecoded(
+                "https://audio.ngfiles.com/771000/771277_Creo---Dune.mp3?f1508708604".into(),
+            )),
         };
 
         let mut serializer = IndexedSerializer::new("~|~", true);
-        let ser_result = song.as_raw().serialize(&mut serializer);
+        let ser_result = song.serialize(&mut serializer);
 
         assert!(ser_result.is_ok(), "{:?}", ser_result);
 

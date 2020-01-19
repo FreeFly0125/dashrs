@@ -421,8 +421,11 @@ impl<'a, 'de> de::MapAccess<'de> for MapAccess<'a, 'de> {
 #[cfg(test)]
 mod test {
     use crate::{
-        de::indexed::IndexedDeserializer,
-        model::song::{raw::RawNewgroundsSong, NewgroundsSong},
+        de::{
+            indexed::IndexedDeserializer,
+            thunk::{PercentDecoded, Thunk},
+        },
+        model::song::NewgroundsSong,
     };
     use serde::Deserialize;
 
@@ -430,14 +433,16 @@ mod test {
     fn deserialize_creo_dune() {
         let song = NewgroundsSong {
             song_id: 771277,
-            name: "Creo - Dune".to_string(),
+            name: "Creo - Dune".into(),
             index_3: 50531,
-            artist: "CreoMusic".to_owned(),
+            artist: "CreoMusic".into(),
             filesize: 9.03,
             index_6: None,
-            index_7: Some("UCsCWA3Y3JppL6feQiMRgm6Q".to_string()),
-            index_8: "1".to_string(),
-            link: "https://audio.ngfiles.com/771000/771277_Creo---Dune.mp3?f1508708604".to_string(),
+            index_7: Some("UCsCWA3Y3JppL6feQiMRgm6Q".into()),
+            index_8: "1".into(),
+            link: Thunk::Processed(PercentDecoded(
+                "https://audio.ngfiles.com/771000/771277_Creo---Dune.mp3?f1508708604".into(),
+            )),
         };
 
         let mut deserializer = IndexedDeserializer::new(
@@ -448,13 +453,13 @@ mod test {
             true,
         );
 
-        let deserialized = RawNewgroundsSong::deserialize(&mut deserializer);
+        let deserialized = NewgroundsSong::deserialize(&mut deserializer);
 
         assert!(deserialized.is_ok());
 
         let mut deserialized = deserialized.unwrap();
 
         assert!(deserialized.link.process().is_ok());
-        assert_eq!(deserialized, song.as_raw());
+        assert_eq!(deserialized, song);
     }
 }

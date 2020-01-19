@@ -1,35 +1,92 @@
+use crate::de::thunk::{PercentDecoded, Thunk};
 use serde::{Deserialize, Serialize};
-use std::fmt::{Display, Formatter};
+use std::{
+    borrow::Cow,
+    fmt::{Display, Formatter},
+    str::Utf8Error,
+};
 
-pub mod raw;
-
-/// Struct representing a Newgrounds song.
+/// Struct modelling a [`NewgroundsSong`] the way it is represented by the Geometry Dash servers
 ///
-/// Owned version of [`RawNewgroundsSong`]
-#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
-pub struct NewgroundsSong {
+/// See [`NewgroundSong`] for an owned version.
+///
+/// The Geometry Dash servers provide a list of the newgrounds songs of the
+/// levels in a `getGJLevels` response.
+///
+/// ### Unused indices:
+/// The following indices aren't used by the Geometry Dash servers: `9`
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+pub struct NewgroundsSong<'a> {
     /// The newgrounds id of this [`NewgroundsSong`]
+    ///
+    /// ## GD Internals
+    /// This value is provided at index `1`
+    #[serde(rename = "1")]
     pub song_id: u64,
 
     /// The name of this [`NewgroundsSong`]
-    pub name: String,
+    ///
+    /// ## GD Internals
+    /// This value is provided at index `2`
+    #[serde(rename = "2", borrow)]
+    pub name: Cow<'a, str>,
 
+    /// ## GD Internals
+    /// This value is provided at index `3`
+    #[serde(rename = "3")]
     pub index_3: u64,
 
     /// The artist of this [`NewgroundsSong`]
-    pub artist: String,
+    ///
+    /// ## GD Internals
+    /// This value is provided at index `4`
+    #[serde(rename = "4")]
+    pub artist: Cow<'a, str>,
 
     /// The filesize of this [`NewgroundsSong`], in megabytes
+    ///
+    /// ## GD Internals
+    /// This value is provided at index `5`
+    #[serde(rename = "5")]
     pub filesize: f64,
 
-    pub index_6: Option<String>,
+    /// ## GD Internals
+    /// This value is provided at index `6`
+    #[serde(rename = "6")]
+    pub index_6: Option<Cow<'a, str>>,
 
-    pub index_7: Option<String>,
+    /// ## GD Internals
+    /// This value is provided at index `7`
+    #[serde(rename = "7")]
+    pub index_7: Option<Cow<'a, str>>,
 
-    pub index_8: String,
+    /// ## GD Internals
+    /// This value is provided at index `8>`
+    #[serde(rename = "8")]
+    pub index_8: Cow<'a, str>,
 
     /// The direct `audio.ngfiles.com` download link for this [`NewgroundsSong`]
-    pub link: String,
+    ///
+    /// ## GD Internals
+    /// This value is provided at index `10`, and is percent encoded.
+    #[serde(rename = "10")]
+    pub link: Thunk<'a, PercentDecoded<'a>>,
+}
+
+impl<'a> NewgroundsSong<'a> {
+    pub fn into_owned(self) -> Result<NewgroundsSong<'static>, Utf8Error> {
+        Ok(NewgroundsSong {
+            song_id: self.song_id,
+            name: Cow::Owned(self.name.into_owned()),
+            index_3: self.index_3,
+            artist: Cow::Owned(self.artist.into_owned()),
+            filesize: self.filesize,
+            index_6: self.index_6.map(|cow| Cow::Owned(cow.into_owned())),
+            index_7: self.index_7.map(|cow| Cow::Owned(cow.into_owned())),
+            index_8: Cow::Owned(self.index_8.into_owned()),
+            link: Thunk::Processed(PercentDecoded(Cow::Owned(self.link.into_processed()?.0.into_owned()))),
+        })
+    }
 }
 
 /// Struct representing Geometry Dash's main songs.
@@ -93,7 +150,7 @@ pub const UNKNOWN: MainSong = MainSong::new(
     "Please either update to the newest version, or bug stadust about adding the new songs",
 );
 
-impl Display for NewgroundsSong {
+impl Display for NewgroundsSong<'_> {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         write!(f, "NewgroundsSong({}, {} by {})", self.song_id, self.name, self.artist)
     }
