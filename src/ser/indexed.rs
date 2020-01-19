@@ -1,11 +1,12 @@
 use crate::ser::error::Error;
 use serde::{
     ser::{
-        SerializeMap, SerializeSeq, SerializeStruct, SerializeStructVariant, SerializeTuple, SerializeTupleStruct, SerializeTupleVariant,
+         SerializeSeq, SerializeStruct,
     },
     Serialize, Serializer,
 };
 use std::fmt::Display;
+use serde::ser::Impossible;
 
 #[derive(Debug)]
 pub struct IndexedSerializer {
@@ -32,13 +33,13 @@ impl IndexedSerializer {
 impl<'a> Serializer for &'a mut IndexedSerializer {
     type Error = Error;
     type Ok = ();
-    type SerializeMap = Self;
+    type SerializeMap = Impossible<(), Error>;
     type SerializeSeq = Self;
     type SerializeStruct = Self;
-    type SerializeStructVariant = Self;
-    type SerializeTuple = Self;
-    type SerializeTupleStruct = Self;
-    type SerializeTupleVariant = Self;
+    type SerializeStructVariant = Impossible<(), Error>;
+    type SerializeTuple = Impossible<(), Error>;
+    type SerializeTupleStruct = Impossible<(), Error>;
+    type SerializeTupleVariant = Impossible<(), Error>;
 
     fn serialize_bool(self, v: bool) -> Result<Self::Ok, Self::Error> {
         self.append(if v { "1" } else { "0" })
@@ -92,8 +93,8 @@ impl<'a> Serializer for &'a mut IndexedSerializer {
         self.append(v)
     }
 
-    fn serialize_bytes(self, v: &[u8]) -> Result<Self::Ok, Self::Error> {
-        unimplemented!("serialize_bytes")
+    fn serialize_bytes(self, _v: &[u8]) -> Result<Self::Ok, Self::Error> {
+        Err(Error::Unsupported("serialize_bytes"))
     }
 
     fn serialize_none(self) -> Result<Self::Ok, Self::Error> {
@@ -109,87 +110,71 @@ impl<'a> Serializer for &'a mut IndexedSerializer {
     }
 
     fn serialize_unit(self) -> Result<Self::Ok, Self::Error> {
-        unimplemented!("serialize_unit")
+        Err(Error::Unsupported("serialize_unit"))
     }
 
-    fn serialize_unit_struct(self, name: &'static str) -> Result<Self::Ok, Self::Error> {
-        unimplemented!("serialize_unit_struct")
+    fn serialize_unit_struct(self, _name: &'static str) -> Result<Self::Ok, Self::Error> {
+        Err(Error::Unsupported("serialize_unit_struct"))
     }
 
-    fn serialize_unit_variant(self, name: &'static str, variant_index: u32, variant: &'static str) -> Result<Self::Ok, Self::Error> {
-        unimplemented!("serialize_unit_variant")
+    fn serialize_unit_variant(self, _name: &'static str, _variant_index: u32, _variant: &'static str) -> Result<Self::Ok, Self::Error> {
+        Err(Error::Unsupported("serialize_unit_variant"))
     }
 
-    fn serialize_newtype_struct<T: ?Sized>(self, name: &'static str, value: &T) -> Result<Self::Ok, Self::Error>
+    fn serialize_newtype_struct<T: ?Sized>(self, _name: &'static str, _value: &T) -> Result<Self::Ok, Self::Error>
     where
         T: Serialize,
     {
-        unimplemented!("serialize_newtype_struct")
+        Err(Error::Unsupported("serialize_newtype_struct"))
     }
 
     fn serialize_newtype_variant<T: ?Sized>(
-        self, name: &'static str, variant_index: u32, variant: &'static str, value: &T,
+        self, _name: &'static str, _variant_index: u32, _variant: &'static str, _value: &T,
     ) -> Result<Self::Ok, Self::Error>
     where
         T: Serialize,
     {
-        unimplemented!("serialize_newtype_variant")
+        Err(Error::Unsupported("serialize_newtype_variant"))
     }
 
-    fn serialize_seq(self, len: Option<usize>) -> Result<Self::SerializeSeq, Self::Error> {
-        unimplemented!("serialize_seq")
+    fn serialize_seq(self, _len: Option<usize>) -> Result<Self::SerializeSeq, Self::Error> {
+        Err(Error::Unsupported("serialize_seq"))
     }
 
-    fn serialize_tuple(self, len: usize) -> Result<Self::SerializeTuple, Self::Error> {
-        unimplemented!("serialize_tuple")
+    fn serialize_tuple(self, _len: usize) -> Result<Self::SerializeTuple, Self::Error> {
+        Err(Error::Unsupported("serialize_tuple"))
     }
 
-    fn serialize_tuple_struct(self, name: &'static str, len: usize) -> Result<Self::SerializeTupleStruct, Self::Error> {
-        unimplemented!("serialize_tuple_struct")
+    fn serialize_tuple_struct(self, _name: &'static str, _len: usize) -> Result<Self::SerializeTupleStruct, Self::Error> {
+        Err(Error::Unsupported("serialize_tuple_struct"))
     }
 
     fn serialize_tuple_variant(
-        self, name: &'static str, variant_index: u32, variant: &'static str, len: usize,
+        self, _name: &'static str, _variant_index: u32, _variant: &'static str, _len: usize,
     ) -> Result<Self::SerializeTupleVariant, Self::Error> {
-        unimplemented!("serialize_tuple_variant")
+        Err(Error::Unsupported("serialize_tuple_variant"))
     }
 
-    fn serialize_map(self, len: Option<usize>) -> Result<Self::SerializeMap, Self::Error> {
-        unimplemented!("serialize_map")
+    fn serialize_map(self, _len: Option<usize>) -> Result<Self::SerializeMap, Self::Error> {
+        Err(Error::Unsupported("serialize_map"))
     }
 
-    fn serialize_struct(self, name: &'static str, len: usize) -> Result<Self::SerializeStruct, Self::Error> {
+    fn serialize_struct(self, _name: &'static str, _len: usize) -> Result<Self::SerializeStruct, Self::Error> {
         // We don't store the struct name and the amount of fields doesn't matter
         Ok(self)
     }
 
     fn serialize_struct_variant(
-        self, name: &'static str, variant_index: u32, variant: &'static str, len: usize,
+        self, _name: &'static str, _variant_index: u32, _variant: &'static str, _len: usize,
     ) -> Result<Self::SerializeStructVariant, Self::Error> {
-        unimplemented!("serialize_struct_variant")
+        Err(Error::Unsupported("serialize_struct_variant"))
     }
 
-    fn collect_str<T: ?Sized>(self, value: &T) -> Result<Self::Ok, Self::Error>
+    fn collect_str<T: ?Sized>(self, _value: &T) -> Result<Self::Ok, Self::Error>
     where
         T: Display,
     {
-        unimplemented!("collect_str")
-    }
-}
-
-impl<'a> SerializeStructVariant for &'a mut IndexedSerializer {
-    type Error = Error;
-    type Ok = ();
-
-    fn serialize_field<T: ?Sized>(&mut self, key: &'static str, value: &T) -> Result<(), Self::Error>
-    where
-        T: Serialize,
-    {
-        unimplemented!("serialize_field")
-    }
-
-    fn end(self) -> Result<Self::Ok, Self::Error> {
-        Ok(())
+        Err(Error::Unsupported("collect_str"))
     }
 }
 
@@ -212,86 +197,17 @@ impl<'a> SerializeStruct for &'a mut IndexedSerializer {
     }
 }
 
-impl<'a> SerializeMap for &'a mut IndexedSerializer {
-    type Error = Error;
-    type Ok = ();
 
-    fn serialize_key<T: ?Sized>(&mut self, key: &T) -> Result<(), Self::Error>
-    where
-        T: Serialize,
-    {
-        unimplemented!("serialize_key")
-    }
-
-    fn serialize_value<T: ?Sized>(&mut self, value: &T) -> Result<(), Self::Error>
-    where
-        T: Serialize,
-    {
-        unimplemented!("serialize_value")
-    }
-
-    fn end(self) -> Result<Self::Ok, Self::Error> {
-        Ok(())
-    }
-}
-
-impl<'a> SerializeTupleVariant for &'a mut IndexedSerializer {
-    type Error = Error;
-    type Ok = ();
-
-    fn serialize_field<T: ?Sized>(&mut self, value: &T) -> Result<(), Self::Error>
-    where
-        T: Serialize,
-    {
-        unimplemented!("serialize_field")
-    }
-
-    fn end(self) -> Result<Self::Ok, Self::Error> {
-        Ok(())
-    }
-}
-
-impl<'a> SerializeTupleStruct for &'a mut IndexedSerializer {
-    type Error = Error;
-    type Ok = ();
-
-    fn serialize_field<T: ?Sized>(&mut self, value: &T) -> Result<(), Self::Error>
-    where
-        T: Serialize,
-    {
-        unimplemented!("serialize_field")
-    }
-
-    fn end(self) -> Result<Self::Ok, Self::Error> {
-        Ok(())
-    }
-}
-
-impl<'a> SerializeTuple for &'a mut IndexedSerializer {
-    type Error = Error;
-    type Ok = ();
-
-    fn serialize_element<T: ?Sized>(&mut self, value: &T) -> Result<(), Self::Error>
-    where
-        T: Serialize,
-    {
-        unimplemented!("serialize_element")
-    }
-
-    fn end(self) -> Result<Self::Ok, Self::Error> {
-        Ok(())
-    }
-}
 
 impl<'a> SerializeSeq for &'a mut IndexedSerializer {
     type Error = Error;
     type Ok = ();
 
-    fn serialize_element<T: ?Sized>(&mut self, value: &T) -> Result<(), Self::Error>
+    fn serialize_element<T: ?Sized>(&mut self, _value: &T) -> Result<(), Self::Error>
     where
         T: Serialize,
     {
-        unimplemented!("serialize_element")
+        Err(Error::Unsupported("SerializeSeq::serialize_element"))
     }
 
     fn end(self) -> Result<Self::Ok, Self::Error> {

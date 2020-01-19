@@ -25,6 +25,10 @@ pub enum Error<'de> {
         /// The index of the data that caused the error
         index: &'de str,
     },
+
+    /// A given [`Deserializer`] function was not supported
+    Unsupported(&'static str)
+
 }
 
 impl Display for Error<'_> {
@@ -33,6 +37,7 @@ impl Display for Error<'_> {
             Error::Custom(s) => write!(f, "{}", s),
             Error::CustomAt { message, index } => write!(f, "{} at index '{}'", message, index),
             Error::Eof => write!(f, "Unexpected EOF while parsing"),
+            Error::Unsupported(what) => write!(f, "unsupported deserializer function: {}", what)
         }
     }
 }

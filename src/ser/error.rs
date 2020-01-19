@@ -6,12 +6,16 @@ use std::fmt::Display;
 pub enum Error {
     /// Some custom error happened during serialization.
     Custom(String),
+
+    /// A given [`Serializer`] function was not supported
+    Unsupported(&'static str)
 }
 
 impl Display for Error {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
             Error::Custom(msg) => write!(f, "{}", msg),
+            Error::Unsupported(what) => write!(f, "unsupported serializer function: {}", what)
         }
     }
 }

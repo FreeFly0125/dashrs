@@ -144,7 +144,7 @@ impl<'a, 'de> Deserializer<'de> for &'a mut IndexedDeserializer<'de> {
         V: Visitor<'de>,
     {
         // the data format is by no means self describing
-        unimplemented!("deserialize_any")
+        Err(Error::Unsupported("deserialize_any"))
     }
 
     fn deserialize_bool<V>(self, visitor: V) -> Result<<V as Visitor<'de>>::Value, Error<'de>>
@@ -171,7 +171,7 @@ impl<'a, 'de> Deserializer<'de> for &'a mut IndexedDeserializer<'de> {
     where
         V: Visitor<'de>,
     {
-        unimplemented!("deserialize_char")
+        Err(Error::Unsupported("deserialize_char"))
     }
 
     fn deserialize_str<V>(self, visitor: V) -> Result<<V as Visitor<'de>>::Value, Error<'de>>
@@ -202,14 +202,14 @@ impl<'a, 'de> Deserializer<'de> for &'a mut IndexedDeserializer<'de> {
     where
         V: Visitor<'de>,
     {
-        unimplemented!("deserialize_bytes")
+        Err(Error::Unsupported("deserialize_bytes"))
     }
 
     fn deserialize_byte_buf<V>(self, _visitor: V) -> Result<<V as Visitor<'de>>::Value, Error<'de>>
     where
         V: Visitor<'de>,
     {
-        unimplemented!("deserialize_byte_buf")
+        Err(Error::Unsupported("deserialize_byte_buf"))
     }
 
     fn deserialize_option<V>(self, visitor: V) -> Result<<V as Visitor<'de>>::Value, Error<'de>>
@@ -233,21 +233,21 @@ impl<'a, 'de> Deserializer<'de> for &'a mut IndexedDeserializer<'de> {
     where
         V: Visitor<'de>,
     {
-        unimplemented!("deserialize_unit")
+        Err(Error::Unsupported("deserialize_unit"))
     }
 
     fn deserialize_unit_struct<V>(self, _name: &'static str, _visitor: V) -> Result<<V as Visitor<'de>>::Value, Error<'de>>
     where
         V: Visitor<'de>,
     {
-        unimplemented!("deserialize_unit_struct")
+        Err(Error::Unsupported("deserialize_unit_struct"))
     }
 
     fn deserialize_newtype_struct<V>(self, _name: &'static str, _visitor: V) -> Result<<V as Visitor<'de>>::Value, Error<'de>>
     where
         V: Visitor<'de>,
     {
-        unimplemented!("deserialize_newtype_struct")
+        Err(Error::Unsupported("deserialize_newtype_struct"))
     }
 
     fn deserialize_seq<V>(self, visitor: V) -> Result<<V as Visitor<'de>>::Value, Error<'de>>
@@ -264,14 +264,14 @@ impl<'a, 'de> Deserializer<'de> for &'a mut IndexedDeserializer<'de> {
     where
         V: Visitor<'de>,
     {
-        unimplemented!("deserialize_tuple")
+        Err(Error::Unsupported("deserialize_tuple"))
     }
 
     fn deserialize_tuple_struct<V>(self, _name: &'static str, _len: usize, _visitor: V) -> Result<<V as Visitor<'de>>::Value, Error<'de>>
     where
         V: Visitor<'de>,
     {
-        unimplemented!("deserialize_tuple_struct")
+        Err(Error::Unsupported("deserialize_tuple_struct"))
     }
 
     fn deserialize_map<V>(self, visitor: V) -> Result<<V as Visitor<'de>>::Value, Error<'de>>
@@ -308,7 +308,7 @@ impl<'a, 'de> Deserializer<'de> for &'a mut IndexedDeserializer<'de> {
     where
         V: Visitor<'de>,
     {
-        unimplemented!("deserialize_enum")
+        Err(Error::Unsupported("deserialize_enum"))
     }
 
     fn deserialize_identifier<V>(self, visitor: V) -> Result<<V as Visitor<'de>>::Value, Error<'de>>
