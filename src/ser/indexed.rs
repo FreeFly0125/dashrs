@@ -1,12 +1,9 @@
 use crate::ser::error::Error;
 use serde::{
-    ser::{
-         SerializeSeq, SerializeStruct,
-    },
+    ser::{Impossible, SerializeSeq, SerializeStruct},
     Serialize, Serializer,
 };
 use std::fmt::Display;
-use serde::ser::Impossible;
 
 #[derive(Debug)]
 pub struct IndexedSerializer {
@@ -196,8 +193,6 @@ impl<'a> SerializeStruct for &'a mut IndexedSerializer {
         Ok(())
     }
 }
-
-
 
 impl<'a> SerializeSeq for &'a mut IndexedSerializer {
     type Error = Error;
