@@ -6,8 +6,12 @@
 /// is done directly on the bytes, and the result of each byte-wise XOR
 /// operation is casted to `char`, meaning this function only works for
 /// ASCII strings.
-pub fn cyclic_xor(encoded: &mut [u8], key: &str) {
-    for (data_byte, key_byte) in encoded.iter_mut().zip(key.bytes().cycle()) {
-        *data_byte = *data_byte ^ key_byte
-    }
+#[inline]
+pub fn cyclic_xor<T>(encoded: &mut [u8], key: &T)
+where
+    T: AsRef<[u8]> + ?Sized, // ?Sized needed here because we want for example to accept &[u8], where T would be [u8]
+{
+    // for_each usually specializes better for iterators
+    // Also changed into using ^= for simplicity
+    encoded.iter_mut().zip(key.as_ref().iter().cycle()).for_each(|(d, k)| *d ^= k);
 }
