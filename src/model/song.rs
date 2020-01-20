@@ -1,13 +1,12 @@
 use crate::de::{
     error::Error,
     indexed::IndexedDeserializer,
-    thunk::{PercentDecoded, Thunk},
+    thunk::{PercentDecoded, ProcessError, Thunk},
 };
 use serde::{Deserialize, Serialize};
 use std::{
     borrow::Cow,
     fmt::{Display, Formatter},
-    str::Utf8Error,
 };
 
 pub fn from_str(input: &str) -> Result<NewgroundsSong, Error> {
@@ -83,7 +82,7 @@ pub struct NewgroundsSong<'a> {
 }
 
 impl<'a> NewgroundsSong<'a> {
-    pub fn into_owned(self) -> Result<NewgroundsSong<'static>, Utf8Error> {
+    pub fn into_owned(self) -> Result<NewgroundsSong<'static>, ProcessError> {
         Ok(NewgroundsSong {
             song_id: self.song_id,
             name: Cow::Owned(self.name.into_owned()),

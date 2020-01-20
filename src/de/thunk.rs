@@ -1,6 +1,39 @@
+use base64::DecodeError;
 use percent_encoding::{percent_decode_str, utf8_percent_encode, NON_ALPHANUMERIC};
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
-use std::{borrow::Cow, convert::TryFrom, str::Utf8Error};
+use serde::{export::Formatter, Deserialize, Deserializer, Serialize, Serializer};
+use std::{borrow::Cow, convert::TryFrom, fmt::Display, str::Utf8Error};
+
+/// Enum modelling the different errors that can occur during processing of a [`Thunk`]
+///
+/// ## Why is this a seperate enum
+/// One might wonder why this enum exists, and why we don't simply reuse
+/// [`Error`](::de::error::Error). The main reason is that I do not want to include variants in that
+/// enum that do not occur during the actual deserialization phase. The second reason has to do with
+/// lifetimes: Just using `Error<'a>` for the error type in the [`TryFrom`] impls used by `Thunk` is
+/// not possible. The reason for that is that processing errors are returned in contexts where data
+/// is transformed into owned representations. This means we cannot simply reuse the lifetime the
+/// input data is bound to for our errors, as the errors potentially have to outlive the input data
+/// (in the worst case they have to be `'static`). Adding a new lifetime to `Thunk` just to use that
+/// for the error type is obviously impractical, however it is possible to use `Error<'static>`,
+/// which at least doesn't add more downsides. However it still leaves us with an error enum dealing
+/// with too much stuff.
+#[derive(Debug)]
+pub enum ProcessError {
+    /// Some utf8 encoding error occurred during processing
+    Utf8(Utf8Error),
+
+    /// Some base64 decoding error occurred during processing
+    Base64(DecodeError),
+}
+
+impl Display for ProcessError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ProcessError::Utf8(utf8) => utf8.fmt(f),
+            ProcessError::Base64(decode) => decode.fmt(f),
+        }
+    }
+}
 
 /// Input value whose further deserialization has been delayed
 ///
@@ -15,8 +48,8 @@ use std::{borrow::Cow, convert::TryFrom, str::Utf8Error};
 /// exactly the unprocessed string it was constructed from (unless it was manually changed of
 /// course, in which case it needs to correctly serialize to a string representation from which it
 /// can be reconstructed via [`TryFrom`])
-#[derive(Debug, Eq, PartialEq)]
-pub enum Thunk<'a, P: TryFrom<&'a str> + Serialize> {
+#[derive(Debug, Eq, PartialEq, Clone)]
+pub enum Thunk<'a, P: TryFrom<&'a str, Error = ProcessError> + Serialize> {
     /// Unprocessed value
     Unprocessed(&'a str),
 
@@ -24,7 +57,7 @@ pub enum Thunk<'a, P: TryFrom<&'a str> + Serialize> {
     Processed(P),
 }
 
-impl<'a, P: TryFrom<&'a str> + Serialize> Serialize for Thunk<'a, P> {
+impl<'a, P: TryFrom<&'a str, Error = ProcessError> + Serialize> Serialize for Thunk<'a, P> {
     fn serialize<S>(&self, serializer: S) -> Result<<S as Serializer>::Ok, <S as Serializer>::Error>
     where
         S: Serializer,
@@ -36,7 +69,7 @@ impl<'a, P: TryFrom<&'a str> + Serialize> Serialize for Thunk<'a, P> {
     }
 }
 
-impl<'a, 'de: 'a, P: TryFrom<&'a str> + Serialize> Deserialize<'de> for Thunk<'a, P> {
+impl<'a, 'de: 'a, P: TryFrom<&'a str, Error = ProcessError> + Serialize> Deserialize<'de> for Thunk<'a, P> {
     fn deserialize<D>(deserializer: D) -> Result<Self, <D as Deserializer<'de>>::Error>
     where
         D: Deserializer<'de>,
@@ -45,7 +78,7 @@ impl<'a, 'de: 'a, P: TryFrom<&'a str> + Serialize> Deserialize<'de> for Thunk<'a
     }
 }
 
-impl<'a, P: TryFrom<&'a str> + Serialize> Thunk<'a, P> {
+impl<'a, P: TryFrom<&'a str, Error = ProcessError> + Serialize> Thunk<'a, P> {
     /// If this is a [`Thunk::Unprocessed`] variant, invokes the [`TryFrom`] impl and returns
     /// [`Thunk::Processed`]. Simply returns itself if this is a [`Thunk::Processed`] variant
     pub fn process(&mut self) -> Result<&P, P::Error> {
@@ -72,10 +105,13 @@ impl<'a, P: TryFrom<&'a str> + Serialize> Thunk<'a, P> {
 pub struct PercentDecoded<'a>(pub Cow<'a, str>);
 
 impl<'a> TryFrom<&'a str> for PercentDecoded<'a> {
-    type Error = Utf8Error;
+    type Error = ProcessError;
 
     fn try_from(value: &'a str) -> Result<Self, Self::Error> {
-        percent_decode_str(value).decode_utf8().map(PercentDecoded)
+        percent_decode_str(value)
+            .decode_utf8()
+            .map(PercentDecoded)
+            .map_err(ProcessError::Utf8)
     }
 }
 
