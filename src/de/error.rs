@@ -12,18 +12,22 @@ pub enum Error<'de> {
     /// already been processed
     Eof,
 
-    /// Some custom error happened during deserialization.
-    ///
-    /// Note that if an error occurs while processing an index, this variant is returned.
-    Custom(String),
-
     /// Some custom error happened while deserializing the data at the specified index.
-    CustomAt {
+    Custom {
         /// The error message
         message: String,
 
         /// The index of the data that caused the error
-        index: &'de str,
+        ///
+        /// Is [`None`] if the error happens at a point where no index was available, such as when
+        /// parsing the index itself
+        index: Option<&'de str>,
+
+        /// The value that caused the error
+        ///
+        /// Not available if the error is not related to any value (for instance if the format
+        /// itself was malformed).
+        value: Option<&'de str>,
     },
 
     /// A given [`Deserializer`] function was not supported
@@ -33,8 +37,7 @@ pub enum Error<'de> {
 impl Display for Error<'_> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            Error::Custom(s) => write!(f, "{}", s),
-            Error::CustomAt { message, index } => write!(f, "{} at index '{}'", message, index),
+            Error::Custom { message, index, value } => write!(f, "{:?} at index {:?} caused {}", value, index, message),
             Error::Eof => write!(f, "Unexpected EOF while parsing"),
             Error::Unsupported(what) => write!(f, "unsupported deserializer function: {}", what),
         }
@@ -48,6 +51,10 @@ impl serde::de::Error for Error<'_> {
     where
         T: Display,
     {
-        Error::Custom(msg.to_string())
+        Error::Custom {
+            message: msg.to_string(),
+            index: None,
+            value: None,
+        }
     }
 }
