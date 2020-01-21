@@ -270,7 +270,8 @@ impl<'a> TryFrom<&'a str> for DecodedPassword {
 
         util::cyclic_xor(&mut decoded, LEVEL_PASSWORD_XOR_KEY);
 
-        // Geometry Dash adds an initial '0' character at the beginning that we don't care about, we just remove it
+        // Geometry Dash adds an initial '0' character at the beginning that we don't care about, we just
+        // remove it
         decoded.remove(0);
 
         String::from_utf8(decoded)
@@ -295,7 +296,10 @@ impl Serialize for DecodedPassword {
 
         password[0] = '0' as u8;
         // This is a strong assert because the copy_from_slice method would panic anyways.
-        assert!(password[1..].len() == self.0.as_bytes().len(), "The level password size doesn't match.");
+        assert!(
+            password[1..].len() == self.0.as_bytes().len(),
+            "The level password size doesn't match."
+        );
         password[1..].copy_from_slice(self.0.as_bytes());
 
         // We need to do the xor **before** we get the base64 encoded data
@@ -303,7 +307,6 @@ impl Serialize for DecodedPassword {
 
         // serialize_bytes does the base64 encode by itself
         serializer.serialize_bytes(&password)
-
     }
 }
 

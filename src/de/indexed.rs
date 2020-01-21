@@ -76,7 +76,7 @@ impl<'de> IndexedDeserializer<'de> {
     /// recalculate the bounds of the token.
     fn peek_token(&mut self) -> Result<Option<&'de str>, Error<'de>> {
         if self.source == "" {
-            return Err(Error::Eof);
+            return Err(Error::Eof)
         }
 
         if let Some(len) = self.current_item_len {
@@ -250,7 +250,7 @@ impl<'a, 'de> Deserializer<'de> for &'a mut IndexedDeserializer<'de> {
                 let _ = self.consume_token(); // potentially skip the delimiter. Explicitly ignore the return value in case we have Error::Eof
 
                 visitor.visit_none()
-            }
+            },
             Err(err) => Err(err),
             Ok(Some(_)) => visitor.visit_some(self),
         }
@@ -383,17 +383,18 @@ impl<'a, 'de> de::SeqAccess<'de> for SeqAccess<'a, 'de> {
 
         self.index += 1;
 
-        // don't use '?' here as we might be at the end of the input and need to interpret this as a `None` value
+        // don't use '?' here as we might be at the end of the input and need to interpret this as a `None`
+        // value
         let next_value = self.deserializer.peek_token().ok().flatten();
 
         match seed.deserialize(&mut *self.deserializer) {
             Err(Error::Eof) => Ok(None),
             Err(Error::Custom { message, value, .. }) =>
                 Err(Error::Custom {
-                message,
+                    message,
                     index: Some(INDICES.get(self.index - 1).unwrap_or(&">=50")),
                     value: value.or(next_value),
-            }),
+                }),
             Err(err) => Err(err),
             Ok(item) => Ok(Some(item)),
         }
@@ -413,10 +414,10 @@ impl<'a, 'de> de::MapAccess<'de> for MapAccess<'a, 'de> {
     where
         K: DeserializeSeed<'de>,
     {
-        self.current_index = match self.deserializer.peek_token(){
+        self.current_index = match self.deserializer.peek_token() {
             Err(Error::Eof) => return Ok(None),
             Ok(idx) => idx,
-            _ => unreachable!()
+            _ => unreachable!(),
         };
 
         if let (Some(expected), Some(index)) = (self.expected_fields, self.current_index) {
@@ -442,55 +443,18 @@ impl<'a, 'de> de::MapAccess<'de> for MapAccess<'a, 'de> {
             self.deserializer.peek_token()
         );
 
-        // don't use '?' here as we might be at the end of the input and need to interpret this as a `None` value
+        // don't use '?' here as we might be at the end of the input and need to interpret this as a `None`
+        // value
         let next_value = self.deserializer.peek_token().ok().flatten();
 
         match seed.deserialize(&mut *self.deserializer) {
             Err(Error::Custom { message, value, .. }) =>
                 Err(Error::Custom {
-                message,
+                    message,
                     index: self.current_index,
                     value: value.or(next_value),
-            }),
+                }),
             r => r,
         }
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use crate::{
-        de::thunk::{PercentDecoded, Thunk},
-        model::song::NewgroundsSong,
-    };
-
-    #[test]
-    fn deserialize_creo_dune() {
-        let song = NewgroundsSong {
-            song_id: 771277,
-            name: "Creo - Dune".into(),
-            index_3: 50531,
-            artist: "CreoMusic".into(),
-            filesize: 9.03,
-            index_6: None,
-            index_7: Some("UCsCWA3Y3JppL6feQiMRgm6Q".into()),
-            index_8: "1".into(),
-            link: Thunk::Processed(PercentDecoded(
-                "https://audio.ngfiles.com/771000/771277_Creo---Dune.mp3?f1508708604".into(),
-            )),
-        };
-
-        let deserialized = crate::model::song::from_str(
-            "1~|~771277~|~2~|~Creo - \
-             Dune~|~3~|~50531~|~4~|~CreoMusic~|~5~|~9.03~|~6~|~~|~7~|~UCsCWA3Y3JppL6feQiMRgm6Q~|~8~|~1~|~10~|~https%3A%2F%2Faudio%\
-             2Engfiles%2Ecom%2F771000%2F771277%5FCreo%2D%2D%2DDune%2Emp3%3Ff1508708604",
-        );
-
-        assert!(deserialized.is_ok(), "{:?}", deserialized);
-
-        let mut deserialized = deserialized.unwrap();
-
-        assert!(deserialized.link.process().is_ok());
-        assert_eq!(deserialized, song);
     }
 }
