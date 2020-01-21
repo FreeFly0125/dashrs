@@ -249,7 +249,7 @@ pub enum Password<'a> {
     /// ## GD Internals
     /// The Geometry Dash servers communicate this variant by setting the password field in the
     /// following way:
-    /// * Prepend a single `"0`` to the password
+    /// * Prepend a single `'1'` to the password
     /// * XOR the resulting string with the key `"26364"` (note that the XOR operation is performed
     ///   using the ASCII value of the characters in that string)
     /// * base64 encode the result of that
@@ -260,7 +260,7 @@ pub enum Password<'a> {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DecodedPassword(String);
 
-pub const PASSWORD_XOR_KEY: &str = "26364";
+pub const LEVEL_PASSWORD_XOR_KEY: &str = "26364";
 
 impl<'a> TryFrom<&'a str> for DecodedPassword {
     type Error = ProcessError;
@@ -268,9 +268,10 @@ impl<'a> TryFrom<&'a str> for DecodedPassword {
     fn try_from(value: &'a str) -> Result<Self, Self::Error> {
         let mut decoded = base64::decode_config(value, URL_SAFE).map_err(ProcessError::Base64)?;
 
-        util::cyclic_xor(&mut decoded, PASSWORD_XOR_KEY);
+        util::cyclic_xor(&mut decoded, LEVEL_PASSWORD_XOR_KEY);
 
-        decoded.remove(0); // remove the ASCII zero that's added for some reason
+        // Geometry Dash adds an initial '0' character at the beginning that we don't care about, we just remove it
+        decoded.remove(0);
 
         String::from_utf8(decoded)
             .map_err(|err| ProcessError::Utf8(err.utf8_error()))
@@ -290,19 +291,19 @@ impl Serialize for DecodedPassword {
         // digits long (6 bytes -> 8 encoded bytes) plus the "0" robtop adds for some reason (1 byte -> 2
         // bytes + 2 bytes padding). So we need a 12 byte buffer to encode the level password
 
-        let mut base64_buffer = [0u8; 12];
         let mut password = [0u8, 7];
 
         password[0] = '0' as u8;
+        // This is a strong assert because the copy_from_slice method would panic anyways.
+        assert!(password[1..].len() == self.0.as_bytes().len(), "The level password size doesn't match.");
         password[1..].copy_from_slice(self.0.as_bytes());
 
-        let encoded = base64::encode_config_slice(&password, URL_SAFE, &mut base64_buffer);
+        // We need to do the xor **before** we get the base64 encoded data
+        util::cyclic_xor(&mut password, LEVEL_PASSWORD_XOR_KEY);
 
-        debug_assert!(encoded == 12);
+        // serialize_bytes does the base64 encode by itself
+        serializer.serialize_bytes(&password)
 
-        util::cyclic_xor(&mut base64_buffer, PASSWORD_XOR_KEY);
-
-        serializer.serialize_bytes(&base64_buffer)
     }
 }
 

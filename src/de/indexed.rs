@@ -76,7 +76,7 @@ impl<'de> IndexedDeserializer<'de> {
     /// recalculate the bounds of the token.
     fn peek_token(&mut self) -> Result<Option<&'de str>, Error<'de>> {
         if self.source == "" {
-            return Err(Error::Eof)
+            return Err(Error::Eof);
         }
 
         if let Some(len) = self.current_item_len {
@@ -250,7 +250,7 @@ impl<'a, 'de> Deserializer<'de> for &'a mut IndexedDeserializer<'de> {
                 let _ = self.consume_token(); // potentially skip the delimiter. Explicitly ignore the return value in case we have Error::Eof
 
                 visitor.visit_none()
-            },
+            }
             Err(err) => Err(err),
             Ok(Some(_)) => visitor.visit_some(self),
         }
@@ -390,10 +390,10 @@ impl<'a, 'de> de::SeqAccess<'de> for SeqAccess<'a, 'de> {
             Err(Error::Eof) => Ok(None),
             Err(Error::Custom { message, value, .. }) =>
                 Err(Error::Custom {
-                    message,
+                message,
                     index: Some(INDICES.get(self.index - 1).unwrap_or(&">=50")),
                     value: value.or(next_value),
-                }),
+            }),
             Err(err) => Err(err),
             Ok(item) => Ok(Some(item)),
         }
@@ -448,10 +448,10 @@ impl<'a, 'de> de::MapAccess<'de> for MapAccess<'a, 'de> {
         match seed.deserialize(&mut *self.deserializer) {
             Err(Error::Custom { message, value, .. }) =>
                 Err(Error::Custom {
-                    message,
+                message,
                     index: self.current_index,
                     value: value.or(next_value),
-                }),
+            }),
             r => r,
         }
     }
