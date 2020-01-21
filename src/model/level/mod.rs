@@ -1,10 +1,6 @@
-use crate::{
-    de::thunk::{ProcessError, Thunk},
-    model::level::Password::PasswordCopy,
-    util,
-};
+use crate::{de::error::Error, util};
 use base64::URL_SAFE;
-use serde::{export::TryFrom, Deserialize, Serialize, Serializer};
+use serde::{de::Error as _, export::TryFrom, Deserialize, Serialize, Serializer};
 
 /// Enum representing the possible level lengths known to dash-rs
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
@@ -225,8 +221,8 @@ impl Into<i32> for Featured {
 }
 
 /// Enum representing a level's copyability status
-#[derive(Debug, Clone, Eq, PartialEq, Deserialize)]
-#[serde(from = "&str")]
+#[derive(Debug, Clone, Eq, PartialEq, Deserialize, Copy)]
+#[serde(try_from = "&str")]
 pub enum Password {
     /// The level isn't copyable through the official Geometry Dash client
     ///
@@ -265,23 +261,23 @@ pub struct DecodedPassword(u32);
 pub const LEVEL_PASSWORD_XOR_KEY: &str = "26364";
 
 impl<'a> TryFrom<&'a str> for DecodedPassword {
-    type Error = ProcessError;
+    type Error = Error<'a>;
 
     fn try_from(value: &'a str) -> Result<Self, Self::Error> {
         // More than enough for storing the decoded password even if in future the format grows
-        let mut decoded_buffer = [0; 32]; 
-        let password_len = base64::decode_config_slice(value, URL_SAFE, &mut decoded_buffer).map_err(ProcessError::Base64)?;
-        
-        // This xor pass is applied after we base64 decoded the input, it's how the game tries to protect data
+        let mut decoded_buffer = [0; 32];
+        let password_len = base64::decode_config_slice(value, URL_SAFE, &mut decoded_buffer).map_err(Error::custom)?;
+
+        // This xor pass is applied after we base64 decoded the input, it's how the game tries to protect
+        // data
         util::cyclic_xor(&mut decoded_buffer[..password_len], LEVEL_PASSWORD_XOR_KEY);
 
-        // Geometry Dash adds an initial '1' character at the beginning that we don't care about, we just skip it
-        // The cost of UTF8 checking here is pretty much nothing since the password is so small, no need to go unsafe
+        // Geometry Dash adds an initial '1' character at the beginning that we don't care about, we just
+        // skip it The cost of UTF8 checking here is pretty much nothing since the password is so
+        // small, no need to go unsafe
         let decoded_str = std::str::from_utf8(&decoded_buffer[1..]).expect("Password wasn't UTF-8 after a xor cycle.");
 
-        decoded_str.parse()
-            .map_err(ProcessError::IntParse)
-            .map(DecodedPassword)
+        decoded_str.parse().map_err(Error::custom).map(DecodedPassword)
     }
 }
 
@@ -290,27 +286,27 @@ impl Serialize for DecodedPassword {
     where
         S: Serializer,
     {
-
         // Even an u64 would fit here
         let mut password = [0u8; 32];
         password[0] = b'1';
         let n = itoa::write(&mut password[1..], self.0).unwrap();
-        
+
         // We need to do the xor **before** we get the base64 encoded data
         util::cyclic_xor(&mut password[..=n], LEVEL_PASSWORD_XOR_KEY);
-        
 
         // serialize_bytes does the base64 encode by itself
         serializer.serialize_bytes(&password[..=n])
     }
 }
 
-impl From<&str> for Password {
-    fn from(raw_password_data: &str) -> Self {
-        match raw_password_data {
+impl<'a> TryFrom<&'a str> for Password {
+    type Error = Error<'a>;
+
+    fn try_from(raw_password_data: &'a str) -> Result<Self, Self::Error> {
+        Ok(match raw_password_data {
             "0" => Password::NoCopy,
             "Aw==" => Password::FreeCopy,
-            _ => PasswordCopy(Thunk::Unprocessed(raw_password_data)),
-        }
+            _ => Password::PasswordCopy(DecodedPassword::try_from(raw_password_data)?),
+        })
     }
 }
