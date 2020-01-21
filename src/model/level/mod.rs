@@ -260,7 +260,7 @@ pub enum Password<'a> {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DecodedPassword(String);
 
-pub const PASSWORD_XOR_KEY: &str = "26364";
+pub const LEVEL_PASSWORD_XOR_KEY: &str = "26364";
 
 impl<'a> TryFrom<&'a str> for DecodedPassword {
     type Error = ProcessError;
@@ -268,9 +268,10 @@ impl<'a> TryFrom<&'a str> for DecodedPassword {
     fn try_from(value: &'a str) -> Result<Self, Self::Error> {
         let mut decoded = base64::decode_config(value, URL_SAFE).map_err(ProcessError::Base64)?;
 
-        util::cyclic_xor(&mut decoded, PASSWORD_XOR_KEY);
+        util::cyclic_xor(&mut decoded, LEVEL_PASSWORD_XOR_KEY);
 
-        decoded.remove(0); // remove the ASCII zero that's added for some reason
+        // Geometry Dash adds an initial '0' character at the beginning that we don't care about, we just remove it
+        decoded.remove(0);
 
         String::from_utf8(decoded)
             .map_err(|err| ProcessError::Utf8(err.utf8_error()))
@@ -294,13 +295,15 @@ impl Serialize for DecodedPassword {
         let mut password = [0u8, 7];
 
         password[0] = '0' as u8;
+        // This is a strong assert because the copy_from_slice method would panic anyways.
+        assert!(password[1..].len() == self.0.as_bytes().len(), "The level password size doesn't match.");
         password[1..].copy_from_slice(self.0.as_bytes());
 
         let encoded = base64::encode_config_slice(&password, URL_SAFE, &mut base64_buffer);
 
         debug_assert!(encoded == 12);
 
-        util::cyclic_xor(&mut base64_buffer, PASSWORD_XOR_KEY);
+        util::cyclic_xor(&mut base64_buffer, LEVEL_PASSWORD_XOR_KEY);
 
         serializer.serialize_bytes(&base64_buffer)
     }

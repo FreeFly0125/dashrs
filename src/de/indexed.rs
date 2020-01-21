@@ -66,7 +66,7 @@ impl<'de> IndexedDeserializer<'de> {
 
     fn peek_item(&self) -> Result<Option<&'de str>, Error<'de>> {
         if self.source == "" {
-            return Err(Error::Eof)
+            return Err(Error::Eof);
         }
 
         let index = match self.delimiter {
@@ -223,7 +223,7 @@ impl<'a, 'de> Deserializer<'de> for &'a mut IndexedDeserializer<'de> {
                 let _ = self.next_item(); // potentially skip the delimiter. Explicitly ignore the return value in case we have Error::Eof
 
                 visitor.visit_none()
-            },
+            }
             Err(err) => Err(err),
             Ok(Some(_)) => visitor.visit_some(self),
         }
@@ -358,11 +358,10 @@ impl<'a, 'de> de::SeqAccess<'de> for SeqAccess<'a, 'de> {
 
         match seed.deserialize(&mut *self.deserializer) {
             Err(Error::Eof) => Ok(None),
-            Err(Error::Custom(message)) =>
-                Err(Error::CustomAt {
-                    message,
-                    index: INDICES.get(self.index - 1).unwrap_or(&">=50"),
-                }),
+            Err(Error::Custom(message)) => Err(Error::CustomAt {
+                message,
+                index: INDICES.get(self.index - 1).unwrap_or(&">=50"),
+            }),
             Err(err) => Err(err),
             Ok(item) => Ok(Some(item)),
         }
@@ -408,11 +407,10 @@ impl<'a, 'de> de::MapAccess<'de> for MapAccess<'a, 'de> {
         );
 
         match seed.deserialize(&mut *self.deserializer) {
-            Err(Error::Custom(message)) =>
-                Err(Error::CustomAt {
-                    message,
-                    index: self.current_index.unwrap(),
-                }),
+            Err(Error::Custom(message)) => Err(Error::CustomAt {
+                message,
+                index: self.current_index.unwrap(),
+            }),
             r => r,
         }
     }
