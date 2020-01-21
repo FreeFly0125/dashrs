@@ -2,7 +2,7 @@
 
 `dash-rs` (spoken 'dashers') is an experimental library related to modelling, and more imporant _processing_ all data formats related to RobTop's 2013 game "Geometry Dash". The long-term goal is to have this crate replace `gdcf_model`, `gdcf_parse` and some parts of `gdrs` in GDCF.
 
-The project is a collaboration with mgostih, on whose idea the initial library design is based on and who continues to provide incredibly helpful insights into optimization, Geometry Dash and Rust.
+The project is a collaboration with [mgostIH](https://github.com/mgostIH), on whose idea the initial library design is based on and who continues to provide incredibly helpful insights into optimization, Geometry Dash and Rust.
 
 ## Goals
 
