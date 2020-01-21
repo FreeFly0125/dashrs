@@ -249,7 +249,7 @@ pub enum Password<'a> {
     /// ## GD Internals
     /// The Geometry Dash servers communicate this variant by setting the password field in the
     /// following way:
-    /// * Prepend a single `"0`` to the password
+    /// * Prepend a single `'1'` to the password
     /// * XOR the resulting string with the key `"26364"` (note that the XOR operation is performed
     ///   using the ASCII value of the characters in that string)
     /// * base64 encode the result of that
@@ -291,7 +291,6 @@ impl Serialize for DecodedPassword {
         // digits long (6 bytes -> 8 encoded bytes) plus the "0" robtop adds for some reason (1 byte -> 2
         // bytes + 2 bytes padding). So we need a 12 byte buffer to encode the level password
 
-        let mut base64_buffer = [0u8; 12];
         let mut password = [0u8, 7];
 
         password[0] = '0' as u8;
@@ -302,13 +301,8 @@ impl Serialize for DecodedPassword {
         // We need to do the xor **before** we get the base64 encoded data
         util::cyclic_xor(&mut password, LEVEL_PASSWORD_XOR_KEY);
 
-        let encoded = base64::encode_config_slice(&password, URL_SAFE, &mut base64_buffer);
-
-        debug_assert!(encoded == 12);
-
-        
-        // serialize_bytes isn't yet implemented on our serializer, we could implement it such that the base64 encoding happens there.
-        serializer.serialize_bytes(&base64_buffer)
+        // serialize_bytes does the base64 encode by itself
+        serializer.serialize_bytes(&password)
 
     }
 }

@@ -150,8 +150,17 @@ impl<'a> Serializer for &'a mut IndexedSerializer {
         self.append(v)
     }
 
-    fn serialize_bytes(self, _v: &[u8]) -> Result<Self::Ok, Self::Error> {
-        Err(Error::Unsupported("serialize_bytes"))
+    // Here we serialize bytes by base64 encoding them, so it's always valid in Geometry Dash's format
+    fn serialize_bytes(self, v: &[u8]) -> Result<Self::Ok, Self::Error> {
+        use base64::URL_SAFE;
+        // We need to use resize instead of reserve because the base64 method for encoding takes initialized slices
+        let idx = self.buffer.len();
+        self.buffer.resize(idx + v.len() * 4 / 3 + 4, 0);
+        // This won't panic because we just allocated the right amount of data to store this
+        let written = base64::encode_config_slice(v, URL_SAFE, &mut self.buffer[idx..]);
+        // Shorten our vec down to just what was written
+        self.buffer.resize(idx + written, 0);
+        Ok(())
     }
 
     fn serialize_none(self) -> Result<Self::Ok, Self::Error> {
