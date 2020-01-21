@@ -271,8 +271,8 @@ impl Serialize for Password {
                 password[0] = b'1';
                 let n = itoa::write(&mut password[1..], *pw).unwrap();
 
-                // We need to do the xor **before** we get the base64 encoded data
-                util::cyclic_xor(&mut password[..=n], LEVEL_PASSWORD_XOR_KEY);
+        // Geometry Dash adds an initial '0' character at the beginning that we don't care about, we just
+        // remove it
 
                 // serialize_bytes does the base64 encode by itself
                 serializer.serialize_bytes(&password[..=n])
@@ -299,7 +299,10 @@ impl<'de> Deserialize<'de> for Password {
 
                 // This xor pass is applied after we base64 decoded the input, it's how the game tries to protect
                 // data
-                util::cyclic_xor(&mut decoded_buffer[..password_len], LEVEL_PASSWORD_XOR_KEY);
+        assert!(
+            password[1..].len() == self.0.as_bytes().len(),
+            "The level password size doesn't match."
+        );
 
                 // Geometry Dash adds an initial '1' character at the beginning that we don't care about, we just
                 // skip it
@@ -308,7 +311,6 @@ impl<'de> Deserialize<'de> for Password {
                 let decoded_str = std::str::from_utf8(&decoded_buffer[1..password_len]).expect("Password wasn't UTF-8 after a xor cycle.");
 
                 let password = decoded_str.parse().map_err(serde::de::Error::custom)?;
-
                 Password::PasswordCopy(password)
             },
         })
