@@ -299,13 +299,17 @@ impl Serialize for DecodedPassword {
         assert!(password[1..].len() == self.0.as_bytes().len(), "The level password size doesn't match.");
         password[1..].copy_from_slice(self.0.as_bytes());
 
+        // We need to do the xor **before** we get the base64 encoded data
+        util::cyclic_xor(&mut password, LEVEL_PASSWORD_XOR_KEY);
+
         let encoded = base64::encode_config_slice(&password, URL_SAFE, &mut base64_buffer);
 
         debug_assert!(encoded == 12);
 
-        util::cyclic_xor(&mut base64_buffer, LEVEL_PASSWORD_XOR_KEY);
-
+        
+        // serialize_bytes isn't yet implemented on our serializer, we could implement it such that the base64 encoding happens there.
         serializer.serialize_bytes(&base64_buffer)
+
     }
 }
 
