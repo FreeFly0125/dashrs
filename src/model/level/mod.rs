@@ -1,8 +1,7 @@
 use crate::util;
 use base64::URL_SAFE;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
-use std::fmt::Display;
-use std::fmt::Formatter;
+use std::fmt::{Display, Formatter};
 
 /// Enum representing the possible level lengths known to dash-rs
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
@@ -328,9 +327,8 @@ impl Display for Password {
 
 #[cfg(test)]
 mod tests {
-    use crate::{de::indexed::IndexedDeserializer, model::level::Password};
+    use crate::{de::indexed::IndexedDeserializer, model::level::Password, ser::indexed::IndexedSerializer};
     use serde::{Deserialize, Serialize};
-    use crate::ser::indexed::IndexedSerializer;
 
     #[test]
     fn deserialize_password() {
