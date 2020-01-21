@@ -1,6 +1,8 @@
 use crate::util;
 use base64::URL_SAFE;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use std::fmt::Display;
+use std::fmt::Formatter;
 
 /// Enum representing the possible level lengths known to dash-rs
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
@@ -311,6 +313,16 @@ impl<'de> Deserialize<'de> for Password {
                 Password::PasswordCopy(password)
             },
         })
+    }
+}
+
+impl Display for Password {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Password::NoCopy => write!(f, "No Copy"),
+            Password::FreeCopy => write!(f, "Free Copy"),
+            Password::PasswordCopy(pw) => write!(f, "{:0>6}", pw),
+        }
     }
 }
 
