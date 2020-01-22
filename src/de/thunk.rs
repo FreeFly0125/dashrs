@@ -1,5 +1,5 @@
 use base64::DecodeError;
-use percent_encoding::{percent_decode_str, utf8_percent_encode, NON_ALPHANUMERIC};
+use percent_encoding::{percent_decode_str, utf8_percent_encode, AsciiSet, CONTROLS};
 use serde::{export::Formatter, Deserialize, Deserializer, Serialize, Serializer};
 use std::{borrow::Cow, convert::TryFrom, fmt::Display, str::Utf8Error};
 
@@ -100,6 +100,15 @@ impl<'a, P: TryFrom<&'a str, Error = ProcessError> + Serialize> Thunk<'a, P> {
         }
     }
 }
+/// Set of characters RobTop encodes when doing percent encoding
+///
+/// This is a subset of [`percent_encoding::NON_ALPHANUMERIC`], which encodes too many characters
+pub const ROBTOP_SET: &AsciiSet = &CONTROLS
+    .add(b' ')  // TODO: investigate if this is part of the set. Song links never contain spaces
+    .add(b':')
+    .add(b'/')
+    .add(b'?')
+    .add(b'~');
 
 #[derive(Debug, Eq, PartialEq)]
 pub struct PercentDecoded<'a>(pub Cow<'a, str>);
@@ -120,7 +129,7 @@ impl<'a> Serialize for PercentDecoded<'a> {
     where
         S: Serializer,
     {
-        let moo: Cow<str> = utf8_percent_encode(&*self.0, NON_ALPHANUMERIC).into();
+        let moo: Cow<str> = utf8_percent_encode(&*self.0, ROBTOP_SET).into();
 
         serializer.serialize_str(&*moo)
     }
