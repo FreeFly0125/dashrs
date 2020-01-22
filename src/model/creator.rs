@@ -1,5 +1,13 @@
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
+use crate::de::indexed::IndexedDeserializer;
+use crate::de::error::Error;
+
+pub fn from_str(input: &str) -> Result<Creator, Error> {
+    let mut deserializer = IndexedDeserializer::new(input, ":", false);
+
+    Creator::deserialize(&mut deserializer)
+}
 
 /// Struct modelling a [`Creator`] of a level.
 ///
@@ -9,7 +17,7 @@ use std::borrow::Cow;
 ///
 /// Creators do not use the map-like representation, meaning the order of fields in the raw data
 /// must correspond to the order of fields in this struct.
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct Creator<'a> {
     /// The [`Creator`]'s unique user ID
     pub user_id: u64,
