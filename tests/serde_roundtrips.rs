@@ -12,13 +12,21 @@ const DARK_REALM_DATA: &str =
      TXkgYmVzdCBsZXZlbCB5ZXQuIFZpZGVvIG9uIG15IFlvdVR1YmUuIEhhdmUgZnVuIGluIHRoaXMgZmFzdC1wYWNlZCBERU1PTiA-OikgdjIgRml4ZWQgc29tZSB0aGluZ3M=:\
      15:3:30:0:31:0:37:3:38:1:39:10:46:1:47:2:35:444085";
 
+const CREO_DUNE_DATA: &str = "1~|~771277~|~2~|~Creo - \
+                              Dune~|~3~|~50531~|~4~|~CreoMusic~|~5~|~8.03~|~6~|~~|~10~|~https%3A%\
+                              2F%2Faudio.ngfiles.com%2F771000%2F771277_Creo---Dune.mp3%3Ff1508708604~|~7~|~UCsCWA3Y3JppL6feQiMRgm6Q~|~8~|~1";
+
 /// Testing data for newgrounds song (de)serialization
 ///
 /// This is the data provided by the Geometry Dash servers for the song "Dune" by Creo, except that
 /// its fields have been reordered
-const CREO_DUNE_DATA: &str = "1~|~771277~|~2~|~Creo - \
+const CREO_DUNE_DATA_ORDERED: &str = "1~|~771277~|~2~|~Creo - \
                               Dune~|~3~|~50531~|~4~|~CreoMusic~|~5~|~8.03~|~6~|~~|~7~|~UCsCWA3Y3JppL6feQiMRgm6Q~|~8~|~1~|~10~|~https%3A%\
                               2F%2Faudio.ngfiles.com%2F771000%2F771277_Creo---Dune.mp3%3Ff1508708604";
+
+const CREO_DUNE_DATA_TOO_MANY_FIELDS: &str = "1~|~771277~|~54~|~should be ignored~|~2~|~Creo - \
+                              Dune~|~3~|~50531~|~4~|~CreoMusic~|~5~|~8.03~|~6~|~~|~7~|~UCsCWA3Y3JppL6feQiMRgm6Q~|~8~|~1~|~10~|~https%3A%\
+                              2F%2Faudio.ngfiles.com%2F771000%2F771277_Creo---Dune.mp3%3Ff1508708604~|~9~|~should be ignored";
 
 const CREO_DUNE: NewgroundsSong<'static> = NewgroundsSong {
     song_id: 771277,
@@ -35,6 +43,7 @@ const CREO_DUNE: NewgroundsSong<'static> = NewgroundsSong {
 };
 
 const CREATOR_REGISTERED_DATA: &str = "4170784:Serponge:119741";
+const CREATOR_REGISTERED_DATA_TOO_MANY_FIELDS: &str = "4170784:Serponge:119741:34:fda:32:asd:3";
 
 const CREATOR_REGISTERED: Creator = Creator {
     user_id: 4170784,
@@ -56,7 +65,7 @@ fn serialize_song() {
 
     assert!(CREO_DUNE.serialize(&mut serializer).is_ok());
 
-    assert_eq!(serializer.finish(), CREO_DUNE_DATA);
+    assert_eq!(serializer.finish(), CREO_DUNE_DATA_ORDERED);
 }
 
 #[test]
@@ -71,4 +80,51 @@ fn deserialize_song() {
 
     assert!(song.link.process().is_ok());
     assert_eq!(song, CREO_DUNE);
+}
+
+#[test]
+fn serialize_registered_creator() {
+    let mut serializer = IndexedSerializer::new(":", false);
+
+    assert!(CREATOR_REGISTERED.serialize(&mut serializer).is_ok());
+
+    assert_eq!(serializer.finish(), CREATOR_REGISTERED_DATA);
+}
+
+#[test]
+fn serialize_unregistered_creator() {
+    let mut serializer = IndexedSerializer::new(":", false);
+
+    assert!(CREATOR_UNREGISTERED.serialize(&mut serializer).is_ok());
+
+    assert_eq!(serializer.finish(), CREATOR_UNREGISTERED_DATA);
+}
+
+#[test]
+fn deserialize_registered_creator() {
+    use dash_rs::model::creator::from_str;
+
+    let creator = from_str(CREATOR_REGISTERED_DATA);
+
+    assert!(creator.is_ok(), "{:?}", creator.unwrap_err());
+    assert_eq!(creator.unwrap(), CREATOR_REGISTERED);
+}
+
+#[test]
+fn deserialize_unregistered_creator() {
+    use dash_rs::model::creator::from_str;
+
+    let creator = from_str(CREATOR_UNREGISTERED_DATA);
+
+    assert!(creator.is_ok(), "{:?}", creator.unwrap_err());
+    assert_eq!(creator.unwrap(), CREATOR_UNREGISTERED);
+}
+
+#[test]
+fn deserialize_too_many_fields(){
+    use dash_rs::model::song::from_str;
+
+    let song = from_str(CREO_DUNE_DATA_TOO_MANY_FIELDS);
+
+    assert!(song.is_ok(), "{:?}", song.unwrap_err());
 }
