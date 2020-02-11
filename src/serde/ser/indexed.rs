@@ -1,4 +1,4 @@
-use crate::ser::error::Error;
+use crate::serde::ser::error::Error;
 use dtoa::Floating;
 use itoa::Integer;
 use serde::{

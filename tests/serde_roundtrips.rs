@@ -1,7 +1,6 @@
 use dash_rs::{
-    de::thunk::{PercentDecoded, Thunk},
     model::{creator::Creator, song::NewgroundsSong},
-    ser::indexed::IndexedSerializer,
+    Thunk, PercentDecoded
 };
 use serde::Serialize;
 use std::borrow::Cow;
@@ -13,20 +12,22 @@ const DARK_REALM_DATA: &str =
      15:3:30:0:31:0:37:3:38:1:39:10:46:1:47:2:35:444085";
 
 const CREO_DUNE_DATA: &str = "1~|~771277~|~2~|~Creo - \
-                              Dune~|~3~|~50531~|~4~|~CreoMusic~|~5~|~8.03~|~6~|~~|~10~|~https%3A%\
-                              2F%2Faudio.ngfiles.com%2F771000%2F771277_Creo---Dune.mp3%3Ff1508708604~|~7~|~UCsCWA3Y3JppL6feQiMRgm6Q~|~8~|~1";
+                              Dune~|~3~|~50531~|~4~|~CreoMusic~|~5~|~8.03~|~6~|~~|~10~|~https%3A%2F%2Faudio.ngfiles.com%2F771000%\
+                              2F771277_Creo---Dune.mp3%3Ff1508708604~|~7~|~UCsCWA3Y3JppL6feQiMRgm6Q~|~8~|~1";
 
 /// Testing data for newgrounds song (de)serialization
 ///
 /// This is the data provided by the Geometry Dash servers for the song "Dune" by Creo, except that
 /// its fields have been reordered
 const CREO_DUNE_DATA_ORDERED: &str = "1~|~771277~|~2~|~Creo - \
-                              Dune~|~3~|~50531~|~4~|~CreoMusic~|~5~|~8.03~|~6~|~~|~7~|~UCsCWA3Y3JppL6feQiMRgm6Q~|~8~|~1~|~10~|~https%3A%\
-                              2F%2Faudio.ngfiles.com%2F771000%2F771277_Creo---Dune.mp3%3Ff1508708604";
+                                      Dune~|~3~|~50531~|~4~|~CreoMusic~|~5~|~8.\
+                                      03~|~6~|~~|~7~|~UCsCWA3Y3JppL6feQiMRgm6Q~|~8~|~1~|~10~|~https%3A%2F%2Faudio.ngfiles.com%2F771000%\
+                                      2F771277_Creo---Dune.mp3%3Ff1508708604";
 
 const CREO_DUNE_DATA_TOO_MANY_FIELDS: &str = "1~|~771277~|~54~|~should be ignored~|~2~|~Creo - \
-                              Dune~|~3~|~50531~|~4~|~CreoMusic~|~5~|~8.03~|~6~|~~|~7~|~UCsCWA3Y3JppL6feQiMRgm6Q~|~8~|~1~|~10~|~https%3A%\
-                              2F%2Faudio.ngfiles.com%2F771000%2F771277_Creo---Dune.mp3%3Ff1508708604~|~9~|~should be ignored";
+                                              Dune~|~3~|~50531~|~4~|~CreoMusic~|~5~|~8.\
+                                              03~|~6~|~~|~7~|~UCsCWA3Y3JppL6feQiMRgm6Q~|~8~|~1~|~10~|~https%3A%2F%2Faudio.ngfiles.com%\
+                                              2F771000%2F771277_Creo---Dune.mp3%3Ff1508708604~|~9~|~should be ignored";
 
 const CREO_DUNE: NewgroundsSong<'static> = NewgroundsSong {
     song_id: 771277,
@@ -61,11 +62,10 @@ const CREATOR_UNREGISTERED: Creator = Creator {
 
 #[test]
 fn serialize_song() {
-    let mut serializer = IndexedSerializer::new("~|~", true);
+    let result = dash_rs::to_robtop_data(&CREO_DUNE);
 
-    assert!(CREO_DUNE.serialize(&mut serializer).is_ok());
-
-    assert_eq!(serializer.finish(), CREO_DUNE_DATA_ORDERED);
+    assert!(result.is_ok());
+    assert_eq!(result.unwrap(), CREO_DUNE_DATA_ORDERED.as_bytes());
 }
 
 #[test]
@@ -84,20 +84,18 @@ fn deserialize_song() {
 
 #[test]
 fn serialize_registered_creator() {
-    let mut serializer = IndexedSerializer::new(":", false);
+    let result = dash_rs::to_robtop_data(&CREATOR_REGISTERED);
 
-    assert!(CREATOR_REGISTERED.serialize(&mut serializer).is_ok());
-
-    assert_eq!(serializer.finish(), CREATOR_REGISTERED_DATA);
+    assert!(result.is_ok());
+    assert_eq!(result.unwrap(), CREATOR_REGISTERED_DATA.as_bytes());
 }
 
 #[test]
 fn serialize_unregistered_creator() {
-    let mut serializer = IndexedSerializer::new(":", false);
+    let result = dash_rs::to_robtop_data(&CREATOR_UNREGISTERED);
 
-    assert!(CREATOR_UNREGISTERED.serialize(&mut serializer).is_ok());
-
-    assert_eq!(serializer.finish(), CREATOR_UNREGISTERED_DATA);
+    assert!(result.is_ok());
+    assert_eq!(result.unwrap(), CREATOR_UNREGISTERED_DATA.as_bytes());
 }
 
 #[test]
@@ -121,7 +119,7 @@ fn deserialize_unregistered_creator() {
 }
 
 #[test]
-fn deserialize_too_many_fields(){
+fn deserialize_too_many_fields() {
     use dash_rs::model::song::from_str;
 
     let song = from_str(CREO_DUNE_DATA_TOO_MANY_FIELDS);

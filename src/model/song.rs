@@ -1,8 +1,4 @@
-use crate::de::{
-    error::Error,
-    indexed::IndexedDeserializer,
-    thunk::{PercentDecoded, ProcessError, Thunk},
-};
+use crate::serde::{DeError as Error, IndexedDeserializer, PercentDecoded, ProcessError, Thunk};
 use serde::{Deserialize, Serialize};
 use std::{
     borrow::Cow,

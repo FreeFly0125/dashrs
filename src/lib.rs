@@ -30,7 +30,11 @@
     type_alias_bounds
 )]
 
-pub mod de;
 pub mod model;
-pub mod ser;
+#[cfg(not(test))]
+mod serde;
+#[cfg(test)]
+pub mod serde;
 pub mod util;
+
+pub use crate::serde::{from_robtop_str, to_robtop_data, Thunk, DeError, SerError, PercentDecoded};

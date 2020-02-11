@@ -7,16 +7,16 @@ use std::{borrow::Cow, convert::TryFrom, fmt::Display, str::Utf8Error, num::Pars
 ///
 /// ## Why is this a seperate enum
 /// One might wonder why this enum exists, and why we don't simply reuse
-/// [`Error`](::de::error::Error). The main reason is that I do not want to include variants in that
-/// enum that do not occur during the actual deserialization phase. The second reason has to do with
-/// lifetimes: Just using `Error<'a>` for the error type in the [`TryFrom`] impls used by `Thunk` is
-/// not possible. The reason for that is that processing errors are returned in contexts where data
-/// is transformed into owned representations. This means we cannot simply reuse the lifetime the
-/// input data is bound to for our errors, as the errors potentially have to outlive the input data
-/// (in the worst case they have to be `'static`). Adding a new lifetime to `Thunk` just to use that
-/// for the error type is obviously impractical, however it is possible to use `Error<'static>`,
-/// which at least doesn't add more downsides. However it still leaves us with an error enum dealing
-/// with too much stuff.
+/// [`Error`](::serde.de::error::Error). The main reason is that I do not want to include variants
+/// in that enum that do not occur during the actual deserialization phase. The second reason has to
+/// do with lifetimes: Just using `Error<'a>` for the error type in the [`TryFrom`] impls used by
+/// `Thunk` is not possible. The reason for that is that processing errors are returned in contexts
+/// where data is transformed into owned representations. This means we cannot simply reuse the
+/// lifetime the input data is bound to for our errors, as the errors potentially have to outlive
+/// the input data (in the worst case they have to be `'static`). Adding a new lifetime to `Thunk`
+/// just to use that for the error type is obviously impractical, however it is possible to use
+/// `Error<'static>`, which at least doesn't add more downsides. However it still leaves us with an
+/// error enum dealing with too much stuff.
 #[derive(Debug)]
 pub enum ProcessError {
     /// Some utf8 encoding error occurred during processing
