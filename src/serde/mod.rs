@@ -4,8 +4,8 @@ mod thunk;
 
 pub use de::{error::Error as DeError, indexed::IndexedDeserializer};
 pub use ser::{error::Error as SerError, indexed::IndexedSerializer};
-pub use thunk::{PercentDecoded, ProcessError, Thunk};
 use serde::{Deserialize, Serialize};
+pub use thunk::{PercentDecoded, ProcessError, Thunk};
 
 /// Trait implemented by objects that can be (de)serialized from/to RobTop's data formats
 ///

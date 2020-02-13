@@ -1,6 +1,6 @@
 use dash_rs::{
     model::{creator::Creator, song::NewgroundsSong},
-    Thunk, PercentDecoded
+    PercentDecoded, Thunk,
 };
 use serde::Serialize;
 use std::borrow::Cow;

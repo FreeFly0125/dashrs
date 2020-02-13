@@ -1,7 +1,7 @@
 use base64::DecodeError;
 use percent_encoding::{percent_decode_str, utf8_percent_encode, AsciiSet, CONTROLS};
-use serde::{export::Formatter, Deserialize, Deserializer, Serialize, Serializer};
-use std::{borrow::Cow, convert::TryFrom, fmt::Display, str::Utf8Error, num::ParseIntError};
+use serde::{export::Formatter, Deserialize, Serialize, Serializer};
+use std::{borrow::Cow, fmt::Display, str::Utf8Error, num::ParseIntError};
 
 /// Enum modelling the different errors that can occur during processing of a [`Thunk`]
 ///
@@ -52,42 +52,60 @@ impl Display for ProcessError {
 /// exactly the unprocessed string it was constructed from (unless it was manually changed of
 /// course, in which case it needs to correctly serialize to a string representation from which it
 /// can be reconstructed via [`TryFrom`])
-#[derive(Debug, Eq, PartialEq, Clone)]
-pub enum Thunk<'a, P: TryFrom<&'a str, Error = ProcessError> + Serialize> {
+#[derive(Debug, Eq, PartialEq, Clone, Deserialize)]
+#[serde(untagged)]
+pub enum Thunk<'a, C: ThunkContent<'a>> {
     /// Unprocessed value
+    #[serde(skip)]
     Unprocessed(&'a str),
 
     /// Processed value
-    Processed(P),
+    Processed(C),
 }
 
-impl<'a, P: TryFrom<&'a str, Error = ProcessError> + Serialize> Serialize for Thunk<'a, P> {
-    fn serialize<S>(&self, serializer: S) -> Result<<S as Serializer>::Ok, <S as Serializer>::Error>
-    where
-        S: Serializer,
-    {
+impl<'a, C: ThunkContent<'a> + Serialize> Serialize for Thunk<'a, C> {
+    fn serialize<S>(&self, serializer: S) -> Result<<S as Serializer>::Ok, <S as Serializer>::Error> where
+        S: Serializer {
         match self {
-            Thunk::Unprocessed(s) => serializer.serialize_str(s),
+            Thunk::Unprocessed(unprocessed) => match C::from_unprocessed(unprocessed).map_err(S::Error::custom) {
+                Cow::Borrowed(s) => serializer.serialize_str(s),
+                Cow::Owned(s) => s.serialize(serializer)
+            },
             Thunk::Processed(processed) => processed.serialize(serializer),
         }
     }
 }
 
-impl<'a, 'de: 'a, P: TryFrom<&'a str, Error = ProcessError> + Serialize> Deserialize<'de> for Thunk<'a, P> {
-    fn deserialize<D>(deserializer: D) -> Result<Self, <D as Deserializer<'de>>::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        <&str>::deserialize(deserializer).map(Thunk::Unprocessed)
+pub trait ThunkContent<'a>: Sized {
+    fn from_unprocessed(unprocessed: &'a str) -> Result<Self, ProcessError>;
+    fn as_unprocessed(&self) -> Cow<'a, str>;
+}
+
+pub(crate) struct Internal<I>(I);
+
+impl<'a, C: ThunkContent<'a>> Serialize for Internal<Thunk<'a, C>> {
+    fn serialize<S>(&self, serializer: S) -> Result<<S as Serializer>::Ok, <S as Serializer>::Error> where
+        S: Serializer {
+        match self.0 {
+            Thunk::Unprocessed(unprocessed) => serializer.serialize_str(unprocessed),
+            Thunk::Processed(ref processed) => match processed.as_unprocessed() {
+                Cow::Borrowed(s) => serializer.serialize_str(s),
+                Cow::Owned(s) => s.serialize(serializer),
+            },
+        }
     }
 }
 
-impl<'a, P: TryFrom<&'a str, Error = ProcessError> + Serialize> Thunk<'a, P> {
+
+
+
+
+impl<'a, C: ThunkContent<'a>> Thunk<'a, C> {
     /// If this is a [`Thunk::Unprocessed`] variant, invokes the [`TryFrom`] impl and returns
     /// [`Thunk::Processed`]. Simply returns itself if this is a [`Thunk::Processed`] variant
-    pub fn process(&mut self) -> Result<&P, P::Error> {
+    pub fn process(&mut self) -> Result<&C, ProcessError> {
         if let Thunk::Unprocessed(raw_data) = self {
-            *self = Thunk::Processed(P::try_from(raw_data)?)
+            *self = Thunk::Processed(C::from_unprocessed(raw_data)?)
         }
 
         match self {
@@ -97,16 +115,16 @@ impl<'a, P: TryFrom<&'a str, Error = ProcessError> + Serialize> Thunk<'a, P> {
     }
 
     /// Returns the result of processing this [`Thunk`]
-    pub fn into_processed(self) -> Result<P, P::Error> {
+    pub fn into_processed(self) -> Result<C, ProcessError> {
         match self {
-            Thunk::Unprocessed(unprocessed) => P::try_from(unprocessed),
+            Thunk::Unprocessed(unprocessed) => C::from_unprocessed(unprocessed),
             Thunk::Processed(p) => Ok(p),
         }
     }
 }
 /// Set of characters RobTop encodes when doing percent encoding
 ///
-/// This is a subset of [`percent_encoding::NON_ALPHANUMERIC`], which encodes too many characters
+/// This is a subset of [`percent_encoding::NON_ALPHANUMERIC`], since that encodes too many characters
 pub const ROBTOP_SET: &AsciiSet = &CONTROLS
     .add(b' ')  // TODO: investigate if this is part of the set. Song links never contain spaces
     .add(b':')
@@ -117,24 +135,15 @@ pub const ROBTOP_SET: &AsciiSet = &CONTROLS
 #[derive(Debug, Eq, PartialEq)]
 pub struct PercentDecoded<'a>(pub Cow<'a, str>);
 
-impl<'a> TryFrom<&'a str> for PercentDecoded<'a> {
-    type Error = ProcessError;
-
-    fn try_from(value: &'a str) -> Result<Self, Self::Error> {
-        percent_decode_str(value)
+impl<'a> ThunkContent<'a> for PercentDecoded<'a> {
+    fn from_unprocessed(unprocessed: &'a str) -> Result<Self, ProcessError> {
+        percent_decode_str(unprocessed)
             .decode_utf8()
             .map(PercentDecoded)
             .map_err(ProcessError::Utf8)
     }
-}
 
-impl<'a> Serialize for PercentDecoded<'a> {
-    fn serialize<S>(&self, serializer: S) -> Result<<S as Serializer>::Ok, <S as Serializer>::Error>
-    where
-        S: Serializer,
-    {
-        let moo: Cow<str> = utf8_percent_encode(&*self.0, ROBTOP_SET).into();
-
-        serializer.serialize_str(&*moo)
+    fn as_unprocessed(&self) -> Cow<'a, str> {
+        utf8_percent_encode(&*self.0, ROBTOP_SET).into()
     }
 }

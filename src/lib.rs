@@ -37,4 +37,4 @@ mod serde;
 pub mod serde;
 pub mod util;
 
-pub use crate::serde::{from_robtop_str, to_robtop_data, Thunk, DeError, SerError, PercentDecoded};
+pub use crate::serde::{from_robtop_str, to_robtop_data, DeError, PercentDecoded, SerError, Thunk};
