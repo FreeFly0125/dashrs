@@ -1,7 +1,7 @@
 use base64::DecodeError;
 use percent_encoding::{percent_decode_str, utf8_percent_encode, NON_ALPHANUMERIC};
 use serde::{export::Formatter, Deserialize, Deserializer, Serialize, Serializer};
-use std::{borrow::Cow, convert::TryFrom, fmt::Display, str::Utf8Error};
+use std::{borrow::Cow, convert::TryFrom, fmt::Display, str::Utf8Error, num::ParseIntError};
 
 /// Enum modelling the different errors that can occur during processing of a [`Thunk`]
 ///
@@ -24,6 +24,9 @@ pub enum ProcessError {
 
     /// Some base64 decoding error occurred during processing
     Base64(DecodeError),
+
+    // Some error occurred when parsing a number
+    IntParse(ParseIntError),
 }
 
 impl Display for ProcessError {
@@ -31,6 +34,7 @@ impl Display for ProcessError {
         match self {
             ProcessError::Utf8(utf8) => utf8.fmt(f),
             ProcessError::Base64(decode) => decode.fmt(f),
+            ProcessError::IntParse(int) => int.fmt(f),
         }
     }
 }
