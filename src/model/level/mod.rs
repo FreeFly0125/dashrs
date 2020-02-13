@@ -271,8 +271,8 @@ impl Serialize for Internal<Password> {
                 password[0] = b'1';
                 let n = itoa::write(&mut password[1..], pw).unwrap();
 
-                // Geometry Dash adds an initial '0' character at the beginning that we don't care about, we just
-                // remove it
+                // We need to do the xor **before** we get the base64 encoded data
+                util::cyclic_xor(&mut password[..=n], LEVEL_PASSWORD_XOR_KEY);
 
                 // serialize_bytes does the base64 encode by itself
                 serializer.serialize_bytes(&password[..=n])
