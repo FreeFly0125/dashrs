@@ -31,21 +31,8 @@ pub trait HasRobtopFormat<'a> {
     /// numerical index in RobTop's data format
     const MAP_LIKE: bool;
 
-    fn into_internal(self) -> Self::Internal;
+    fn as_internal(&'a self) -> Self::Internal;
     fn from_internal(int: Self::Internal) -> Self;
-}
-
-// We use this trait to fake ourselves some high-kinder-lifetimes. More precisely, this trait allows
-// us to perform the following conversion
-// ==================================================================
-// &'shorter Self<'longer> --> Self<'shorter> where 'longer: 'shorter
-// ==================================================================
-// The operation may only re-borrow data, and not perform any clones. This trait is effectively
-// pub(crate)
-pub trait ShortenLifetime<'shorter> {
-    type Shortened;
-
-    fn shorten(&'shorter self) -> Self::Shortened;
 }
 
 pub fn from_robtop_str<'a, T: HasRobtopFormat<'a>>(input: &'a str) -> Result<T, DeError> {
@@ -56,15 +43,10 @@ pub fn from_robtop_str<'a, T: HasRobtopFormat<'a>>(input: &'a str) -> Result<T, 
     Ok(T::from_internal(internal))
 }
 
-pub fn to_robtop_data<'a, 'b, T>(t: &'b T) -> Result<Vec<u8>, SerError>
-where
-    T::Shortened: HasRobtopFormat<'b>,
-    T: ShortenLifetime<'b>,
-{
-    let mut serializer = IndexedSerializer::new(T::Shortened::DELIMITER, T::Shortened::MAP_LIKE);
-    let with_shorter_lifetime = t.shorten();
+pub fn to_robtop_data<'a, T: HasRobtopFormat<'a>>(t: &'a T) -> Result<Vec<u8>, SerError> {
+    let mut serializer = IndexedSerializer::new(T::DELIMITER, T::MAP_LIKE);
 
-    with_shorter_lifetime.into_internal().serialize(&mut serializer)?;
+    t.as_internal().serialize(&mut serializer)?;
 
     Ok(serializer.finish().into_bytes()) // FIXME: change the .finish() method
 }

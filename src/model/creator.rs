@@ -2,10 +2,7 @@ use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 
 mod internal {
-    use crate::{
-        model::creator::Creator,
-        serde::{HasRobtopFormat, ShortenLifetime},
-    };
+    use crate::{model::creator::Creator, serde::HasRobtopFormat};
     use std::borrow::Cow;
 
     impl<'a> HasRobtopFormat<'a> for Creator<'a> {
@@ -14,23 +11,15 @@ mod internal {
         const DELIMITER: &'static str = ":";
         const MAP_LIKE: bool = false;
 
-        fn into_internal(self) -> Self::Internal {
-            self
-        }
-
-        fn from_internal(int: Self::Internal) -> Self {
-            int
-        }
-    }
-
-    impl<'b, 'a> ShortenLifetime<'b> for Creator<'a> {
-        type Shortened = Creator<'b>;
-
-        fn shorten(&'b self) -> Self::Shortened {
+        fn as_internal(&'a self) -> Self::Internal {
             Creator {
                 name: Cow::Borrowed(self.name.as_ref()),
                 ..*self
             }
+        }
+
+        fn from_internal(int: Self::Internal) -> Self {
+            int
         }
     }
 }

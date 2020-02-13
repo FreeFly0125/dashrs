@@ -8,7 +8,7 @@ use std::{
 mod internal {
     use crate::{
         model::song::NewgroundsSong,
-        serde::{HasRobtopFormat, Internal, PercentDecoded, ShortenLifetime, Thunk},
+        serde::{HasRobtopFormat, Internal, PercentDecoded, Thunk},
     };
     use serde::{Deserialize, Serialize};
     use std::borrow::Cow;
@@ -49,17 +49,20 @@ mod internal {
         const DELIMITER: &'static str = "~|~";
         const MAP_LIKE: bool = true;
 
-        fn into_internal(self) -> Self::Internal {
+        fn as_internal(&'a self) -> Self::Internal {
             InternalNewgroundsSong {
                 song_id: self.song_id,
-                name: self.name,
+                name: Cow::Borrowed(self.name.as_ref()),
                 index_3: self.index_3,
-                artist: self.artist,
+                artist: Cow::Borrowed(self.artist.as_ref()),
                 filesize: self.filesize,
-                index_6: self.index_6,
-                index_7: self.index_7,
-                index_8: self.index_8,
-                link: Internal(self.link),
+                index_6: self.index_6.as_ref().map(|moo| Cow::Borrowed(moo.as_ref())),
+                index_7: self.index_7.as_ref().map(|moo| Cow::Borrowed(moo.as_ref())),
+                index_8: Cow::Borrowed(self.index_8.as_ref()),
+                link: match self.link {
+                    Thunk::Unprocessed(s) => Internal(Thunk::Unprocessed(s)),
+                    Thunk::Processed(ref decoded) => Internal(Thunk::Processed(PercentDecoded(Cow::Borrowed(decoded.0.as_ref())))),
+                },
             }
         }
 
@@ -74,27 +77,6 @@ mod internal {
                 index_7: int.index_7,
                 index_8: int.index_8,
                 link: int.link.0,
-            }
-        }
-    }
-
-    impl<'a: 'b, 'b> ShortenLifetime<'b> for NewgroundsSong<'a> {
-        type Shortened = NewgroundsSong<'b>;
-
-        fn shorten(&'b self) -> Self::Shortened {
-            NewgroundsSong {
-                song_id: self.song_id,
-                name: Cow::Borrowed(self.name.as_ref()),
-                index_3: self.index_3,
-                artist: Cow::Borrowed(self.artist.as_ref()),
-                filesize: self.filesize,
-                index_6: self.index_6.as_ref().map(|moo| Cow::Borrowed(moo.as_ref())),
-                index_7: self.index_7.as_ref().map(|moo| Cow::Borrowed(moo.as_ref())),
-                index_8: Cow::Borrowed(self.index_8.as_ref()),
-                link: match self.link {
-                    Thunk::Unprocessed(s) => Thunk::Unprocessed(s),
-                    Thunk::Processed(ref decoded) => Thunk::Processed(PercentDecoded(Cow::Borrowed(decoded.0.as_ref()))),
-                },
             }
         }
     }

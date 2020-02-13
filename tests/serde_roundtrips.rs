@@ -69,7 +69,6 @@ fn serialize_song() {
 
 #[test]
 fn deserialize_song() {
-
     let song = dash_rs::from_robtop_str::<NewgroundsSong>(CREO_DUNE_DATA);
 
     assert!(song.is_ok(), "{:?}", song.unwrap_err());
@@ -114,7 +113,6 @@ fn deserialize_unregistered_creator() {
 
 #[test]
 fn deserialize_too_many_fields() {
-
     let song = dash_rs::from_robtop_str::<NewgroundsSong>(CREO_DUNE_DATA_TOO_MANY_FIELDS);
 
     assert!(song.is_ok(), "{:?}", song.unwrap_err());
