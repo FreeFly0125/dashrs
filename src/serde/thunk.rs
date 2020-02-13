@@ -1,6 +1,6 @@
 use base64::DecodeError;
 use percent_encoding::{percent_decode_str, utf8_percent_encode, AsciiSet, CONTROLS};
-use serde::{export::Formatter, ser::Error as _, Deserialize, Serialize, Serializer};
+use serde::{export::Formatter, ser::Error as _, Deserialize, Deserializer, Serialize, Serializer};
 use std::{borrow::Cow, fmt::Display, num::ParseIntError, str::Utf8Error};
 
 /// Enum modelling the different errors that can occur during processing of a [`Thunk`]
@@ -80,7 +80,9 @@ pub trait ThunkContent<'a>: Sized {
     fn as_unprocessed(&self) -> Cow<str>;
 }
 
-pub(crate) struct Internal<I>(pub(crate) I);
+// effectively pub(crate) since it's not reexported in lib.rs
+#[derive(Debug)]
+pub struct Internal<I>(pub(crate) I);
 
 impl<'a, C: ThunkContent<'a>> Serialize for Internal<Thunk<'a, C>> {
     fn serialize<S>(&self, serializer: S) -> Result<<S as Serializer>::Ok, <S as Serializer>::Error>
@@ -95,6 +97,15 @@ impl<'a, C: ThunkContent<'a>> Serialize for Internal<Thunk<'a, C>> {
                     Cow::Owned(s) => s.serialize(serializer),
                 },
         }
+    }
+}
+
+impl<'de: 'a, 'a, C: ThunkContent<'a>> Deserialize<'de> for Internal<Thunk<'a, C>> {
+    fn deserialize<D>(deserializer: D) -> Result<Self, <D as Deserializer<'de>>::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        <&str>::deserialize(deserializer).map(Thunk::Unprocessed).map(Internal)
     }
 }
 

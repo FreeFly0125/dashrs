@@ -2,7 +2,6 @@ use dash_rs::{
     model::{creator::Creator, song::NewgroundsSong},
     PercentDecoded, Thunk,
 };
-use serde::Serialize;
 use std::borrow::Cow;
 
 const DARK_REALM_DATA: &str =
@@ -70,9 +69,8 @@ fn serialize_song() {
 
 #[test]
 fn deserialize_song() {
-    use dash_rs::model::song::from_str;
 
-    let song = from_str(CREO_DUNE_DATA);
+    let song = dash_rs::from_robtop_str::<NewgroundsSong>(CREO_DUNE_DATA);
 
     assert!(song.is_ok(), "{:?}", song.unwrap_err());
 
@@ -100,9 +98,7 @@ fn serialize_unregistered_creator() {
 
 #[test]
 fn deserialize_registered_creator() {
-    use dash_rs::model::creator::from_str;
-
-    let creator = from_str(CREATOR_REGISTERED_DATA);
+    let creator = dash_rs::from_robtop_str::<Creator>(CREATOR_REGISTERED_DATA);
 
     assert!(creator.is_ok(), "{:?}", creator.unwrap_err());
     assert_eq!(creator.unwrap(), CREATOR_REGISTERED);
@@ -110,9 +106,7 @@ fn deserialize_registered_creator() {
 
 #[test]
 fn deserialize_unregistered_creator() {
-    use dash_rs::model::creator::from_str;
-
-    let creator = from_str(CREATOR_UNREGISTERED_DATA);
+    let creator = dash_rs::from_robtop_str::<Creator>(CREATOR_UNREGISTERED_DATA);
 
     assert!(creator.is_ok(), "{:?}", creator.unwrap_err());
     assert_eq!(creator.unwrap(), CREATOR_UNREGISTERED);
@@ -120,9 +114,8 @@ fn deserialize_unregistered_creator() {
 
 #[test]
 fn deserialize_too_many_fields() {
-    use dash_rs::model::song::from_str;
 
-    let song = from_str(CREO_DUNE_DATA_TOO_MANY_FIELDS);
+    let song = dash_rs::from_robtop_str::<NewgroundsSong>(CREO_DUNE_DATA_TOO_MANY_FIELDS);
 
     assert!(song.is_ok(), "{:?}", song.unwrap_err());
 }

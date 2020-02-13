@@ -31,10 +31,7 @@
 )]
 
 pub mod model;
-#[cfg(not(test))]
-mod serde;
-#[cfg(test)]
-pub mod serde;
+pub(crate) mod serde;
 pub mod util;
 
 pub use crate::serde::{from_robtop_str, to_robtop_data, DeError, PercentDecoded, SerError, Thunk};
