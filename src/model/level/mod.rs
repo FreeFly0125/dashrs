@@ -1,8 +1,8 @@
 use crate::util;
-    serde::{ProcessError, Thunk},
 use base64::URL_SAFE;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::fmt::{Display, Formatter};
+use crate::serde::Internal;
 
 /// Enum representing the possible level lengths known to dash-rs
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
@@ -258,22 +258,22 @@ pub enum Password {
 
 pub const LEVEL_PASSWORD_XOR_KEY: &str = "26364";
 
-impl Serialize for Password {
+impl Serialize for Internal<Password> {
     fn serialize<S>(&self, serializer: S) -> Result<<S as Serializer>::Ok, <S as Serializer>::Error>
     where
         S: Serializer,
     {
-        match self {
+        match self.0 {
             Password::FreeCopy => serializer.serialize_str("Aw=="),
             Password::NoCopy => serializer.serialize_str("0"),
             Password::PasswordCopy(pw) => {
                 // Even an u64 would fit here
                 let mut password = [0u8; 32];
                 password[0] = b'1';
-                let n = itoa::write(&mut password[1..], *pw).unwrap();
+                let n = itoa::write(&mut password[1..], pw).unwrap();
 
-        // Geometry Dash adds an initial '0' character at the beginning that we don't care about, we just
-        // remove it
+                // Geometry Dash adds an initial '0' character at the beginning that we don't care about, we just
+                // remove it
 
                 // serialize_bytes does the base64 encode by itself
                 serializer.serialize_bytes(&password[..=n])
@@ -282,14 +282,14 @@ impl Serialize for Password {
     }
 }
 
-impl<'de> Deserialize<'de> for Password {
+impl<'de> Deserialize<'de> for Internal<Password> {
     fn deserialize<D>(deserializer: D) -> Result<Self, <D as Deserializer<'de>>::Error>
     where
         D: Deserializer<'de>,
     {
         let raw_password_data = <&str>::deserialize(deserializer)?;
 
-        Ok(match raw_password_data {
+        Ok(Internal(match raw_password_data {
             "0" => Password::NoCopy,
             "Aw==" => Password::FreeCopy,
             _ => {
@@ -300,10 +300,7 @@ impl<'de> Deserialize<'de> for Password {
 
                 // This xor pass is applied after we base64 decoded the input, it's how the game tries to protect
                 // data
-        assert!(
-            password[1..].len() == self.0.as_bytes().len(),
-            "The level password size doesn't match."
-        );
+                util::cyclic_xor(&mut decoded_buffer[..password_len], LEVEL_PASSWORD_XOR_KEY);
 
                 // Geometry Dash adds an initial '1' character at the beginning that we don't care about, we just
                 // skip it
@@ -314,7 +311,7 @@ impl<'de> Deserialize<'de> for Password {
                 let password = decoded_str.parse().map_err(serde::de::Error::custom)?;
                 Password::PasswordCopy(password)
             },
-        })
+        }))
     }
 }
 

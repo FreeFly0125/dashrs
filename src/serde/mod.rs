@@ -6,6 +6,7 @@ pub use de::{error::Error as DeError, indexed::IndexedDeserializer};
 pub use ser::{error::Error as SerError, indexed::IndexedSerializer};
 use serde::{Deserialize, Serialize};
 pub use thunk::{PercentDecoded, ProcessError, Thunk};
+pub(crate) use thunk::Internal;
 
 /// Trait implemented by objects that can be (de)serialized from/to RobTop's data formats
 ///

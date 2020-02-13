@@ -145,7 +145,7 @@ impl<'a> Serializer for &'a mut IndexedSerializer {
     fn serialize_char(self, v: char) -> Result<Self::Ok, Self::Error> {
         // We don't need allocations for appending a single char
         // A buffer of size 4 is always enough to encode a char
-        let mut buffer : [u8; 4]= [0; 4];
+        let mut buffer: [u8; 4] = [0; 4];
         self.append(v.encode_utf8(&mut buffer))
     }
 

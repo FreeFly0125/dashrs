@@ -1,7 +1,7 @@
 use base64::DecodeError;
 use percent_encoding::{percent_decode_str, utf8_percent_encode, AsciiSet, CONTROLS};
-use serde::{export::Formatter, Deserialize, Serialize, Serializer};
-use std::{borrow::Cow, fmt::Display, str::Utf8Error, num::ParseIntError};
+use serde::{export::Formatter, ser::Error as _, Deserialize, Serialize, Serializer};
+use std::{borrow::Cow, fmt::Display, num::ParseIntError, str::Utf8Error};
 
 /// Enum modelling the different errors that can occur during processing of a [`Thunk`]
 ///
@@ -64,13 +64,12 @@ pub enum Thunk<'a, C: ThunkContent<'a>> {
 }
 
 impl<'a, C: ThunkContent<'a> + Serialize> Serialize for Thunk<'a, C> {
-    fn serialize<S>(&self, serializer: S) -> Result<<S as Serializer>::Ok, <S as Serializer>::Error> where
-        S: Serializer {
+    fn serialize<S>(&self, serializer: S) -> Result<<S as Serializer>::Ok, <S as Serializer>::Error>
+    where
+        S: Serializer,
+    {
         match self {
-            Thunk::Unprocessed(unprocessed) => match C::from_unprocessed(unprocessed).map_err(S::Error::custom) {
-                Cow::Borrowed(s) => serializer.serialize_str(s),
-                Cow::Owned(s) => s.serialize(serializer)
-            },
+            Thunk::Unprocessed(unprocessed) => C::from_unprocessed(unprocessed).map_err(S::Error::custom)?.serialize(serializer),
             Thunk::Processed(processed) => processed.serialize(serializer),
         }
     }
@@ -78,27 +77,26 @@ impl<'a, C: ThunkContent<'a> + Serialize> Serialize for Thunk<'a, C> {
 
 pub trait ThunkContent<'a>: Sized {
     fn from_unprocessed(unprocessed: &'a str) -> Result<Self, ProcessError>;
-    fn as_unprocessed(&self) -> Cow<'a, str>;
+    fn as_unprocessed(&self) -> Cow<str>;
 }
 
-pub(crate) struct Internal<I>(I);
+pub(crate) struct Internal<I>(pub(crate) I);
 
 impl<'a, C: ThunkContent<'a>> Serialize for Internal<Thunk<'a, C>> {
-    fn serialize<S>(&self, serializer: S) -> Result<<S as Serializer>::Ok, <S as Serializer>::Error> where
-        S: Serializer {
+    fn serialize<S>(&self, serializer: S) -> Result<<S as Serializer>::Ok, <S as Serializer>::Error>
+    where
+        S: Serializer,
+    {
         match self.0 {
             Thunk::Unprocessed(unprocessed) => serializer.serialize_str(unprocessed),
-            Thunk::Processed(ref processed) => match processed.as_unprocessed() {
-                Cow::Borrowed(s) => serializer.serialize_str(s),
-                Cow::Owned(s) => s.serialize(serializer),
-            },
+            Thunk::Processed(ref processed) =>
+                match processed.as_unprocessed() {
+                    Cow::Borrowed(s) => serializer.serialize_str(s),
+                    Cow::Owned(s) => s.serialize(serializer),
+                },
         }
     }
 }
-
-
-
-
 
 impl<'a, C: ThunkContent<'a>> Thunk<'a, C> {
     /// If this is a [`Thunk::Unprocessed`] variant, invokes the [`TryFrom`] impl and returns
@@ -124,7 +122,8 @@ impl<'a, C: ThunkContent<'a>> Thunk<'a, C> {
 }
 /// Set of characters RobTop encodes when doing percent encoding
 ///
-/// This is a subset of [`percent_encoding::NON_ALPHANUMERIC`], since that encodes too many characters
+/// This is a subset of [`percent_encoding::NON_ALPHANUMERIC`], since that encodes too many
+/// characters
 pub const ROBTOP_SET: &AsciiSet = &CONTROLS
     .add(b' ')  // TODO: investigate if this is part of the set. Song links never contain spaces
     .add(b':')
@@ -132,8 +131,9 @@ pub const ROBTOP_SET: &AsciiSet = &CONTROLS
     .add(b'?')
     .add(b'~');
 
-#[derive(Debug, Eq, PartialEq)]
-pub struct PercentDecoded<'a>(pub Cow<'a, str>);
+#[derive(Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(transparent)]
+pub struct PercentDecoded<'a>(#[serde(borrow)] pub Cow<'a, str>);
 
 impl<'a> ThunkContent<'a> for PercentDecoded<'a> {
     fn from_unprocessed(unprocessed: &'a str) -> Result<Self, ProcessError> {
@@ -143,7 +143,7 @@ impl<'a> ThunkContent<'a> for PercentDecoded<'a> {
             .map_err(ProcessError::Utf8)
     }
 
-    fn as_unprocessed(&self) -> Cow<'a, str> {
-        utf8_percent_encode(&*self.0, ROBTOP_SET).into()
+    fn as_unprocessed(&self) -> Cow<str> {
+        utf8_percent_encode(self.0.as_ref(), ROBTOP_SET).into()
     }
 }
