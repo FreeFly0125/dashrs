@@ -17,7 +17,7 @@ use std::{borrow::Cow, fmt::Display, num::ParseIntError, str::Utf8Error};
 /// just to use that for the error type is obviously impractical, however it is possible to use
 /// `Error<'static>`, which at least doesn't add more downsides. However it still leaves us with an
 /// error enum dealing with too much stuff.
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum ProcessError {
     /// Some utf8 encoding error occurred during processing
     Utf8(Utf8Error),

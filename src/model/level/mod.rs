@@ -354,10 +354,9 @@ mod tests {
 
     #[test]
     fn deserialize_password() {
-        let pw = Password::from_robtop("AwcBBQAHAA==");
-
-        assert!(pw.is_ok(), "{:?}", pw.unwrap_err());
-        assert_eq!(Password::PasswordCopy(123456), pw.unwrap());
+        assert_eq!(Password::from_robtop("AwcBBQAHAA=="), Ok(Password::PasswordCopy(123456)));
+        assert_eq!(Password::from_robtop("AwUCBgU="), Ok(Password::PasswordCopy(3101)));
+        assert_eq!(Password::from_robtop("AwYDBgQCBg=="), Ok(Password::PasswordCopy(0)));
     }
 
     #[test]
@@ -366,5 +365,16 @@ mod tests {
         let result = base64::encode_config(&encoded, URL_SAFE);
 
         assert_eq!(result, "AwcBBQAHAA==")
+    }
+
+    #[test]
+    fn serialize_password_with_padding() {
+        // TODO GAME SPECIFIC
+        // in-game code for padding is inconsistent, see above test cases
+
+        // password of 'Time Pressure' by AeonAir
+        assert_eq!(base64::encode_config(&robtop_encode_level_password(3101), URL_SAFE), "AwYDBQUCBw==");
+        // password of 'Breakthrough' by Hinds1324
+        assert_eq!(base64::encode_config(&robtop_encode_level_password(0), URL_SAFE), "AwYDBgQCBg==")
     }
 }
