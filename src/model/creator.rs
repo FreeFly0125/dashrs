@@ -3,23 +3,40 @@ use std::borrow::Cow;
 
 mod internal {
     use crate::{model::creator::Creator, serde::HasRobtopFormat};
+    use serde::{Deserialize, Serialize};
     use std::borrow::Cow;
 
+    #[derive(Debug, Deserialize, Serialize)]
+    pub struct InternalCreator<'a> {
+        pub user_id: u64,
+
+        #[serde(borrow)]
+        pub name: Cow<'a, str>,
+
+        #[serde(with = "crate::util::default_to_none")]
+        pub account_id: Option<u64>,
+    }
+
     impl<'a> HasRobtopFormat<'a> for Creator<'a> {
-        type Internal = Creator<'a>;
+        type Internal = InternalCreator<'a>;
 
         const DELIMITER: &'static str = ":";
         const MAP_LIKE: bool = false;
 
         fn as_internal(&'a self) -> Self::Internal {
-            Creator {
+            InternalCreator {
+                user_id: self.user_id,
                 name: Cow::Borrowed(self.name.as_ref()),
-                ..*self
+                account_id: self.account_id
             }
         }
 
         fn from_internal(int: Self::Internal) -> Self {
-            int
+            Creator {
+                user_id: int.user_id,
+                name: int.name,
+                account_id: int.account_id
+            }
         }
     }
 }
