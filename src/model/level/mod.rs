@@ -349,9 +349,8 @@ impl Display for Password {
 }
 #[cfg(test)]
 mod tests {
-    use crate::{model::level::Password};
-    use serde::Serialize;
-    use crate::serde::Internal;
+    use crate::model::level::{robtop_encode_level_password, Password};
+    use base64::URL_SAFE;
 
     #[test]
     fn deserialize_password() {
@@ -363,12 +362,9 @@ mod tests {
 
     #[test]
     fn serialize_password() {
-        let mut ser = crate::serde::IndexedSerializer::new(":", false);
+        let encoded = robtop_encode_level_password(123456);
+        let result = base64::encode_config(&encoded, URL_SAFE);
 
-        let result = Internal(Password::PasswordCopy(123456)).serialize(&mut ser);
-
-        assert!(result.is_ok(), "{:?}", result.unwrap_err());
-
-        assert_eq!(ser.finish(), "AwcBBQAHAA==")
+        assert_eq!(result, "AwcBBQAHAA==")
     }
 }
