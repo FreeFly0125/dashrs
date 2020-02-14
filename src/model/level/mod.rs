@@ -1,4 +1,7 @@
-use crate::{serde::Internal, util};
+use crate::{
+    serde::{Internal, ProcessError},
+    util,
+};
 use base64::URL_SAFE;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::fmt::{Display, Formatter};
@@ -257,6 +260,55 @@ pub enum Password {
 
 pub const LEVEL_PASSWORD_XOR_KEY: &str = "26364";
 
+// Move this out of the (De)Serialize impl so we can more easily test the functions
+fn robtop_encode_level_password(pw: u32) -> [u8; 7] {
+    let mut password = [b'0'; 7];
+    password[0] = b'1';
+
+    let mut itoa_buf = [0u8; 6];
+
+    let n = itoa::write(&mut itoa_buf[..], pw).unwrap();
+
+    // ensure the password is padded with zeroes as needed
+    for i in 0..n {
+        password[7 - n + i] = itoa_buf[i];
+    }
+
+    // We need to do the xor **before** we get the base64 encoded data
+    util::cyclic_xor(&mut password[..], LEVEL_PASSWORD_XOR_KEY);
+
+    password
+}
+
+impl Password {
+    fn from_robtop(raw_password_data: &str) -> Result<Self, ProcessError> {
+        Ok(match raw_password_data {
+            "0" => Password::NoCopy,
+            "Aw==" => Password::FreeCopy,
+            _ => {
+                // More than enough for storing the decoded password even if in future the format grows
+                let mut decoded_buffer = [0; 32];
+                let password_len =
+                    base64::decode_config_slice(raw_password_data, URL_SAFE, &mut decoded_buffer).map_err(ProcessError::Base64)?;
+
+                // This xor pass is applied after we base64 decoded the input, it's how the game tries to protect
+                // data
+                util::cyclic_xor(&mut decoded_buffer[..password_len], LEVEL_PASSWORD_XOR_KEY);
+
+                // Geometry Dash adds an initial '1' character at the beginning that we don't care about, we just
+                // skip it
+                // The cost of UTF8 checking here is pretty much nothing since the password is so
+                // small, no need to go unsafe
+                // FIXME: no need to go through std::str APIs
+                let decoded_str = std::str::from_utf8(&decoded_buffer[1..password_len]).expect("Password wasn't UTF-8 after a xor cycle.");
+                let password = decoded_str.parse().map_err(ProcessError::IntParse)?;
+
+                Password::PasswordCopy(password)
+            },
+        })
+    }
+}
+
 impl Serialize for Internal<Password> {
     fn serialize<S>(&self, serializer: S) -> Result<<S as Serializer>::Ok, <S as Serializer>::Error>
     where
@@ -266,16 +318,8 @@ impl Serialize for Internal<Password> {
             Password::FreeCopy => serializer.serialize_str("Aw=="),
             Password::NoCopy => serializer.serialize_str("0"),
             Password::PasswordCopy(pw) => {
-                // Even an u64 would fit here
-                let mut password = [0u8; 32];
-                password[0] = b'1';
-                let n = itoa::write(&mut password[1..], pw).unwrap();
-
-                // We need to do the xor **before** we get the base64 encoded data
-                util::cyclic_xor(&mut password[..=n], LEVEL_PASSWORD_XOR_KEY);
-
                 // serialize_bytes does the base64 encode by itself
-                serializer.serialize_bytes(&password[..=n])
+                serializer.serialize_bytes(&robtop_encode_level_password(pw))
             },
         }
     }
@@ -288,29 +332,9 @@ impl<'de> Deserialize<'de> for Internal<Password> {
     {
         let raw_password_data = <&str>::deserialize(deserializer)?;
 
-        Ok(Internal(match raw_password_data {
-            "0" => Password::NoCopy,
-            "Aw==" => Password::FreeCopy,
-            _ => {
-                // More than enough for storing the decoded password even if in future the format grows
-                let mut decoded_buffer = [0; 32];
-                let password_len =
-                    base64::decode_config_slice(raw_password_data, URL_SAFE, &mut decoded_buffer).map_err(serde::de::Error::custom)?;
-
-                // This xor pass is applied after we base64 decoded the input, it's how the game tries to protect
-                // data
-                util::cyclic_xor(&mut decoded_buffer[..password_len], LEVEL_PASSWORD_XOR_KEY);
-
-                // Geometry Dash adds an initial '1' character at the beginning that we don't care about, we just
-                // skip it
-                // The cost of UTF8 checking here is pretty much nothing since the password is so
-                // small, no need to go unsafe
-                let decoded_str = std::str::from_utf8(&decoded_buffer[1..password_len]).expect("Password wasn't UTF-8 after a xor cycle.");
-
-                let password = decoded_str.parse().map_err(serde::de::Error::custom)?;
-                Password::PasswordCopy(password)
-            },
-        }))
+        Password::from_robtop(raw_password_data)
+            .map(Internal)
+            .map_err(serde::de::Error::custom)
     }
 }
 
@@ -323,30 +347,28 @@ impl Display for Password {
         }
     }
 }
-// #[cfg(test)]
-// mod tests {
-// use crate::{IndexedDeserializer, model::level::Password, ser::indexed::IndexedSerializer};
-// use serde::{Deserialize, Serialize};
-//
-// #[test]
-// fn deserialize_password() {
-// let mut deser = IndexedDeserializer::new("AwcBBQAHAA==", ":", false); // initialization doesnt
-// matter
-//
-// let pw = Password::deserialize(&mut deser);
-//
-// assert!(pw.is_ok(), "{:?}", pw.unwrap_err());
-// assert_eq!(Password::PasswordCopy(123456), pw.unwrap());
-// }
-//
-// #[test]
-// fn serialize_password() {
-// let mut ser = IndexedSerializer::new(":", false);
-//
-// let result = Password::PasswordCopy(123456).serialize(&mut ser);
-//
-// assert!(result.is_ok(), "{:?}", result.unwrap_err());
-//
-// assert_eq!("AwcBBQAHAA==", ser.finish())
-// }
-// }
+#[cfg(test)]
+mod tests {
+    use crate::{model::level::Password};
+    use serde::Serialize;
+    use crate::serde::Internal;
+
+    #[test]
+    fn deserialize_password() {
+        let pw = Password::from_robtop("AwcBBQAHAA==");
+
+        assert!(pw.is_ok(), "{:?}", pw.unwrap_err());
+        assert_eq!(Password::PasswordCopy(123456), pw.unwrap());
+    }
+
+    #[test]
+    fn serialize_password() {
+        let mut ser = crate::serde::IndexedSerializer::new(":", false);
+
+        let result = Internal(Password::PasswordCopy(123456)).serialize(&mut ser);
+
+        assert!(result.is_ok(), "{:?}", result.unwrap_err());
+
+        assert_eq!(ser.finish(), "AwcBBQAHAA==")
+    }
+}
