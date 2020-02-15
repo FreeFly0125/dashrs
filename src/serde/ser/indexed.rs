@@ -5,12 +5,13 @@ use serde::{
     ser::{Error as _, Impossible, SerializeStruct},
     Serialize, Serializer,
 };
+use std::io::Write;
 use std::fmt::Display;
 
 #[allow(missing_debug_implementations)]
-pub struct IndexedSerializer {
+pub struct IndexedSerializer<W> {
     delimiter: &'static [u8],
-    buffer: Vec<u8>,
+    buffer: W,
     map_like: bool,
 
     /// Value indicating whether this serializer has already serialized something. This is used to
@@ -23,38 +24,24 @@ pub struct IndexedSerializer {
     is_start: bool,
 }
 
-impl IndexedSerializer {
-    pub fn new(delimiter: &'static str, map_like: bool) -> Self {
+impl<W> IndexedSerializer<W> 
+where
+    W : Write,
+{
+    pub fn new(delimiter: &'static str, writer: W, map_like: bool) -> Self {
         IndexedSerializer {
             delimiter: delimiter.as_bytes(),
-            buffer: Vec::new(),
+            buffer: writer,
             map_like,
             is_start: true,
         }
-    }
-
-    pub fn with_capacity(delimiter: &'static str, map_like: bool, capacity: usize) -> Self {
-        IndexedSerializer {
-            delimiter: delimiter.as_bytes(),
-            buffer: Vec::with_capacity(capacity),
-            map_like,
-            is_start: true,
-        }
-    }
-
-    pub fn finish(self) -> String {
-        debug_assert!(std::str::from_utf8(&self.buffer[..]).is_ok());
-
-        // We only ever put valid utf8 into the buffer
-
-        unsafe { String::from_utf8_unchecked(self.buffer) }
     }
 
     fn append_integer<I: Integer>(&mut self, int: I) -> Result<(), Error> {
         if self.is_start {
             self.is_start = false;
         } else {
-            self.buffer.extend_from_slice(self.delimiter);
+            self.buffer.write_all(self.delimiter)?;
         }
 
         itoa::write(&mut self.buffer, int).map_err(Error::custom)?;
@@ -66,7 +53,7 @@ impl IndexedSerializer {
         if self.is_start {
             self.is_start = false;
         } else {
-            self.buffer.extend_from_slice(self.delimiter);
+            self.buffer.write_all(self.delimiter)?;
         }
 
         dtoa::write(&mut self.buffer, float).map_err(Error::custom)?;
@@ -78,16 +65,15 @@ impl IndexedSerializer {
         if self.is_start {
             self.is_start = false;
         } else {
-            self.buffer.extend_from_slice(self.delimiter);
+            self.buffer.write_all(self.delimiter)?;
         }
 
-        self.buffer.extend_from_slice(s.as_bytes());
-
+        self.buffer.write_all(s.as_bytes())?;
         Ok(())
     }
 }
 
-impl<'a> Serializer for &'a mut IndexedSerializer {
+impl<'a, W : Write> Serializer for &'a mut IndexedSerializer<W> {
     type Error = Error;
     type Ok = ();
     type SerializeMap = Impossible<(), Error>;
@@ -156,19 +142,15 @@ impl<'a> Serializer for &'a mut IndexedSerializer {
     // Here we serialize bytes by base64 encoding them, so it's always valid in Geometry Dash's format
     fn serialize_bytes(self, v: &[u8]) -> Result<Self::Ok, Self::Error> {
         use base64::URL_SAFE;
-        // We need to use resize instead of reserve because the base64 method for encoding takes initialized
-        // slices
-        let idx = self.buffer.len();
-        self.buffer.resize(idx + v.len() * 4 / 3 + 4, 0);
-        // This won't panic because we just allocated the right amount of data to store this
-        let written = base64::encode_config_slice(v, URL_SAFE, &mut self.buffer[idx..]);
-        // Shorten our vec down to just what was written
-        self.buffer.resize(idx + written, 0);
+        use base64::write::EncoderWriter;
+        let mut enc = EncoderWriter::new(&mut self.buffer, URL_SAFE);
+        enc.write_all(v)?;
+        enc.finish()?;
         Ok(())
     }
 
     fn serialize_none(self) -> Result<Self::Ok, Self::Error> {
-        self.buffer.extend_from_slice(self.delimiter);
+        self.buffer.write_all(self.delimiter)?;
         Ok(())
     }
 
@@ -248,7 +230,7 @@ impl<'a> Serializer for &'a mut IndexedSerializer {
     }
 }
 
-impl<'a> SerializeStruct for &'a mut IndexedSerializer {
+impl<'a, W : Write> SerializeStruct for &'a mut IndexedSerializer<W> {
     type Error = Error;
     type Ok = ();
 

@@ -1,5 +1,5 @@
-mod de;
-mod ser;
+pub(crate) mod de;
+pub(crate) mod ser;
 mod thunk;
 
 pub use de::{error::Error as DeError, indexed::IndexedDeserializer};
@@ -44,9 +44,10 @@ pub fn from_robtop_str<'a, T: HasRobtopFormat<'a>>(input: &'a str) -> Result<T, 
 }
 
 pub fn to_robtop_data<'a, T: HasRobtopFormat<'a>>(t: &'a T) -> Result<Vec<u8>, SerError> {
-    let mut serializer = IndexedSerializer::new(T::DELIMITER, T::MAP_LIKE);
+    let mut buf : Vec<u8> = Vec::with_capacity(64);
+    let mut serializer = IndexedSerializer::new(T::DELIMITER, &mut buf, T::MAP_LIKE);
 
     t.as_internal().serialize(&mut serializer)?;
 
-    Ok(serializer.finish().into_bytes()) // FIXME: change the .finish() method
+    Ok(buf) 
 }

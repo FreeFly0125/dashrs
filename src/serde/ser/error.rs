@@ -1,5 +1,6 @@
 use serde::export::Formatter;
 use std::fmt::Display;
+use std::io;
 
 /// Errors that can occur during serialization
 #[derive(Debug)]
@@ -9,6 +10,8 @@ pub enum Error {
 
     /// A given [`Serializer`] function was not supported
     Unsupported(&'static str),
+
+    Io(std::io::Error),
 }
 
 impl Display for Error {
@@ -16,7 +19,14 @@ impl Display for Error {
         match self {
             Error::Custom(msg) => write!(f, "{}", msg),
             Error::Unsupported(what) => write!(f, "unsupported serializer function: {}", what),
+            Error::Io(err) => write!(f, "io error: {}", err),
         }
+    }
+}
+
+impl From<io::Error> for Error {
+    fn from(error : io::Error) -> Self{
+        Error::Io(error)
     }
 }
 
