@@ -1,18 +1,85 @@
-use crate::de::{
-    error::Error,
-    indexed::IndexedDeserializer,
-    thunk::{PercentDecoded, ProcessError, Thunk},
-};
+use crate::serde::{PercentDecoded, ProcessError, Thunk};
 use serde::{Deserialize, Serialize};
 use std::{
     borrow::Cow,
     fmt::{Display, Formatter},
 };
 
-pub fn from_str(input: &str) -> Result<NewgroundsSong, Error> {
-    let mut deserializer = IndexedDeserializer::new(input, "~|~", true);
+mod internal {
+    use crate::{
+        model::song::NewgroundsSong,
+        serde::{HasRobtopFormat, Internal, PercentDecoded, Thunk},
+    };
+    use serde::{Deserialize, Serialize};
+    use std::borrow::Cow;
 
-    NewgroundsSong::deserialize(&mut deserializer)
+    #[derive(Debug, Serialize, Deserialize)]
+    pub struct InternalNewgroundsSong<'a> {
+        #[serde(rename = "1")]
+        pub song_id: u64,
+
+        #[serde(rename = "2", borrow)]
+        pub name: Cow<'a, str>,
+
+        #[serde(rename = "3")]
+        pub index_3: u64,
+
+        #[serde(rename = "4")]
+        pub artist: Cow<'a, str>,
+
+        #[serde(rename = "5")]
+        pub filesize: f64,
+
+        #[serde(rename = "6")]
+        pub index_6: Option<Cow<'a, str>>,
+
+        #[serde(rename = "7")]
+        pub index_7: Option<Cow<'a, str>>,
+
+        #[serde(rename = "8")]
+        pub index_8: Cow<'a, str>,
+
+        #[serde(rename = "10")]
+        pub link: Internal<Thunk<'a, PercentDecoded<'a>>>,
+    }
+
+    impl<'a> HasRobtopFormat<'a> for NewgroundsSong<'a> {
+        type Internal = InternalNewgroundsSong<'a>;
+
+        const DELIMITER: &'static str = "~|~";
+        const MAP_LIKE: bool = true;
+
+        fn as_internal(&'a self) -> Self::Internal {
+            InternalNewgroundsSong {
+                song_id: self.song_id,
+                name: Cow::Borrowed(self.name.as_ref()),
+                index_3: self.index_3,
+                artist: Cow::Borrowed(self.artist.as_ref()),
+                filesize: self.filesize,
+                index_6: self.index_6.as_ref().map(|moo| Cow::Borrowed(moo.as_ref())),
+                index_7: self.index_7.as_ref().map(|moo| Cow::Borrowed(moo.as_ref())),
+                index_8: Cow::Borrowed(self.index_8.as_ref()),
+                link: match self.link {
+                    Thunk::Unprocessed(s) => Internal(Thunk::Unprocessed(s)),
+                    Thunk::Processed(ref decoded) => Internal(Thunk::Processed(PercentDecoded(Cow::Borrowed(decoded.0.as_ref())))),
+                },
+            }
+        }
+
+        fn from_internal(int: Self::Internal) -> Self {
+            NewgroundsSong {
+                song_id: int.song_id,
+                name: int.name,
+                index_3: int.index_3,
+                artist: int.artist,
+                filesize: int.filesize,
+                index_6: int.index_6,
+                index_7: int.index_7,
+                index_8: int.index_8,
+                link: int.link.0,
+            }
+        }
+    }
 }
 
 /// Struct modelling a [`NewgroundsSong`]
@@ -29,55 +96,47 @@ pub struct NewgroundsSong<'a> {
     ///
     /// ## GD Internals
     /// This value is provided at index `1`
-    #[serde(rename = "1")]
     pub song_id: u64,
 
     /// The name of this [`NewgroundsSong`]
     ///
     /// ## GD Internals
     /// This value is provided at index `2`
-    #[serde(rename = "2", borrow)]
+    #[serde(borrow)]
     pub name: Cow<'a, str>,
 
     /// ## GD Internals
     /// This value is provided at index `3`
-    #[serde(rename = "3")]
     pub index_3: u64,
 
     /// The artist of this [`NewgroundsSong`]
     ///
     /// ## GD Internals
     /// This value is provided at index `4`
-    #[serde(rename = "4")]
     pub artist: Cow<'a, str>,
 
     /// The filesize of this [`NewgroundsSong`], in megabytes
     ///
     /// ## GD Internals
     /// This value is provided at index `5`
-    #[serde(rename = "5")]
     pub filesize: f64,
 
     /// ## GD Internals
     /// This value is provided at index `6`
-    #[serde(rename = "6")]
     pub index_6: Option<Cow<'a, str>>,
 
     /// ## GD Internals
     /// This value is provided at index `7`
-    #[serde(rename = "7")]
     pub index_7: Option<Cow<'a, str>>,
 
     /// ## GD Internals
     /// This value is provided at index `8>`
-    #[serde(rename = "8")]
     pub index_8: Cow<'a, str>,
 
     /// The direct `audio.ngfiles.com` download link for this [`NewgroundsSong`]
     ///
     /// ## GD Internals
     /// This value is provided at index `10`, and is percent encoded.
-    #[serde(rename = "10")]
     pub link: Thunk<'a, PercentDecoded<'a>>,
 }
 
