@@ -15,3 +15,32 @@ where
     // Also changed into using ^= for simplicity
     encoded.iter_mut().zip(key.as_ref().iter().cycle()).for_each(|(d, k)| *d ^= k);
 }
+
+pub(crate) mod default_to_none {
+    use serde::{Deserialize, Deserializer, Serialize, Serializer};
+
+    pub fn serialize<S, T>(to_serialize: &Option<T>, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+        T: Default + Serialize,
+    {
+        match to_serialize {
+            None => T::default().serialize(serializer),
+            Some(ref t) => t.serialize(serializer),
+        }
+    }
+
+    pub fn deserialize<'de, D, T>(deserializer: D) -> Result<Option<T>, D::Error>
+    where
+        D: Deserializer<'de>,
+        T: Default + Deserialize<'de> + PartialEq,
+    {
+        let deserialized = T::deserialize(deserializer)?;
+
+        if deserialized == T::default() {
+            Ok(None)
+        } else {
+            Ok(Some(deserialized))
+        }
+    }
+}
