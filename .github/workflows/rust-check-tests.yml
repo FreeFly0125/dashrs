@@ -1,0 +1,19 @@
+name: Validate PRs
+
+# Checks if code inside pull requests against 'master' compiles and passes all tests
+
+on: 
+  pull_request:
+    branches: master
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Check
+      run: cargo check --verbose
+    - name: Run tests
+      run: cargo test --verbose
