@@ -61,7 +61,7 @@ const CREATOR_UNREGISTERED: Creator = Creator {
 
 #[test]
 fn serialize_song() {
-    let mut buf : Vec<u8> = Vec::new();
+    let mut buf: Vec<u8> = Vec::new();
     let result = dash_rs::write_robtop_data(&CREO_DUNE, &mut buf);
 
     assert!(result.is_ok());
@@ -82,7 +82,7 @@ fn deserialize_song() {
 
 #[test]
 fn serialize_registered_creator() {
-    let mut buf : Vec<u8> = Vec::new();
+    let mut buf: Vec<u8> = Vec::new();
     let result = dash_rs::write_robtop_data(&CREATOR_REGISTERED, &mut buf);
 
     assert!(result.is_ok());
@@ -91,7 +91,7 @@ fn serialize_registered_creator() {
 
 #[test]
 fn serialize_unregistered_creator() {
-    let mut buf : Vec<u8> = Vec::new();
+    let mut buf: Vec<u8> = Vec::new();
     let result = dash_rs::write_robtop_data(&CREATOR_UNREGISTERED, &mut buf);
 
     assert!(result.is_ok());

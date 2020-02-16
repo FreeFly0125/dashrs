@@ -5,8 +5,7 @@ use serde::{
     ser::{Error as _, Impossible, SerializeStruct},
     Serialize, Serializer,
 };
-use std::io::Write;
-use std::fmt::Display;
+use std::{fmt::Display, io::Write};
 
 #[allow(missing_debug_implementations)]
 pub struct IndexedSerializer<W> {
@@ -24,14 +23,14 @@ pub struct IndexedSerializer<W> {
     is_start: bool,
 }
 
-impl<W> IndexedSerializer<W> 
+impl<W> IndexedSerializer<W>
 where
-    W : Write,
+    W: Write,
 {
     pub fn new(delimiter: &'static str, writer: W, map_like: bool) -> Self {
         IndexedSerializer {
             delimiter: delimiter.as_bytes(),
-            writer: writer,
+            writer,
             map_like,
             is_start: true,
         }
@@ -73,7 +72,7 @@ where
     }
 }
 
-impl<'a, W : Write> Serializer for &'a mut IndexedSerializer<W> {
+impl<'a, W: Write> Serializer for &'a mut IndexedSerializer<W> {
     type Error = Error;
     type Ok = ();
     type SerializeMap = Impossible<(), Error>;
@@ -141,8 +140,7 @@ impl<'a, W : Write> Serializer for &'a mut IndexedSerializer<W> {
 
     // Here we serialize bytes by base64 encoding them, so it's always valid in Geometry Dash's format
     fn serialize_bytes(self, v: &[u8]) -> Result<Self::Ok, Self::Error> {
-        use base64::URL_SAFE;
-        use base64::write::EncoderWriter;
+        use base64::{write::EncoderWriter, URL_SAFE};
         let mut enc = EncoderWriter::new(&mut self.writer, URL_SAFE);
         enc.write_all(v)?;
         enc.finish()?;
@@ -230,7 +228,7 @@ impl<'a, W : Write> Serializer for &'a mut IndexedSerializer<W> {
     }
 }
 
-impl<'a, W : Write> SerializeStruct for &'a mut IndexedSerializer<W> {
+impl<'a, W: Write> SerializeStruct for &'a mut IndexedSerializer<W> {
     type Error = Error;
     type Ok = ();
 

@@ -1,6 +1,5 @@
 use serde::export::Formatter;
-use std::fmt::Display;
-use std::io;
+use std::{fmt::Display, io};
 
 /// Errors that can occur during serialization
 #[derive(Debug)]
@@ -28,13 +27,13 @@ impl Display for Error {
 }
 
 impl From<io::Error> for Error {
-    fn from(error : io::Error) -> Self{
+    fn from(error: io::Error) -> Self {
         Error::Io(error)
     }
 }
 
 impl From<std::string::FromUtf8Error> for Error {
-    fn from(error : std::string::FromUtf8Error) -> Self{
+    fn from(error: std::string::FromUtf8Error) -> Self {
         Error::Utf8(error)
     }
 }

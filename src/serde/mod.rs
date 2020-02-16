@@ -45,17 +45,17 @@ pub fn from_robtop_str<'a, T: HasRobtopFormat<'a>>(input: &'a str) -> Result<T, 
     Ok(T::from_internal(internal))
 }
 
-pub fn write_robtop_data<'a, T: HasRobtopFormat<'a>, W : Write>(t: &'a T, mut writer : W) -> Result<(), SerError> {
+pub fn write_robtop_data<'a, T: HasRobtopFormat<'a>, W: Write>(t: &'a T, mut writer: W) -> Result<(), SerError> {
     let mut serializer = IndexedSerializer::new(T::DELIMITER, &mut writer, T::MAP_LIKE);
 
     t.as_internal().serialize(&mut serializer)?;
 
-    Ok(()) 
+    Ok(())
 }
 
-pub fn to_robtop_string<'a, T: HasRobtopFormat<'a>>(t : &'a T) -> Result<String, SerError> {
-    let mut buf : Vec<u8> = Vec::with_capacity(64);
-    
+pub fn to_robtop_string<'a, T: HasRobtopFormat<'a>>(t: &'a T) -> Result<String, SerError> {
+    let mut buf: Vec<u8> = Vec::with_capacity(64);
+
     let mut serializer = IndexedSerializer::new(T::DELIMITER, &mut buf, T::MAP_LIKE);
     t.as_internal().serialize(&mut serializer)?;
     Ok(String::from_utf8(buf)?)

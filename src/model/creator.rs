@@ -1,7 +1,6 @@
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 
-
 mod internal {
     use crate::{model::creator::Creator, serde::HasRobtopFormat};
     use serde::{Deserialize, Serialize};
