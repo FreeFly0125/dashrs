@@ -5,59 +5,46 @@ use serde::{
     ser::{Error as _, Impossible, SerializeStruct},
     Serialize, Serializer,
 };
+use std::io::Write;
 use std::fmt::Display;
 
 #[allow(missing_debug_implementations)]
-pub struct IndexedSerializer {
+pub struct IndexedSerializer<W> {
     delimiter: &'static [u8],
-    buffer: Vec<u8>,
+    writer: W,
     map_like: bool,
 
     /// Value indicating whether this serializer has already serialized something. This is used to
     /// check if we need to prepend the delimiter to the next field.
     ///
-    /// Note that this field cannot simply be replaced in favor of a `buffer.len() == 0` check. In
+    /// Note that this field cannot simply be replaced in favor of a `writer.len() == 0` check. In
     /// case of list-like serialization the first field could be `None`, which is serialized to the
-    /// empty string. In that case, a delimiter needs to be appended, but since the buffer would
+    /// empty string. In that case, a delimiter needs to be appended, but since the writer would
     /// still be empty, no delimiter would be added.
     is_start: bool,
 }
 
-impl IndexedSerializer {
-    pub fn new(delimiter: &'static str, map_like: bool) -> Self {
+impl<W> IndexedSerializer<W> 
+where
+    W : Write,
+{
+    pub fn new(delimiter: &'static str, writer: W, map_like: bool) -> Self {
         IndexedSerializer {
             delimiter: delimiter.as_bytes(),
-            buffer: Vec::new(),
+            writer: writer,
             map_like,
             is_start: true,
         }
-    }
-
-    pub fn with_capacity(delimiter: &'static str, map_like: bool, capacity: usize) -> Self {
-        IndexedSerializer {
-            delimiter: delimiter.as_bytes(),
-            buffer: Vec::with_capacity(capacity),
-            map_like,
-            is_start: true,
-        }
-    }
-
-    pub fn finish(self) -> String {
-        debug_assert!(std::str::from_utf8(&self.buffer[..]).is_ok());
-
-        // We only ever put valid utf8 into the buffer
-
-        unsafe { String::from_utf8_unchecked(self.buffer) }
     }
 
     fn append_integer<I: Integer>(&mut self, int: I) -> Result<(), Error> {
         if self.is_start {
             self.is_start = false;
         } else {
-            self.buffer.extend_from_slice(self.delimiter);
+            self.writer.write_all(self.delimiter)?;
         }
 
-        itoa::write(&mut self.buffer, int).map_err(Error::custom)?;
+        itoa::write(&mut self.writer, int).map_err(Error::custom)?;
 
         Ok(())
     }
@@ -66,10 +53,10 @@ impl IndexedSerializer {
         if self.is_start {
             self.is_start = false;
         } else {
-            self.buffer.extend_from_slice(self.delimiter);
+            self.writer.write_all(self.delimiter)?;
         }
 
-        dtoa::write(&mut self.buffer, float).map_err(Error::custom)?;
+        dtoa::write(&mut self.writer, float).map_err(Error::custom)?;
 
         Ok(())
     }
@@ -78,16 +65,15 @@ impl IndexedSerializer {
         if self.is_start {
             self.is_start = false;
         } else {
-            self.buffer.extend_from_slice(self.delimiter);
+            self.writer.write_all(self.delimiter)?;
         }
 
-        self.buffer.extend_from_slice(s.as_bytes());
-
+        self.writer.write_all(s.as_bytes())?;
         Ok(())
     }
 }
 
-impl<'a> Serializer for &'a mut IndexedSerializer {
+impl<'a, W : Write> Serializer for &'a mut IndexedSerializer<W> {
     type Error = Error;
     type Ok = ();
     type SerializeMap = Impossible<(), Error>;
@@ -145,8 +131,8 @@ impl<'a> Serializer for &'a mut IndexedSerializer {
     fn serialize_char(self, v: char) -> Result<Self::Ok, Self::Error> {
         // We don't need allocations for appending a single char
         // A buffer of size 4 is always enough to encode a char
-        let mut buffer: [u8; 4] = [0; 4];
-        self.append(v.encode_utf8(&mut buffer))
+        let mut char_buffer: [u8; 4] = [0; 4];
+        self.append(v.encode_utf8(&mut char_buffer))
     }
 
     fn serialize_str(self, v: &str) -> Result<Self::Ok, Self::Error> {
@@ -156,19 +142,15 @@ impl<'a> Serializer for &'a mut IndexedSerializer {
     // Here we serialize bytes by base64 encoding them, so it's always valid in Geometry Dash's format
     fn serialize_bytes(self, v: &[u8]) -> Result<Self::Ok, Self::Error> {
         use base64::URL_SAFE;
-        // We need to use resize instead of reserve because the base64 method for encoding takes initialized
-        // slices
-        let idx = self.buffer.len();
-        self.buffer.resize(idx + v.len() * 4 / 3 + 4, 0);
-        // This won't panic because we just allocated the right amount of data to store this
-        let written = base64::encode_config_slice(v, URL_SAFE, &mut self.buffer[idx..]);
-        // Shorten our vec down to just what was written
-        self.buffer.resize(idx + written, 0);
+        use base64::write::EncoderWriter;
+        let mut enc = EncoderWriter::new(&mut self.writer, URL_SAFE);
+        enc.write_all(v)?;
+        enc.finish()?;
         Ok(())
     }
 
     fn serialize_none(self) -> Result<Self::Ok, Self::Error> {
-        self.buffer.extend_from_slice(self.delimiter);
+        self.writer.write_all(self.delimiter)?;
         Ok(())
     }
 
@@ -248,7 +230,7 @@ impl<'a> Serializer for &'a mut IndexedSerializer {
     }
 }
 
-impl<'a> SerializeStruct for &'a mut IndexedSerializer {
+impl<'a, W : Write> SerializeStruct for &'a mut IndexedSerializer<W> {
     type Error = Error;
     type Ok = ();
 

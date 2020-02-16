@@ -8,6 +8,8 @@ use serde::{Deserialize, Serialize};
 pub(crate) use thunk::Internal;
 pub use thunk::{PercentDecoded, ProcessError, Thunk};
 
+use std::io::Write;
+
 /// Trait implemented by objects that can be (de)serialized from/to RobTop's data formats
 ///
 /// Structs implementing this trait can be used with the [`from_robtop_str`]/[`to_robtop_data`]
@@ -43,10 +45,18 @@ pub fn from_robtop_str<'a, T: HasRobtopFormat<'a>>(input: &'a str) -> Result<T, 
     Ok(T::from_internal(internal))
 }
 
-pub fn to_robtop_data<'a, T: HasRobtopFormat<'a>>(t: &'a T) -> Result<Vec<u8>, SerError> {
-    let mut serializer = IndexedSerializer::new(T::DELIMITER, T::MAP_LIKE);
+pub fn write_robtop_data<'a, T: HasRobtopFormat<'a>, W : Write>(t: &'a T, mut writer : W) -> Result<(), SerError> {
+    let mut serializer = IndexedSerializer::new(T::DELIMITER, &mut writer, T::MAP_LIKE);
 
     t.as_internal().serialize(&mut serializer)?;
 
-    Ok(serializer.finish().into_bytes()) // FIXME: change the .finish() method
+    Ok(()) 
+}
+
+pub fn to_robtop_string<'a, T: HasRobtopFormat<'a>>(t : &'a T) -> Result<String, SerError> {
+    let mut buf : Vec<u8> = Vec::with_capacity(64);
+    
+    let mut serializer = IndexedSerializer::new(T::DELIMITER, &mut buf, T::MAP_LIKE);
+    t.as_internal().serialize(&mut serializer)?;
+    Ok(String::from_utf8(buf)?)
 }

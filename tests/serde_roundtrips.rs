@@ -4,7 +4,7 @@ use dash_rs::{
 };
 use std::borrow::Cow;
 
-const DARK_REALM_DATA: &str =
+const _DARK_REALM_DATA: &str =
     "1:11774780:2:Dark \
      Realm:5:2:6:2073761:8:10:9:30:10:90786:12:0:13:20:14:10974:17:1:43:0:25::18:10:19:11994:42:0:45:0:3:\
      TXkgYmVzdCBsZXZlbCB5ZXQuIFZpZGVvIG9uIG15IFlvdVR1YmUuIEhhdmUgZnVuIGluIHRoaXMgZmFzdC1wYWNlZCBERU1PTiA-OikgdjIgRml4ZWQgc29tZSB0aGluZ3M=:\
@@ -43,7 +43,7 @@ const CREO_DUNE: NewgroundsSong<'static> = NewgroundsSong {
 };
 
 const CREATOR_REGISTERED_DATA: &str = "4170784:Serponge:119741";
-const CREATOR_REGISTERED_DATA_TOO_MANY_FIELDS: &str = "4170784:Serponge:119741:34:fda:32:asd:3";
+const _CREATOR_REGISTERED_DATA_TOO_MANY_FIELDS: &str = "4170784:Serponge:119741:34:fda:32:asd:3";
 
 const CREATOR_REGISTERED: Creator = Creator {
     user_id: 4170784,
@@ -61,10 +61,11 @@ const CREATOR_UNREGISTERED: Creator = Creator {
 
 #[test]
 fn serialize_song() {
-    let result = dash_rs::to_robtop_data(&CREO_DUNE);
+    let mut buf : Vec<u8> = Vec::new();
+    let result = dash_rs::write_robtop_data(&CREO_DUNE, &mut buf);
 
     assert!(result.is_ok());
-    assert_eq!(result.unwrap(), CREO_DUNE_DATA_ORDERED.as_bytes());
+    assert_eq!(buf, CREO_DUNE_DATA_ORDERED.as_bytes());
 }
 
 #[test]
@@ -81,18 +82,20 @@ fn deserialize_song() {
 
 #[test]
 fn serialize_registered_creator() {
-    let result = dash_rs::to_robtop_data(&CREATOR_REGISTERED);
+    let mut buf : Vec<u8> = Vec::new();
+    let result = dash_rs::write_robtop_data(&CREATOR_REGISTERED, &mut buf);
 
     assert!(result.is_ok());
-    assert_eq!(result.unwrap(), CREATOR_REGISTERED_DATA.as_bytes());
+    assert_eq!(buf, CREATOR_REGISTERED_DATA.as_bytes());
 }
 
 #[test]
 fn serialize_unregistered_creator() {
-    let result = dash_rs::to_robtop_data(&CREATOR_UNREGISTERED);
+    let mut buf : Vec<u8> = Vec::new();
+    let result = dash_rs::write_robtop_data(&CREATOR_UNREGISTERED, &mut buf);
 
     assert!(result.is_ok());
-    assert_eq!(result.unwrap(), CREATOR_UNREGISTERED_DATA.as_bytes());
+    assert_eq!(buf, CREATOR_UNREGISTERED_DATA.as_bytes());
 }
 
 #[test]
