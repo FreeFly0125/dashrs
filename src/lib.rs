@@ -1,3 +1,4 @@
+#![forbid(unsafe_code)]
 #![deny(
     const_err,
     illegal_floating_point_literal_pattern,
