@@ -11,15 +11,15 @@ use std::fmt::Display;
 #[allow(missing_debug_implementations)]
 pub struct IndexedSerializer<W> {
     delimiter: &'static [u8],
-    buffer: W,
+    writer: W,
     map_like: bool,
 
     /// Value indicating whether this serializer has already serialized something. This is used to
     /// check if we need to prepend the delimiter to the next field.
     ///
-    /// Note that this field cannot simply be replaced in favor of a `buffer.len() == 0` check. In
+    /// Note that this field cannot simply be replaced in favor of a `writer.len() == 0` check. In
     /// case of list-like serialization the first field could be `None`, which is serialized to the
-    /// empty string. In that case, a delimiter needs to be appended, but since the buffer would
+    /// empty string. In that case, a delimiter needs to be appended, but since the writer would
     /// still be empty, no delimiter would be added.
     is_start: bool,
 }
@@ -31,7 +31,7 @@ where
     pub fn new(delimiter: &'static str, writer: W, map_like: bool) -> Self {
         IndexedSerializer {
             delimiter: delimiter.as_bytes(),
-            buffer: writer,
+            writer: writer,
             map_like,
             is_start: true,
         }
@@ -41,10 +41,10 @@ where
         if self.is_start {
             self.is_start = false;
         } else {
-            self.buffer.write_all(self.delimiter)?;
+            self.writer.write_all(self.delimiter)?;
         }
 
-        itoa::write(&mut self.buffer, int).map_err(Error::custom)?;
+        itoa::write(&mut self.writer, int).map_err(Error::custom)?;
 
         Ok(())
     }
@@ -53,10 +53,10 @@ where
         if self.is_start {
             self.is_start = false;
         } else {
-            self.buffer.write_all(self.delimiter)?;
+            self.writer.write_all(self.delimiter)?;
         }
 
-        dtoa::write(&mut self.buffer, float).map_err(Error::custom)?;
+        dtoa::write(&mut self.writer, float).map_err(Error::custom)?;
 
         Ok(())
     }
@@ -65,10 +65,10 @@ where
         if self.is_start {
             self.is_start = false;
         } else {
-            self.buffer.write_all(self.delimiter)?;
+            self.writer.write_all(self.delimiter)?;
         }
 
-        self.buffer.write_all(s.as_bytes())?;
+        self.writer.write_all(s.as_bytes())?;
         Ok(())
     }
 }
@@ -131,8 +131,8 @@ impl<'a, W : Write> Serializer for &'a mut IndexedSerializer<W> {
     fn serialize_char(self, v: char) -> Result<Self::Ok, Self::Error> {
         // We don't need allocations for appending a single char
         // A buffer of size 4 is always enough to encode a char
-        let mut buffer: [u8; 4] = [0; 4];
-        self.append(v.encode_utf8(&mut buffer))
+        let mut char_buffer: [u8; 4] = [0; 4];
+        self.append(v.encode_utf8(&mut char_buffer))
     }
 
     fn serialize_str(self, v: &str) -> Result<Self::Ok, Self::Error> {
@@ -143,14 +143,14 @@ impl<'a, W : Write> Serializer for &'a mut IndexedSerializer<W> {
     fn serialize_bytes(self, v: &[u8]) -> Result<Self::Ok, Self::Error> {
         use base64::URL_SAFE;
         use base64::write::EncoderWriter;
-        let mut enc = EncoderWriter::new(&mut self.buffer, URL_SAFE);
+        let mut enc = EncoderWriter::new(&mut self.writer, URL_SAFE);
         enc.write_all(v)?;
         enc.finish()?;
         Ok(())
     }
 
     fn serialize_none(self) -> Result<Self::Ok, Self::Error> {
-        self.buffer.write_all(self.delimiter)?;
+        self.writer.write_all(self.delimiter)?;
         Ok(())
     }
 

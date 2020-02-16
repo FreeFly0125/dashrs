@@ -1,13 +1,6 @@
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
-use crate::serde::de::indexed::IndexedDeserializer;
-use crate::serde::de::error::Error;
 
-pub fn from_str(input: &str) -> Result<Creator, Error> {
-    let mut deserializer = IndexedDeserializer::new(input, ":", false);
-
-    Creator::deserialize(&mut deserializer)
-}
 
 mod internal {
     use crate::{model::creator::Creator, serde::HasRobtopFormat};

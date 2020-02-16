@@ -11,7 +11,9 @@ pub enum Error {
     /// A given [`Serializer`] function was not supported
     Unsupported(&'static str),
 
-    Io(std::io::Error),
+    Io(io::Error),
+
+    Utf8(std::string::FromUtf8Error),
 }
 
 impl Display for Error {
@@ -20,6 +22,7 @@ impl Display for Error {
             Error::Custom(msg) => write!(f, "{}", msg),
             Error::Unsupported(what) => write!(f, "unsupported serializer function: {}", what),
             Error::Io(err) => write!(f, "io error: {}", err),
+            Error::Utf8(err) => write!(f, "failed utf8 conversion: {}", err),
         }
     }
 }
@@ -27,6 +30,12 @@ impl Display for Error {
 impl From<io::Error> for Error {
     fn from(error : io::Error) -> Self{
         Error::Io(error)
+    }
+}
+
+impl From<std::string::FromUtf8Error> for Error {
+    fn from(error : std::string::FromUtf8Error) -> Self{
+        Error::Utf8(error)
     }
 }
 
