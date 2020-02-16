@@ -1,13 +1,20 @@
 name: Rustfmt
 
-# Runs `cargo fmt` whenever code is pushed. 
+# Runs `cargo fmt` whenever code is pushed or pr'd into master. 
 
-on: [push]
+on: 
+  push:
+    branches: 
+      - master
+  pull_request:
+    branches:
+      - master
 
 jobs:
   format:
     name: Rustfmt
     runs-on: ubuntu-latest
+    
     steps:
       - uses: actions/checkout@v2
       - uses: actions-rs/toolchain@v1
@@ -20,3 +27,12 @@ jobs:
         with:
           command: fmt
           args: --all
+      - name: Commit files
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git commit -m "CI: Automatic Rustfmt" -a
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
