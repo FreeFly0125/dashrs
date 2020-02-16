@@ -9,6 +9,8 @@ on:
   pull_request:
     branches:
       - master
+    types: 
+      - closed
 
 jobs:
   format:
@@ -27,11 +29,13 @@ jobs:
         with:
           command: fmt
           args: --all
-      - name: Commit files
+      - name: Commit files # only runs if something actually changed
         run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git commit -m "CI: Automatic Rustfmt" -a
+          if [[ -n "$(git status -s)" ]]; then
+            git config --local user.email "action@github.com"
+            git config --local user.name "GitHub Action"
+            git commit -m "CI: Automatic Rustfmt" -a
+          fi
       - name: Push changes
         uses: ad-m/github-push-action@master
         with:
