@@ -27,7 +27,7 @@ mod internal {
             InternalCreator {
                 user_id: self.user_id,
                 name: Cow::Borrowed(self.name.as_ref()),
-                account_id: self.account_id
+                account_id: self.account_id,
             }
         }
 
@@ -35,7 +35,7 @@ mod internal {
             Creator {
                 user_id: int.user_id,
                 name: int.name,
-                account_id: int.account_id
+                account_id: int.account_id,
             }
         }
     }

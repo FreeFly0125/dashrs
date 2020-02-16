@@ -122,17 +122,21 @@ impl<'de> IndexedDeserializer<'de> {
 }
 
 macro_rules! delegate_to_from_str {
-    ($deserialize_method: ident, $visitor_method: ident) => {
+    ($deserialize_method:ident, $visitor_method:ident) => {
         fn $deserialize_method<V>(self, visitor: V) -> Result<<V as Visitor<'de>>::Value, Error<'de>>
         where
-            V: Visitor<'de>
+            V: Visitor<'de>,
         {
-            trace!("RobtopDeserializer::{} called called on {:?}", stringify!($deserialize_method), self.peek_token());
+            trace!(
+                "RobtopDeserializer::{} called called on {:?}",
+                stringify!($deserialize_method),
+                self.peek_token()
+            );
 
             match self.consume_token()?.map(FromStr::from_str) {
                 Some(Ok(parsed)) => visitor.$visitor_method(parsed),
                 Some(Err(error)) => Err(Error::custom(error)),
-                None => visitor.visit_none()
+                None => visitor.visit_none(),
             }
         }
     };
