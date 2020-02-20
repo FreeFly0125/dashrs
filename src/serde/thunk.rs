@@ -1,7 +1,8 @@
-use base64::DecodeError;
+use base64::{DecodeError, URL_SAFE};
 use percent_encoding::{percent_decode_str, utf8_percent_encode, AsciiSet, CONTROLS};
 use serde::{export::Formatter, ser::Error as _, Deserialize, Deserializer, Serialize, Serializer};
 use std::{borrow::Cow, fmt::Display, num::ParseIntError, str::Utf8Error};
+use std::string::FromUtf8Error;
 
 /// Enum modelling the different errors that can occur during processing of a [`Thunk`]
 ///
@@ -17,10 +18,13 @@ use std::{borrow::Cow, fmt::Display, num::ParseIntError, str::Utf8Error};
 /// just to use that for the error type is obviously impractical, however it is possible to use
 /// `Error<'static>`, which at least doesn't add more downsides. However it still leaves us with an
 /// error enum dealing with too much stuff.
-#[derive(Debug, PartialEq)]
+#[derive(Debug)]
 pub enum ProcessError {
     /// Some utf8 encoding error occurred during processing
     Utf8(Utf8Error),
+
+    /// Some utf8 encoding error occurred while processing after some backing storage was allocated
+    FromUtf8(FromUtf8Error),
 
     /// Some base64 decoding error occurred during processing
     Base64(DecodeError),
@@ -35,6 +39,7 @@ impl Display for ProcessError {
             ProcessError::Utf8(utf8) => utf8.fmt(f),
             ProcessError::Base64(decode) => decode.fmt(f),
             ProcessError::IntParse(int) => int.fmt(f),
+            ProcessError::FromUtf8(from_utf8) => from_utf8.fmt(f)
         }
     }
 }
@@ -75,8 +80,16 @@ impl<'a, C: ThunkContent<'a> + Serialize> Serialize for Thunk<'a, C> {
     }
 }
 
+/// Trait structs are used in the [`Thunk::Processed`] variant implement.
+///
+/// This trait provides the means to translate from and into RobTop's representation for thunked data, while not being used in the (de)serialization into any other data format.
 pub trait ThunkContent<'a>: Sized {
+    /// Takes some data from the [`Thunk::Unprocessed`] variant and processes it
+    ///
+    /// This function is *not* called automatically during deserialization from a RobTop data format.
     fn from_unprocessed(unprocessed: &'a str) -> Result<Self, ProcessError>;
+
+    /// Takes some processed thunk value and converts it into RobTop-representation
     fn as_unprocessed(&self) -> Cow<str>;
 }
 
@@ -156,5 +169,22 @@ impl<'a> ThunkContent<'a> for PercentDecoded<'a> {
 
     fn as_unprocessed(&self) -> Cow<str> {
         utf8_percent_encode(self.0.as_ref(), ROBTOP_SET).into()
+    }
+}
+
+#[derive(Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(transparent)]
+pub struct Base64Decoded<'a>(Cow<'a, str>);
+
+impl<'a> ThunkContent<'a> for Base64Decoded<'a> {
+    fn from_unprocessed(unprocessed: &'a str) -> Result<Self, ProcessError> {
+        let vec = base64::decode_config(unprocessed, URL_SAFE).map_err(ProcessError::Base64)?;
+        let string = String::from_utf8(vec).map_err(ProcessError::FromUtf8)?;
+
+        Ok(Base64Decoded(Cow::Owned(string)))
+    }
+
+    fn as_unprocessed(&self) -> Cow<str> {
+        Cow::Owned(base64::encode_config(&*self.0, URL_SAFE))
     }
 }
