@@ -126,5 +126,9 @@ fn deserialize_partial_level() {
     let level = dash_rs::from_robtop_str::<PartialLevel<_, _>>(_DARK_REALM_DATA);
 
     assert!(level.is_ok(), "{:?}", level.unwrap_err());
+
+    let mut level = level.unwrap();
+
+    assert!(level.description.as_mut().unwrap().process().is_ok());
     println!("{:?}", level);
 }
