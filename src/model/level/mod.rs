@@ -1,14 +1,19 @@
 use crate::{
-    serde::{Internal, ProcessError},
-    util,
+    model::{song::MainSong, GameVersion},
+    serde::{Base64Decoded, Internal, ProcessError},
+    util, Thunk,
 };
 use base64::URL_SAFE;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
-use std::fmt::{Display, Formatter};
+use std::{
+    borrow::Cow,
+    fmt::{Display, Formatter},
+};
+
+mod internal;
 
 /// Enum representing the possible level lengths known to dash-rs
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
-#[serde(from = "i32", into = "i32")]
 pub enum LevelLength {
     /// Enum variant that's used by the [`From<i32>`](From) impl for when an
     /// unrecognized value is passed
@@ -50,34 +55,8 @@ pub enum LevelLength {
     ExtraLong,
 }
 
-impl Into<i32> for LevelLength {
-    fn into(self) -> i32 {
-        match self {
-            LevelLength::Unknown(unknown) => unknown,
-            LevelLength::Tiny => 0,
-            LevelLength::Short => 1,
-            LevelLength::Medium => 2,
-            LevelLength::Long => 3,
-            LevelLength::ExtraLong => 4,
-        }
-    }
-}
-
-impl From<i32> for LevelLength {
-    fn from(int: i32) -> Self {
-        match int {
-            0 => LevelLength::Tiny,
-            1 => LevelLength::Short,
-            2 => LevelLength::Medium,
-            3 => LevelLength::Long,
-            4 => LevelLength::ExtraLong,
-            _ => LevelLength::Unknown(int),
-        }
-    }
-}
-
 /// Enum representing the possible level ratings
-#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, PartialOrd, Ord)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
 pub enum LevelRating {
     /// Enum variant that's used by the [`From<i32>`](From) impl for when an
     /// unrecognized value is passed
@@ -142,8 +121,17 @@ pub enum LevelRating {
     Demon(DemonRating),
 }
 
+impl LevelRating {
+    pub fn is_demon(&self) -> bool {
+        match self {
+            LevelRating::Demon(_) => true,
+            _ => false,
+        }
+    }
+}
+
 /// Enum representing the possible demon difficulties
-#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, PartialOrd, Ord)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
 pub enum DemonRating {
     /// Enum variant that's used by the [`From<i32>`](From) impl for when an
     /// unrecognized value is passed
@@ -183,6 +171,52 @@ pub enum DemonRating {
     /// This variant is represented by the value `5` in requests and by the
     /// value `50` in responses
     Extreme,
+}
+
+impl DemonRating {
+    fn from_response_value(value: i32) -> DemonRating {
+        match value {
+            10 => DemonRating::Easy,
+            20 => DemonRating::Medium,
+            30 => DemonRating::Hard,
+            40 => DemonRating::Insane,
+            50 => DemonRating::Extreme,
+            _ => DemonRating::Unknown(value),
+        }
+    }
+
+    fn from_request_value(value: i32) -> DemonRating {
+        match value {
+            1 => DemonRating::Easy,
+            2 => DemonRating::Medium,
+            3 => DemonRating::Hard,
+            4 => DemonRating::Insane,
+            5 => DemonRating::Extreme,
+            _ => DemonRating::Unknown(value),
+        }
+    }
+
+    fn into_request_value(self) -> i32 {
+        match self {
+            DemonRating::Unknown(value) => value,
+            DemonRating::Easy => 1,
+            DemonRating::Medium => 2,
+            DemonRating::Hard => 3,
+            DemonRating::Insane => 4,
+            DemonRating::Extreme => 5,
+        }
+    }
+
+    fn into_response_value(self) -> i32 {
+        match self {
+            DemonRating::Unknown(value) => value,
+            DemonRating::Easy => 10,
+            DemonRating::Medium => 20,
+            DemonRating::Hard => 30,
+            DemonRating::Insane => 40,
+            DemonRating::Extreme => 50,
+        }
+    }
 }
 
 /// Enum representing a levels featured state
@@ -347,6 +381,214 @@ impl Display for Password {
         }
     }
 }
+
+/// Struct representing partial levels. These are returned to
+/// [`LevelsRequest`]s and only
+/// contain metadata
+/// on the level.
+///
+/// ## GD Internals:
+/// The Geometry Dash servers provide lists of partial levels via the
+/// `getGJLevels` endpoint.
+///
+/// ### Unmapped values:
+/// + Index `8`: Index 8 is a boolean value indicating whether the level has a
+/// difficulty rating that isn't N/A. This is equivalent to checking if
+/// [`PartialLevel::difficulty`] is unequal to
+/// [`LevelRating::NotAvailable`]
+/// + Index `17`: Index 17 is a boolean value indicating whether
+/// the level is a demon level. This is equivalent to checking if
+/// [`PartialLevel::difficulty`] is the [`LevelRating::Demon`] variant.
+/// + Index `25`: Index 25 is a boolean value indicating
+/// whether the level is an auto level. This is equivalent to checking if
+/// [`PartialLevel::difficulty`] is equal to
+/// [`LevelRating::Auto`].
+///
+/// ### Unprovided values:
+/// These values are not provided for by the `getGJLevels` endpoint and are
+/// thus only modelled in the [`Level`] struct: `4`, `27`,
+/// `28`, `29`, `36`
+///
+/// ### Unused indices:
+/// The following indices aren't used by the Geometry Dash servers: `11`, `16`,
+/// `17`, `20`, `21`, `22`, `23`, `24`, `26`, `31`, `32`, `33`, `34`, `40`,
+/// `41`, `44`
+#[derive(Debug, Eq, PartialEq, Serialize, Deserialize)]
+pub struct PartialLevel<'a, Song, User> {
+    /// The level's unique level id
+    ///
+    /// ## GD Internals:
+    /// This value is provided at index `1`.
+    pub level_id: u64,
+
+    /// The level's name
+    ///
+    /// ## GD Internals:
+    /// This value is provided at index `2`.
+    #[serde(borrow)]
+    pub name: Cow<'a, str>,
+
+    /// The level's description. Is [`None`] if the creator didn't put any
+    /// description.
+    ///
+    /// ## GD Internals:
+    /// This value is provided at index `3` and encoded using urlsafe base 64.
+    pub description: Option<Thunk<'a, Base64Decoded<'a>>>,
+
+    /// The [`PartialLevel`]'s version. The version get incremented every time
+    /// the level is updated, and the initial version is always version 1.
+    ///
+    /// ## GD Internals:
+    /// This value is provided at index `5`.
+    pub version: u32,
+
+    /// The ID of the level's creator
+    ///
+    /// ## GD Internals:
+    /// This value is provided at index `6`.
+    pub creator: User,
+
+    /// The difficulty of this [`PartialLevel`]
+    ///
+    /// ## GD Internals:
+    /// This value is a construct from the value at the indices `9`, `17` and
+    /// `25`, whereas index 9 is an integer representation of either the
+    /// [`LevelRating`] or the [`DemonRating`]
+    /// struct, depending on the value of index 17.
+    ///
+    /// If index 25 is set to true, the level is an auto level and the value at
+    /// index 9 is some nonsense, in which case it is ignored.
+    pub difficulty: LevelRating,
+
+    /// The amount of downloads
+    ///
+    /// ## GD Internals:
+    /// This value is provided at index `10`
+    pub downloads: u32,
+
+    /// The [`MainSong`] the level uses, if any.
+    ///
+    /// ## GD Internals:
+    /// This value is provided at index `12`. Interpretation is additionally
+    /// dependant on the value at index `35` (the custom song id), as
+    /// without that information, a value of `0` for
+    /// this field could either mean the level uses `Stereo Madness` or no
+    /// main song.
+    pub main_song: Option<MainSong>,
+
+    /// The gd version the request was uploaded/last updated in.
+    ///
+    /// ## GD Internals:
+    /// This value is provided at index `13`
+    pub gd_version: GameVersion,
+
+    /// The amount of likes this [`PartialLevel`] has received
+    ///
+    /// ## GD Internals:
+    /// This value is provided at index `14`
+    pub likes: i32,
+
+    /// The length of this [`PartialLevel`]
+    ///
+    /// ## GD Internals:
+    /// This value is provided as an integer representation of the
+    /// [`LevelLength`] struct at index `15`
+    pub length: LevelLength,
+
+    /// The amount of stars completion of this [`PartialLevel`] awards
+    ///
+    /// ## GD Internals:
+    /// This value is provided at index `18`
+    pub stars: u8,
+
+    /// This [`PartialLevel`]s featured state
+    ///
+    /// ## GD Internals:
+    /// This value is provided at index `19`
+    pub featured: Featured,
+
+    /// The ID of the level this [`PartialLevel`] is a copy of, or [`None`], if
+    /// this [`PartialLevel`] isn't a copy.
+    ///
+    /// ## GD Internals:
+    /// This value is provided at index `30`
+    pub copy_of: Option<u64>,
+
+    // TODO: figure this value out
+    /// ## GD Internals:
+    /// This value is provided at index `31`
+    pub index_31: Option<Cow<'a, str>>,
+
+    /// The id of the newgrounds song this [`PartialLevel`] uses, or [`None`]
+    /// if it useds a main song.
+    ///
+    /// ## GD Internals:
+    /// This value is provided at index `35`, and a value of `0` means, that no
+    /// custom song is used.
+    pub custom_song: Song,
+
+    /// The amount of coints in this [`PartialLevel`]
+    ///
+    /// ## GD Internals:
+    /// This value is provided at index `37`
+    pub coin_amount: u8,
+
+    /// Value indicating whether the user coins (if present) in this
+    /// [`PartialLevel`] are verified
+    ///
+    /// ## GD Internals:
+    /// This value is provided at index `38`, as an integer
+    pub coins_verified: bool,
+
+    /// The amount of stars the level creator has requested when uploading this
+    /// [`PartialLevel`], or [`None`] if no stars were requested.
+    ///
+    /// ## GD Internals:
+    /// This value is provided at index `39`, and a value of `0` means no stars
+    /// were requested
+    pub stars_requested: Option<u8>,
+
+    // TODO: figure this value out
+    /// ## GD Internals:
+    /// This value is provided at index `40`
+    pub index_40: Option<Cow<'a, str>>,
+
+    /// Value indicating whether this [`PartialLevel`] is epic
+    ///
+    /// ## GD Internals:
+    /// This value is provided at index `42`, as an integer
+    pub is_epic: bool,
+
+    // TODO: figure this value out
+    /// According to the GDPS source its a value called `starDemonDiff`. It
+    /// seems to correlate to the level's difficulty.
+    ///
+    /// ## GD Internals:
+    /// This value is provided at index `43` and seems to be an integer
+    pub index_43: Cow<'a, str>,
+
+    /// The amount of objects in this [`PartialLevel`]. Note that a value of `None` _does not_ mean that there are no objects in the level, but rather that the server's didn't provide an object count.
+    ///
+    /// ## GD Internals:
+    /// This value is provided at index `45`, although only for levels uploaded
+    /// in version 2.1 or later. For all older levels this is always `None`
+    pub object_amount: Option<u32>,
+
+    /// According to the GDPS source this is always `1`, although that is
+    /// evidently wrong
+    ///
+    /// ## GD Internals:
+    /// This value is provided at index `46` and seems to be an integer
+    pub index_46: Option<Cow<'a, str>>,
+
+    /// According to the GDPS source, this is always `2`, although that is
+    /// evidently wrong
+    ///
+    /// ## GD Internals:
+    /// This value is provided at index `47` and seems to be an integer
+    pub index_47: Option<Cow<'a, str>>,
+}
+
 #[cfg(test)]
 mod tests {
     use crate::model::level::{robtop_encode_level_password, Password};
@@ -354,9 +596,9 @@ mod tests {
 
     #[test]
     fn deserialize_password() {
-        assert_eq!(Password::from_robtop("AwcBBQAHAA=="), Ok(Password::PasswordCopy(123456)));
-        assert_eq!(Password::from_robtop("AwUCBgU="), Ok(Password::PasswordCopy(3101)));
-        assert_eq!(Password::from_robtop("AwYDBgQCBg=="), Ok(Password::PasswordCopy(0)));
+        assert_eq!(Password::from_robtop("AwcBBQAHAA==").unwrap(), Password::PasswordCopy(123456));
+        assert_eq!(Password::from_robtop("AwUCBgU=").unwrap(), Password::PasswordCopy(3101));
+        assert_eq!(Password::from_robtop("AwYDBgQCBg==").unwrap(), Password::PasswordCopy(0));
     }
 
     #[test]

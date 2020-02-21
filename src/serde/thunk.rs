@@ -1,8 +1,7 @@
 use base64::{DecodeError, URL_SAFE};
 use percent_encoding::{percent_decode_str, utf8_percent_encode, AsciiSet, CONTROLS};
 use serde::{export::Formatter, ser::Error as _, Deserialize, Deserializer, Serialize, Serializer};
-use std::{borrow::Cow, fmt::Display, num::ParseIntError, str::Utf8Error};
-use std::string::FromUtf8Error;
+use std::{borrow::Cow, fmt::Display, num::ParseIntError, str::Utf8Error, string::FromUtf8Error};
 
 /// Enum modelling the different errors that can occur during processing of a [`Thunk`]
 ///
@@ -39,7 +38,7 @@ impl Display for ProcessError {
             ProcessError::Utf8(utf8) => utf8.fmt(f),
             ProcessError::Base64(decode) => decode.fmt(f),
             ProcessError::IntParse(int) => int.fmt(f),
-            ProcessError::FromUtf8(from_utf8) => from_utf8.fmt(f)
+            ProcessError::FromUtf8(from_utf8) => from_utf8.fmt(f),
         }
     }
 }
@@ -82,11 +81,13 @@ impl<'a, C: ThunkContent<'a> + Serialize> Serialize for Thunk<'a, C> {
 
 /// Trait structs are used in the [`Thunk::Processed`] variant implement.
 ///
-/// This trait provides the means to translate from and into RobTop's representation for thunked data, while not being used in the (de)serialization into any other data format.
+/// This trait provides the means to translate from and into RobTop's representation for thunked
+/// data, while not being used in the (de)serialization into any other data format.
 pub trait ThunkContent<'a>: Sized {
     /// Takes some data from the [`Thunk::Unprocessed`] variant and processes it
     ///
-    /// This function is *not* called automatically during deserialization from a RobTop data format.
+    /// This function is *not* called automatically during deserialization from a RobTop data
+    /// format.
     fn from_unprocessed(unprocessed: &'a str) -> Result<Self, ProcessError>;
 
     /// Takes some processed thunk value and converts it into RobTop-representation
@@ -174,7 +175,7 @@ impl<'a> ThunkContent<'a> for PercentDecoded<'a> {
 
 #[derive(Debug, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(transparent)]
-pub struct Base64Decoded<'a>(Cow<'a, str>);
+pub struct Base64Decoded<'a>(pub Cow<'a, str>);
 
 impl<'a> ThunkContent<'a> for Base64Decoded<'a> {
     fn from_unprocessed(unprocessed: &'a str) -> Result<Self, ProcessError> {

@@ -1,5 +1,5 @@
 use dash_rs::{
-    model::{creator::Creator, song::NewgroundsSong},
+    model::{creator::Creator, level::PartialLevel, song::NewgroundsSong},
     PercentDecoded, Thunk,
 };
 use std::borrow::Cow;
@@ -119,4 +119,12 @@ fn deserialize_too_many_fields() {
     let song = dash_rs::from_robtop_str::<NewgroundsSong>(CREO_DUNE_DATA_TOO_MANY_FIELDS);
 
     assert!(song.is_ok(), "{:?}", song.unwrap_err());
+}
+
+#[test]
+fn deserialize_partial_level() {
+    let level = dash_rs::from_robtop_str::<PartialLevel<_, _>>(_DARK_REALM_DATA);
+
+    assert!(level.is_ok(), "{:?}", level.unwrap_err());
+    println!("{:?}", level);
 }

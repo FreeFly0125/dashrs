@@ -160,15 +160,20 @@ impl<'a> NewgroundsSong<'a> {
 ///
 /// This data is not provided by the API and needs to be manually kept up to
 /// date
-#[derive(Debug, Eq, PartialEq, Clone, Copy)]
+#[derive(Debug, Eq, PartialEq, Clone, Copy, Serialize, Deserialize)]
+#[serde(from = "u8", into = "u8")]
 pub struct MainSong {
     /// The ID of this [`MainSong`]
     pub main_song_id: u8,
 
     /// The name of this [`MainSong`]
+    #[serde(skip)]
+    // even though we (de)serialize using From and Into, we have to mark these as skip so that the 'de lifetime isn't constrained by
+    // 'static
     pub name: &'static str,
 
     /// The artist of this [`MainSong`]
+    #[serde(skip)]
     pub artist: &'static str,
 }
 
@@ -223,8 +228,14 @@ impl Display for NewgroundsSong<'_> {
     }
 }
 
-impl From<u8> for &'static MainSong {
+impl From<u8> for MainSong {
     fn from(song_id: u8) -> Self {
-        MAIN_SONGS.get(song_id as usize).unwrap_or(&UNKNOWN)
+        *MAIN_SONGS.get(song_id as usize).unwrap_or(&UNKNOWN)
+    }
+}
+
+impl Into<u8> for MainSong {
+    fn into(self) -> u8 {
+        self.main_song_id
     }
 }

@@ -6,7 +6,7 @@ pub use de::{error::Error as DeError, indexed::IndexedDeserializer};
 pub use ser::{error::Error as SerError, indexed::IndexedSerializer};
 use serde::{Deserialize, Serialize};
 pub(crate) use thunk::Internal;
-pub use thunk::{PercentDecoded, ProcessError, Thunk};
+pub use thunk::{Base64Decoded, PercentDecoded, ProcessError, Thunk};
 
 use std::io::Write;
 
