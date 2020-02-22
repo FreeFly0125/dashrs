@@ -1,9 +1,12 @@
 //! Module containing all structs modelling requests to the boomlings APIs.
 //!
-//! These directly implement (de)serialization into RobTop's data format, unlike models where RobTop's eccentricities are hidden. This is since directly re-using these structs outside of making/proxying requests for the boomlings servers seems rather useless to me, as they already contain a lot of boomlings-specific fields.
+//! These directly implement (de)serialization into RobTop's data format, unlike models where
+//! RobTop's eccentricities are hidden. This is since directly re-using these structs outside of
+//! making/proxying requests for the boomlings servers seems rather useless to me, as they already
+//! contain a lot of boomlings-specific fields.
 
 use crate::model::GameVersion;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 pub mod level;
 
