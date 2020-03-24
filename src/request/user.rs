@@ -1,11 +1,8 @@
 //! Module containing request definitions for retrieving users
 
-use std::{
-    fmt::{Display, Error, Formatter},
-    hash::{Hash, Hasher},
-};
 use crate::request::{BaseRequest, GD_21};
 use serde::Serialize;
+use std::fmt::{Display, Error, Formatter};
 
 /// Struct modelled after a request to `getGJUserInfo20.php`.
 ///
@@ -33,29 +30,22 @@ impl UserRequest<'_> {
     }
 }
 
-impl Hash for UserRequest<'_> {
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        self.user.hash(state)
-    }
-}
-
 impl<'a> Into<UserRequest<'a>> for u64 {
     fn into(self) -> UserRequest<'a> {
         UserRequest::new(self)
     }
 }
-/*
-impl Into<UserRequest> for SearchedUser {
-    fn into(self) -> UserRequest {
-        UserRequest::new(self.account_id)
-    }
-}
-
-impl Into<UserRequest> for &SearchedUser {
-    fn into(self) -> UserRequest {
-        UserRequest::new(self.account_id)
-    }
-}*/
+// impl Into<UserRequest> for SearchedUser {
+// fn into(self) -> UserRequest {
+// UserRequest::new(self.account_id)
+// }
+// }
+//
+// impl Into<UserRequest> for &SearchedUser {
+// fn into(self) -> UserRequest {
+// UserRequest::new(self.account_id)
+// }
+// }
 
 impl Display for UserRequest<'_> {
     fn fmt(&self, f: &mut Formatter) -> Result<(), Error> {
@@ -109,39 +99,32 @@ impl<'a> Into<UserSearchRequest<'a>> for &'a str {
         UserSearchRequest::new(self)
     }
 }
-/*
-impl Into<UserSearchRequest> for Creator {
-    fn into(self) -> UserSearchRequest {
-        UserSearchRequest::new(self.name)
-    }
-}
-
-impl Into<UserSearchRequest> for &Creator {
-    fn into(self) -> UserSearchRequest {
-        UserSearchRequest::new(self.name.to_string())
-    }
-}
-
-impl Into<UserSearchRequest> for User {
-    fn into(self) -> UserSearchRequest {
-        UserSearchRequest::new(self.name)
-    }
-}
-
-impl Into<UserSearchRequest> for &User {
-    fn into(self) -> UserSearchRequest {
-        UserSearchRequest::new(self.name.to_string())
-    }
-}*/
+// impl Into<UserSearchRequest> for Creator {
+// fn into(self) -> UserSearchRequest {
+// UserSearchRequest::new(self.name)
+// }
+// }
+//
+// impl Into<UserSearchRequest> for &Creator {
+// fn into(self) -> UserSearchRequest {
+// UserSearchRequest::new(self.name.to_string())
+// }
+// }
+//
+// impl Into<UserSearchRequest> for User {
+// fn into(self) -> UserSearchRequest {
+// UserSearchRequest::new(self.name)
+// }
+// }
+//
+// impl Into<UserSearchRequest> for &User {
+// fn into(self) -> UserSearchRequest {
+// UserSearchRequest::new(self.name.to_string())
+// }
+// }
 
 impl Display for UserSearchRequest<'_> {
     fn fmt(&self, f: &mut Formatter) -> Result<(), Error> {
         write!(f, "UserSearchRequest({})", self.search_string)
-    }
-}
-
-impl Hash for UserSearchRequest<'_> {
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        self.search_string.hash(state)
     }
 }

@@ -1,11 +1,8 @@
 //! Module containing request structs for retrieving profile/level comments
 
-use std::{
-    fmt::{Display, Formatter},
-    hash::{Hash, Hasher},
-};
-use crate::request::{GD_21, BaseRequest};
+use crate::request::{BaseRequest, GD_21};
 use serde::Serialize;
+use std::fmt::{Display, Formatter};
 
 /// The different orderings that can be requested for level comments
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize)]
@@ -103,16 +100,6 @@ impl Display for LevelCommentsRequest<'_> {
     }
 }
 
-impl Hash for LevelCommentsRequest<'_> {
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        self.level_id.hash(state);
-        self.sort_mode.hash(state);
-        self.limit.hash(state);
-        self.page.hash(state);
-        self.total.hash(state);
-    }
-}
-
 impl<'a> Into<LevelCommentsRequest<'a>> for u64 {
     fn into(self) -> LevelCommentsRequest<'a> {
         LevelCommentsRequest::new(self)
@@ -158,13 +145,5 @@ impl ProfileCommentsRequest<'_> {
 impl Display for ProfileCommentsRequest<'_> {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         write!(f, "AccountCommentsRequest({})", self.account_id)
-    }
-}
-
-impl Hash for ProfileCommentsRequest<'_> {
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        self.account_id.hash(state);
-        self.page.hash(state);
-        self.total.hash(state);
     }
 }

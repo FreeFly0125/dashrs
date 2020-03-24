@@ -8,9 +8,9 @@
 use crate::model::GameVersion;
 use serde::{Deserialize, Serialize};
 
+pub mod comment;
 pub mod level;
 pub mod user;
-pub mod comment;
 
 /// A `BaseRequest` instance that has all its fields set to the
 /// same values a Geometry Dash 2.1 client would use
