@@ -71,17 +71,27 @@ pub struct LevelCommentsRequest<'a> {
     pub limit: u32,
 }
 
-impl LevelCommentsRequest<'_> {
+impl<'a> LevelCommentsRequest<'a> {
     pub const fn new(level: u64) -> Self {
+        Self::with_base(GD_21, level)
+    }
+
+    pub const fn with_base(base: BaseRequest<'a>, level: u64) -> Self {
         LevelCommentsRequest {
             level_id: level,
-            base: GD_21,
+            base,
             page: 0,
             total: 0,
             sort_mode: SortMode::Recent,
             limit: 20,
         }
     }
+
+    const_setter!(total: u32);
+
+    const_setter!(limit: u32);
+
+    const_setter!(page: u32);
 
     pub const fn liked(mut self) -> Self {
         self.sort_mode = SortMode::Liked;
@@ -131,15 +141,23 @@ pub struct ProfileCommentsRequest<'a> {
     pub account_id: u64,
 }
 
-impl ProfileCommentsRequest<'_> {
+impl<'a> ProfileCommentsRequest<'a> {
     pub const fn new(account: u64) -> Self {
+        Self::with_base(GD_21, account)
+    }
+
+    pub const fn with_base(base: BaseRequest<'a>, account: u64) -> Self {
         ProfileCommentsRequest {
             account_id: account,
-            base: GD_21,
+            base,
             page: 0,
             total: 0,
         }
     }
+
+    const_setter!(total: u32);
+
+    const_setter!(account_id: u64);
 }
 
 impl Display for ProfileCommentsRequest<'_> {
