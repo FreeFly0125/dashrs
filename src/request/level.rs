@@ -189,7 +189,7 @@ impl SearchFilters {
         self
     }
 
-    pub const fn is_original(mut self) -> Self {
+    pub const fn original(mut self) -> Self {
         self.original = true;
         self
     }
