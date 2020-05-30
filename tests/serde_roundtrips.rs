@@ -146,6 +146,8 @@ fn deserialize_level() {
 
 #[test]
 fn deserialize_level2() {
+    env_logger::builder().is_test(true).try_init();
+
     let level = dash_rs::from_robtop_str::<Level<_, _>>(include_str!("data/897837_time_pressure_gjdownload_response"));
 
     assert!(level.is_ok(), "{:?}", level.unwrap_err());
@@ -154,6 +156,4 @@ fn deserialize_level2() {
 
     assert!(level.description.as_mut().unwrap().process().is_ok());
     assert!(level.level_data.is_some());
-
-    println!("{:?}", level);
 }

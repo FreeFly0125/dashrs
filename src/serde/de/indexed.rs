@@ -54,12 +54,14 @@ impl<'de> IndexedDeserializer<'de> {
     /// * *map_like*: Whether the input is in map-like format or not (meaning it is in list-like
     ///   format)
     pub fn new(source: &'de str, delimiter: &'static str, map_like: bool) -> Self {
+        let mut iter = delimiter.chars();
+
         IndexedDeserializer {
             source,
-            delimiter: if delimiter.len() == 1 {
-                Delimiter::Char(delimiter.chars().next().unwrap())
-            } else {
-                Delimiter::String(delimiter)
+            delimiter: match (iter.next(), iter.next()) {
+                (Some(ch), None) => Delimiter::Char(ch),
+                (None, None) => panic!("No delimiter given!"),
+                _ => Delimiter::String(delimiter),
             },
             map_like,
             current_item_len: None,
@@ -359,7 +361,9 @@ impl<'a, 'de> Deserializer<'de> for &'a mut IndexedDeserializer<'de> {
         // indices. By the time this is called, they key itself will already have been popped in our
         // `MapAccess` implementation. This means we need to skip exactly one item! We'll feed a `None` to
         // the visitor. Because idk what we really wanna do here otherwise
-        self.consume_token()?;
+        let token = self.consume_token()?;
+
+        warn!("Ignored token {:?}. Maybe some index is unmapped?", token);
 
         visitor.visit_none()
     }
