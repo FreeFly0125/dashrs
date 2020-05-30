@@ -35,17 +35,6 @@ impl<'a> Into<UserRequest<'a>> for u64 {
         UserRequest::new(self)
     }
 }
-// impl Into<UserRequest> for SearchedUser {
-// fn into(self) -> UserRequest {
-// UserRequest::new(self.account_id)
-// }
-// }
-//
-// impl Into<UserRequest> for &SearchedUser {
-// fn into(self) -> UserRequest {
-// UserRequest::new(self.account_id)
-// }
-// }
 
 impl Display for UserRequest<'_> {
     fn fmt(&self, f: &mut Formatter) -> Result<(), Error> {
@@ -99,29 +88,6 @@ impl<'a> Into<UserSearchRequest<'a>> for &'a str {
         UserSearchRequest::new(self)
     }
 }
-// impl Into<UserSearchRequest> for Creator {
-// fn into(self) -> UserSearchRequest {
-// UserSearchRequest::new(self.name)
-// }
-// }
-//
-// impl Into<UserSearchRequest> for &Creator {
-// fn into(self) -> UserSearchRequest {
-// UserSearchRequest::new(self.name.to_string())
-// }
-// }
-//
-// impl Into<UserSearchRequest> for User {
-// fn into(self) -> UserSearchRequest {
-// UserSearchRequest::new(self.name)
-// }
-// }
-//
-// impl Into<UserSearchRequest> for &User {
-// fn into(self) -> UserSearchRequest {
-// UserSearchRequest::new(self.name.to_string())
-// }
-// }
 
 impl Display for UserSearchRequest<'_> {
     fn fmt(&self, f: &mut Formatter) -> Result<(), Error> {
