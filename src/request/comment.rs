@@ -157,6 +157,8 @@ impl<'a> ProfileCommentsRequest<'a> {
 
     const_setter!(total: u32);
 
+    const_setter!(page: u32);
+
     const_setter!(account_id: u64);
 }
 
@@ -168,7 +170,7 @@ impl Display for ProfileCommentsRequest<'_> {
 
 #[cfg(test)]
 mod tests {
-    use crate::request::comment::LevelCommentsRequest;
+    use crate::request::comment::{LevelCommentsRequest, ProfileCommentsRequest};
     use crate::serde::RequestSerializer;
     use serde::Serialize;
 
@@ -187,5 +189,22 @@ mod tests {
         request.serialize(&mut serializer).unwrap();
 
         assert_eq!(std::str::from_utf8(&output), Ok("gameVersion=21&binaryVersion=33&secret=Wmfd2893gb7&total=0&page=2&mode=1&levelID=1234&count=15"));
+    }
+
+    #[test]
+    fn serialize_profile_comments() {
+        if let Err(err) = env_logger::builder().is_test(true).try_init() {
+            // nothing to make the tests fail over
+            eprintln!("Error setting up env_logger: {:?}", err)
+        }
+
+        let request = ProfileCommentsRequest::new(1710032).page(2);
+        let mut output = Vec::new();
+
+        let mut serializer = RequestSerializer::new(&mut output);
+
+        request.serialize(&mut serializer).unwrap();
+
+        assert_eq!(std::str::from_utf8(&output), Ok("gameVersion=21&binaryVersion=33&secret=Wmfd2893gb7&total=0&page=2&accountID=1710032"));
     }
 }
