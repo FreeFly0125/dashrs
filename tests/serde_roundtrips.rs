@@ -1,13 +1,13 @@
 use dash_rs::{
-    model::{creator::Creator, level::Level, song::NewgroundsSong},
-    PercentDecoded, Thunk,
+    model::{
+        creator::Creator,
+        level::{DemonRating, Featured::Featured, Level, LevelData, LevelLength, LevelRating, Password},
+        song::{MainSong, NewgroundsSong},
+        GameVersion,
+    },
+    Base64Decoded, PercentDecoded, Thunk,
 };
 use std::borrow::Cow;
-use dash_rs::Base64Decoded;
-use dash_rs::model::level::{LevelRating, DemonRating, LevelLength, LevelData, Password};
-use dash_rs::model::song::MainSong;
-use dash_rs::model::GameVersion;
-use dash_rs::model::level::Featured::Featured;
 
 const DARK_REALM_DATA: &str =
     "1:11774780:2:Dark \
@@ -64,10 +64,12 @@ const CREATOR_UNREGISTERED: Creator = Creator {
     account_id: None,
 };
 
-const TIME_PRESSURE: Level<Option<u64>,u64> = Level {
+const TIME_PRESSURE: Level<Option<u64>, u64> = Level {
     level_id: 897837,
     name: Cow::Borrowed("time pressure"),
-    description: Some(Thunk::Processed(Base64Decoded(Cow::Borrowed("please rate and like  8-9 stars mabye?")))),
+    description: Some(Thunk::Processed(Base64Decoded(Cow::Borrowed(
+        "please rate and like  8-9 stars mabye?",
+    )))),
     version: 2,
     creator: 842519,
     difficulty: LevelRating::Demon(DemonRating::Easy),
@@ -105,7 +107,7 @@ const TIME_PRESSURE: Level<Option<u64>,u64> = Level {
 
 #[test]
 fn serialize_song() {
-    env_logger::builder().is_test(true).try_init();
+    init_log();
 
     let mut buf: Vec<u8> = Vec::new();
     let result = dash_rs::write_robtop_data(&CREO_DUNE, &mut buf);
@@ -116,7 +118,7 @@ fn serialize_song() {
 
 #[test]
 fn deserialize_song() {
-    env_logger::builder().is_test(true).try_init();
+    init_log();
 
     let song = dash_rs::from_robtop_str::<NewgroundsSong>(CREO_DUNE_DATA);
 
@@ -130,7 +132,7 @@ fn deserialize_song() {
 
 #[test]
 fn serialize_registered_creator() {
-    env_logger::builder().is_test(true).try_init();
+    init_log();
 
     let mut buf: Vec<u8> = Vec::new();
     let result = dash_rs::write_robtop_data(&CREATOR_REGISTERED, &mut buf);
@@ -141,7 +143,7 @@ fn serialize_registered_creator() {
 
 #[test]
 fn serialize_unregistered_creator() {
-    env_logger::builder().is_test(true).try_init();
+    init_log();
 
     let mut buf: Vec<u8> = Vec::new();
     let result = dash_rs::write_robtop_data(&CREATOR_UNREGISTERED, &mut buf);
@@ -152,7 +154,7 @@ fn serialize_unregistered_creator() {
 
 #[test]
 fn deserialize_registered_creator() {
-    env_logger::builder().is_test(true).try_init();
+    init_log();
 
     let creator = dash_rs::from_robtop_str::<Creator>(CREATOR_REGISTERED_DATA);
 
@@ -162,7 +164,7 @@ fn deserialize_registered_creator() {
 
 #[test]
 fn deserialize_unregistered_creator() {
-    env_logger::builder().is_test(true).try_init();
+    init_log();
 
     let creator = dash_rs::from_robtop_str::<Creator>(CREATOR_UNREGISTERED_DATA);
 
@@ -172,7 +174,7 @@ fn deserialize_unregistered_creator() {
 
 #[test]
 fn deserialize_too_many_fields() {
-    env_logger::builder().is_test(true).try_init();
+    init_log();
 
     let song = dash_rs::from_robtop_str::<NewgroundsSong>(CREO_DUNE_DATA_TOO_MANY_FIELDS);
 
@@ -181,7 +183,7 @@ fn deserialize_too_many_fields() {
 
 #[test]
 fn deserialize_partial_level() {
-    env_logger::builder().is_test(true).try_init();
+    init_log();
 
     let level = dash_rs::from_robtop_str::<Level<_, _>>(DARK_REALM_DATA);
 
@@ -194,7 +196,7 @@ fn deserialize_partial_level() {
 
 #[test]
 fn deserialize_level() {
-    env_logger::builder().is_test(true).try_init();
+    init_log();
 
     let level = dash_rs::from_robtop_str::<Level<_, _>>(include_str!("data/11774780_dark_realm_gjdownload_response"));
 
@@ -206,7 +208,7 @@ fn deserialize_level() {
 
 #[test]
 fn deserialize_level2() {
-    env_logger::builder().is_test(true).try_init();
+    init_log();
 
     let level = dash_rs::from_robtop_str::<Level<_, _>>(include_str!("data/897837_time_pressure_gjdownload_response"));
 
@@ -218,4 +220,11 @@ fn deserialize_level2() {
     level.level_data.as_mut().unwrap().level_data = Cow::Borrowed("REMOVED");
 
     assert_eq!(level, TIME_PRESSURE);
+}
+
+fn init_log() {
+    if let Err(err) = env_logger::builder().is_test(true).try_init() {
+        // nothing to make the tests fail over
+        eprintln!("Error setting up env_logger: {:?}", err)
+    }
 }
