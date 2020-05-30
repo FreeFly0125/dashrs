@@ -649,6 +649,8 @@ mod tests {
         assert_eq!(Password::from_robtop("AwcBBQAHAA==").unwrap(), Password::PasswordCopy(123456));
         assert_eq!(Password::from_robtop("AwUCBgU=").unwrap(), Password::PasswordCopy(3101));
         assert_eq!(Password::from_robtop("AwYDBgQCBg==").unwrap(), Password::PasswordCopy(0));
+        assert_eq!(Password::from_robtop("Aw==").unwrap(), Password::FreeCopy);
+        assert_eq!(Password::from_robtop("0").unwrap(), Password::NoCopy);
     }
 
     #[test]
