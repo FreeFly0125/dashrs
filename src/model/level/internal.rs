@@ -1,7 +1,7 @@
 use crate::{
     model::{
         level::{DemonRating, Featured, Level, LevelData, LevelLength, LevelRating, Password},
-        song::{MainSong, MAIN_SONGS},
+        song::MainSong,
         GameVersion,
     },
     serde::{Base64Decoded, HasRobtopFormat, Internal},
@@ -157,7 +157,7 @@ pub struct InternalLevel<'a> {
     pub downloads: u32,
 
     #[serde(rename = "12")]
-    pub main_song: MainSong,
+    pub main_song: u8,
 
     #[serde(rename = "13")]
     pub gd_version: u8,
@@ -249,7 +249,7 @@ impl<'a> HasRobtopFormat<'a> for Level<'a, Option<u64>, u64> {
             rating: self.difficulty.into_response_value(),
             is_demon: self.difficulty.is_demon(),
             downloads: self.downloads,
-            main_song: self.main_song.unwrap_or(MAIN_SONGS[0]),
+            main_song: self.main_song.map(|song| song.main_song_id).unwrap_or(0),
             gd_version: self.gd_version.into(),
             likes: self.likes,
             length: self.length,
@@ -308,7 +308,11 @@ impl<'a> HasRobtopFormat<'a> for Level<'a, Option<u64>, u64> {
                 LevelRating::from_response_value(int.rating)
             },
             downloads: int.downloads,
-            main_song: if int.custom_song.is_some() { None } else { Some(int.main_song) },
+            main_song: if int.custom_song.is_some() {
+                None
+            } else {
+                Some(MainSong::from(int.main_song))
+            },
             gd_version: GameVersion::from(int.gd_version),
             likes: int.likes,
             length: int.length,

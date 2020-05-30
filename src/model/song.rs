@@ -161,7 +161,6 @@ impl<'a> NewgroundsSong<'a> {
 /// This data is not provided by the API and needs to be manually kept up to
 /// date
 #[derive(Debug, Eq, PartialEq, Clone, Copy, Serialize, Deserialize)]
-#[serde(from = "u8", into = "u8")]
 pub struct MainSong {
     /// The ID of this [`MainSong`]
     pub main_song_id: u8,
