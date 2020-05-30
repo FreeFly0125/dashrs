@@ -259,7 +259,8 @@ impl Into<i32> for Featured {
 }
 
 /// Enum representing a level's copyability status
-#[derive(Debug, Clone, Eq, PartialEq, Copy)]
+// FIXME: Find a sane implementation for (de)serialize here
+#[derive(Debug, Clone, Eq, PartialEq, Copy, Serialize, Deserialize)]
 pub enum Password {
     /// The level isn't copyable through the official Geometry Dash client
     ///
@@ -414,7 +415,7 @@ impl Display for Password {
 /// `17`, `20`, `21`, `22`, `23`, `24`, `26`, `31`, `32`, `33`, `34`, `40`,
 /// `41`, `44`
 #[derive(Debug, Eq, PartialEq, Serialize, Deserialize)]
-pub struct PartialLevel<'a, Song, User> {
+pub struct Level<'a, Song, User> {
     /// The level's unique level id
     ///
     /// ## GD Internals:
@@ -589,6 +590,50 @@ pub struct PartialLevel<'a, Song, User> {
     /// ## GD Internals:
     /// This value is provided at index `47` and seems to be an integer
     pub index_47: Option<Cow<'a, str>>,
+
+    /// Additional data about this level that can be retrieved by downloading the level.
+    ///
+    /// This is [`None`] for levels retrieved via the "overview" endpoint `getGJLevels`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub level_data: Option<LevelData<'a>>,
+}
+
+/// Struct encapsulating the additional level data returned when actually downloading a level
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct LevelData<'a> {
+    /// The level's actual data.
+    ///
+    /// TODO: Wrap in fitting Thunk
+    ///
+    /// ## GD Internals:
+    /// This value is provided at index `4`, and is urlsafe base64 encoded and `DEFLATE` compressed
+    pub level_data: Cow<'a, str>,
+
+    /// The level's password
+    ///
+    /// ## GD Internals:
+    /// This value is provided at index `27`. For encoding details, see the documentation on the [`Password`] variants
+    pub password: Password,
+
+    /// The time passed since the `Level` was uploaded, as a string. Note that these strings are very imprecise, as they are only of the form "x months ago", or similar.
+    ///
+    /// TODO: Parse these into an enum
+    ///
+    /// ## GD Internals:
+    /// This value is provided at index `28`
+    pub time_since_upload: Cow<'a, str>,
+
+    /// The time passed since the `Level` was last updated, as a string. Note that these strings are very imprecise, as they are only of the form "x months ago", or similar.
+    ///
+    /// ## GD Internals:
+    /// This value is provided at index `29`
+    pub time_since_update: Cow<'a, str>,
+
+    /// According to the GDPS source, this is a value called `extraString`
+    ///
+    /// ## GD Internals:
+    /// This value is provided at index `36`
+    pub index_36: Option<Cow<'a, str>>,
 }
 
 #[cfg(test)]

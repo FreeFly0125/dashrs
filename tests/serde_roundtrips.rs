@@ -1,10 +1,10 @@
 use dash_rs::{
-    model::{creator::Creator, level::PartialLevel, song::NewgroundsSong},
+    model::{creator::Creator, level::Level, song::NewgroundsSong},
     PercentDecoded, Thunk,
 };
 use std::borrow::Cow;
 
-const _DARK_REALM_DATA: &str =
+const DARK_REALM_DATA: &str =
     "1:11774780:2:Dark \
      Realm:5:2:6:2073761:8:10:9:30:10:90786:12:0:13:20:14:10974:17:1:43:0:25::18:10:19:11994:42:0:45:0:3:\
      TXkgYmVzdCBsZXZlbCB5ZXQuIFZpZGVvIG9uIG15IFlvdVR1YmUuIEhhdmUgZnVuIGluIHRoaXMgZmFzdC1wYWNlZCBERU1PTiA-OikgdjIgRml4ZWQgc29tZSB0aGluZ3M=:\
@@ -123,12 +123,37 @@ fn deserialize_too_many_fields() {
 
 #[test]
 fn deserialize_partial_level() {
-    let level = dash_rs::from_robtop_str::<PartialLevel<_, _>>(_DARK_REALM_DATA);
+    let level = dash_rs::from_robtop_str::<Level<_, _>>(DARK_REALM_DATA);
 
     assert!(level.is_ok(), "{:?}", level.unwrap_err());
 
     let mut level = level.unwrap();
 
     assert!(level.description.as_mut().unwrap().process().is_ok());
+}
+
+#[test]
+fn deserialize_level() {
+    let level = dash_rs::from_robtop_str::<Level<_, _>>(include_str!("data/11774780_dark_realm_gjdownload_response"));
+
+    assert!(level.is_ok(), "{:?}", level.unwrap_err());
+
+    let mut level = level.unwrap();
+
+    assert!(level.description.as_mut().unwrap().process().is_ok());
+    assert!(level.level_data.is_some());
+}
+
+#[test]
+fn deserialize_level2() {
+    let level = dash_rs::from_robtop_str::<Level<_, _>>(include_str!("data/897837_time_pressure_gjdownload_response"));
+
+    assert!(level.is_ok(), "{:?}", level.unwrap_err());
+
+    let mut level = level.unwrap();
+
+    assert!(level.description.as_mut().unwrap().process().is_ok());
+    assert!(level.level_data.is_some());
+
     println!("{:?}", level);
 }

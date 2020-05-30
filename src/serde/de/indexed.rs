@@ -356,7 +356,7 @@ impl<'a, 'de> Deserializer<'de> for &'a mut IndexedDeserializer<'de> {
         V: Visitor<'de>,
     {
         // We are still very much not self describing, however we do need to correctly handle unimplemented
-        // indices. By the time this is called, they key itself will already have been popped in out
+        // indices. By the time this is called, they key itself will already have been popped in our
         // `MapAccess` implementation. This means we need to skip exactly one item! We'll feed a `None` to
         // the visitor. Because idk what we really wanna do here otherwise
         self.consume_token()?;

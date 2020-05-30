@@ -1,6 +1,6 @@
 use crate::{
     model::{
-        level::{DemonRating, Featured, LevelLength, LevelRating, PartialLevel},
+        level::{DemonRating, Featured, LevelLength, LevelRating, Level},
         song::{MainSong, MAIN_SONGS},
         GameVersion,
     },
@@ -9,6 +9,7 @@ use crate::{
 };
 use serde::{Deserialize, Serialize};
 use std::borrow::{Borrow, Cow};
+use crate::model::level::{Password, LevelData};
 
 mod level_length {
     use crate::model::level::LevelLength;
@@ -125,7 +126,7 @@ impl LevelRating {
     }
 }
 #[derive(Debug, Serialize, Deserialize)]
-pub struct InternalPartialLevel<'a> {
+pub struct InternalLevel<'a> {
     #[serde(rename = "1")]
     pub level_id: u64,
 
@@ -209,16 +210,31 @@ pub struct InternalPartialLevel<'a> {
 
     #[serde(rename = "47")]
     pub index_47: Option<&'a str>,
+
+    #[serde(rename = "4", default, skip_serializing_if = "Option::is_none")]
+    pub level_data: Option<&'a str>,
+
+    #[serde(rename = "27", default, skip_serializing_if = "Option::is_none")]
+    pub password: Option<Internal<Password>>,
+
+    #[serde(rename = "28", default, skip_serializing_if = "Option::is_none")]
+    pub time_since_upload: Option<&'a str>,
+
+    #[serde(rename = "29", default, skip_serializing_if = "Option::is_none")]
+    pub time_since_update: Option<&'a str>,
+
+    #[serde(rename = "36", default, skip_serializing_if = "Option::is_none")]
+    pub index_36: Option<&'a str>,
 }
 
-impl<'a> HasRobtopFormat<'a> for PartialLevel<'a, Option<u64>, u64> {
-    type Internal = InternalPartialLevel<'a>;
+impl<'a> HasRobtopFormat<'a> for Level<'a, Option<u64>, u64> {
+    type Internal = InternalLevel<'a>;
 
     const DELIMITER: &'static str = ":";
     const MAP_LIKE: bool = true;
 
     fn as_internal(&'a self) -> Self::Internal {
-        InternalPartialLevel {
+        InternalLevel {
             level_id: self.level_id,
             name: self.name.borrow(),
             description: self.description.as_ref().map(|thunk| {
@@ -252,11 +268,27 @@ impl<'a> HasRobtopFormat<'a> for PartialLevel<'a, Option<u64>, u64> {
             object_amount: self.object_amount,
             index_46: self.index_46.as_ref().map(|moo| moo.borrow()),
             index_47: self.index_47.as_ref().map(|moo| moo.borrow()),
+            level_data: self.level_data.as_ref().map(|data|data.level_data.borrow()),
+            password: self.level_data.as_ref().map(|data|Internal(data.password)),
+            time_since_upload: self.level_data.as_ref().map(|data|data.time_since_upload.borrow()),
+            time_since_update: self.level_data.as_ref().map(|data|data.time_since_update.borrow()),
+            index_36: self.level_data.as_ref().map(|data|data.index_36.as_ref().map(|moo|moo.borrow())).flatten()
         }
     }
 
     fn from_internal(int: Self::Internal) -> Self {
-        PartialLevel {
+        let level_data = match int.level_data {
+            None => None,
+            Some(data) => Some(LevelData {
+                level_data: Cow::Borrowed(data),
+                password: int.password.map(|pw|pw.0).unwrap_or(Password::NoCopy),
+                time_since_upload: Cow::Borrowed(int.time_since_upload.unwrap_or("Unknown")),
+                time_since_update:  Cow::Borrowed(int.time_since_update.unwrap_or("Unknown")),
+                index_36: int.index_36.map(Cow::Borrowed)
+            }),
+        };
+
+        Level {
             level_id: int.level_id,
             name: Cow::Borrowed(int.name),
             description: int.description.map(|internal| internal.0),
@@ -290,6 +322,7 @@ impl<'a> HasRobtopFormat<'a> for PartialLevel<'a, Option<u64>, u64> {
             object_amount: int.object_amount,
             index_46: int.index_46.map(Cow::Borrowed),
             index_47: int.index_47.map(Cow::Borrowed),
+            level_data
         }
     }
 }
