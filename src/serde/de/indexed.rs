@@ -57,7 +57,7 @@ impl<'de> IndexedDeserializer<'de> {
         IndexedDeserializer {
             source,
             delimiter: if delimiter.len() == 1 {
-                Delimiter::Char(delimiter.chars().nth(0).unwrap())
+                Delimiter::Char(delimiter.chars().next().unwrap())
             } else {
                 Delimiter::String(delimiter)
             },
@@ -92,7 +92,7 @@ impl<'de> IndexedDeserializer<'de> {
             Delimiter::String(s) => self.source.find(s),
         };
 
-        self.current_item_len = Some(index.unwrap_or(self.source.len()));
+        self.current_item_len = Some(index.unwrap_or_else(|| self.source.len()));
 
         Ok(match index {
             Some(index) if index == 0 => None,

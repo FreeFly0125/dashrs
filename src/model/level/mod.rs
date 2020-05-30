@@ -612,10 +612,12 @@ pub struct LevelData<'a> {
     /// The level's password
     ///
     /// ## GD Internals:
-    /// This value is provided at index `27`. For encoding details, see the documentation on the [`Password`] variants
+    /// This value is provided at index `27`. For encoding details, see the documentation on the
+    /// [`Password`] variants
     pub password: Password,
 
-    /// The time passed since the `Level` was uploaded, as a string. Note that these strings are very imprecise, as they are only of the form "x months ago", or similar.
+    /// The time passed since the `Level` was uploaded, as a string. Note that these strings are
+    /// very imprecise, as they are only of the form "x months ago", or similar.
     ///
     /// TODO: Parse these into an enum
     ///
@@ -623,7 +625,8 @@ pub struct LevelData<'a> {
     /// This value is provided at index `28`
     pub time_since_upload: Cow<'a, str>,
 
-    /// The time passed since the `Level` was last updated, as a string. Note that these strings are very imprecise, as they are only of the form "x months ago", or similar.
+    /// The time passed since the `Level` was last updated, as a string. Note that these strings are
+    /// very imprecise, as they are only of the form "x months ago", or similar.
     ///
     /// ## GD Internals:
     /// This value is provided at index `29`

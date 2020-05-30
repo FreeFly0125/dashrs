@@ -34,7 +34,7 @@ mod internal {
         pub index_6: Option<&'a str>,
 
         #[serde(rename = "7")]
-        pub index_7:Option<&'a str>,
+        pub index_7: Option<&'a str>,
 
         #[serde(rename = "8")]
         pub index_8: &'a str,
