@@ -349,9 +349,16 @@ impl<'ser, 'a, W: Write> Serializer for &'a mut ValueSerializer<'ser, W> {
 
         self.write_key()?;
 
+        // This is a horrible hack. In `LevelsRequest` there is one particular field, namely
+        // 'completedLevels`, that represents a list of values. In the entire freaking API, this is the only
+        // vector where serialization is required to surround the value list with parenthesis. We cannot
+        // simply deal with this in a newtype wrapper around vec, since werde does not allows us (rightfully
+        // so) to just randomly write parenthesis to an arbitrary serializer. Which is why we have to
+        // special case that one field here, in the serializer for robtop's request data format.
         Ok(SerializeSeq {
             serializer: self.serializer,
             is_start: true,
+            parenthesized: self.key == Some("completedLevels"),
         })
     }
 
@@ -404,6 +411,7 @@ impl<'ser, 'a, W: Write> Serializer for &'a mut ValueSerializer<'ser, W> {
 pub(crate) struct SerializeSeq<'ser, W: Write> {
     serializer: &'ser mut RequestSerializer<W>,
     is_start: bool,
+    parenthesized: bool,
 }
 
 impl<'write, W: Write> serde::ser::SerializeSeq for SerializeSeq<'write, W> {
@@ -416,6 +424,8 @@ impl<'write, W: Write> serde::ser::SerializeSeq for SerializeSeq<'write, W> {
     {
         if !self.is_start {
             self.serializer.writer.write(b",").map_err(Error::custom)?;
+        } else if self.parenthesized {
+            self.serializer.writer.write(b"(").map_err(Error::custom)?;
         }
 
         self.is_start = false;
@@ -428,6 +438,9 @@ impl<'write, W: Write> serde::ser::SerializeSeq for SerializeSeq<'write, W> {
     fn end(self) -> Result<Self::Ok, Self::Error> {
         if self.is_start {
             self.serializer.writer.write(b"-").map_err(Error::custom)?; // empty sequence
+        }
+        if self.parenthesized {
+            self.serializer.writer.write(b")").map_err(Error::custom)?;
         }
         Ok(())
     }

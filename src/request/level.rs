@@ -187,7 +187,8 @@ impl SearchFilters {
         self
     }
 
-    /// Limit search results to levels in two player mode (that is, where controls in dual mode are split)
+    /// Limit search results to levels in two player mode (that is, where controls in dual mode are
+    /// split)
     pub const fn two_player(mut self) -> Self {
         self.two_player = true;
         self
@@ -631,7 +632,7 @@ mod tests {
         assert_eq!(
             std::str::from_utf8(&output),
             Ok(
-                "gameVersion=21&binaryVersion=35&secret=Wmfd2893gb7&type=2&str=&len=2,3&diff=-&page=0&total=0&featured=1&original=0&\
+                "gameVersion=21&binaryVersion=33&secret=Wmfd2893gb7&type=2&str=&len=2,3&diff=-&page=0&total=0&featured=1&original=0&\
                  twoPlayer=1&coins=0&epic=1&star=1&completedLevels=(18018958,21373201,22057275,22488444,22008823,23144971,17382902,87600,\
                  22031889,22390740,22243264,21923305)&onlyCompleted=0&uncompleted=1"
             )
