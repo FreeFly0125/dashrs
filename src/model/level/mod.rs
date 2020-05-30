@@ -567,7 +567,9 @@ pub struct PartialLevel<'a, Song, User> {
     /// This value is provided at index `43` and seems to be an integer
     pub index_43: Cow<'a, str>,
 
-    /// The amount of objects in this [`PartialLevel`]. Note that a value of `None` _does not_ mean that there are no objects in the level, but rather that the server's didn't provide an object count.
+    /// The amount of objects in this [`PartialLevel`]. Note that a value of `None` _does not_ mean
+    /// that there are no objects in the level, but rather that the server's didn't provide an
+    /// object count.
     ///
     /// ## GD Internals:
     /// This value is provided at index `45`, although only for levels uploaded

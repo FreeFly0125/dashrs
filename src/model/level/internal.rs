@@ -84,8 +84,8 @@ impl LevelRating {
     fn from_request_value(value: i32) -> LevelRating {
         match value {
             -3 => LevelRating::Auto,
-            -2 => LevelRating::Demon(DemonRating::Unknown(-1)), /* The value doesn't matter, since setting the request field "rating" to
-                                                                  * -2 means "search for any demon, regardless of difficulty" */
+            -2 => LevelRating::Demon(DemonRating::Unknown(-1)), // The value doesn't matter, since setting the request field "rating" to
+            // -2 means "search for any demon, regardless of difficulty"
             -1 => LevelRating::NotAvailable,
             1 => LevelRating::Easy,
             2 => LevelRating::Normal,
@@ -130,7 +130,7 @@ pub struct InternalPartialLevel<'a> {
     pub level_id: u64,
 
     #[serde(borrow, rename = "2")]
-    pub name: Cow<'a, str>,
+    pub name: &'a str,
 
     #[serde(rename = "3")]
     pub description: Option<Internal<Thunk<'a, Base64Decoded<'a>>>>,
@@ -178,7 +178,7 @@ pub struct InternalPartialLevel<'a> {
     pub copy_of: Option<u64>,
 
     #[serde(rename = "31")]
-    pub index_31: Option<Cow<'a, str>>,
+    pub index_31: Option<&'a str>,
 
     #[serde(rename = "35", with = "crate::util::default_to_none")]
     pub custom_song: Option<u64>,
@@ -193,22 +193,22 @@ pub struct InternalPartialLevel<'a> {
     pub stars_requested: Option<u8>,
 
     #[serde(rename = "40")]
-    pub index_40: Option<Cow<'a, str>>,
+    pub index_40: Option<&'a str>,
 
     #[serde(rename = "42")]
     pub is_epic: bool,
 
     #[serde(rename = "43")]
-    pub index_43: Cow<'a, str>,
+    pub index_43: &'a str,
 
     #[serde(rename = "45", with = "crate::util::default_to_none")]
     pub object_amount: Option<u32>,
 
     #[serde(rename = "46")]
-    pub index_46: Option<Cow<'a, str>>,
+    pub index_46: Option<&'a str>,
 
     #[serde(rename = "47")]
-    pub index_47: Option<Cow<'a, str>>,
+    pub index_47: Option<&'a str>,
 }
 
 impl<'a> HasRobtopFormat<'a> for PartialLevel<'a, Option<u64>, u64> {
@@ -220,7 +220,7 @@ impl<'a> HasRobtopFormat<'a> for PartialLevel<'a, Option<u64>, u64> {
     fn as_internal(&'a self) -> Self::Internal {
         InternalPartialLevel {
             level_id: self.level_id,
-            name: Cow::Borrowed(self.name.borrow()),
+            name: self.name.borrow(),
             description: self.description.as_ref().map(|thunk| {
                 Internal(match thunk {
                     Thunk::Unprocessed(unproc) => Thunk::Unprocessed(unproc),
@@ -241,24 +241,24 @@ impl<'a> HasRobtopFormat<'a> for PartialLevel<'a, Option<u64>, u64> {
             stars: self.stars,
             featured: self.featured,
             copy_of: self.copy_of,
-            index_31: self.index_31.as_ref().map(|moo| Cow::Borrowed(moo.borrow())),
+            index_31: self.index_31.as_ref().map(|moo| moo.borrow()),
             custom_song: self.custom_song,
             coin_amount: self.coin_amount,
             coins_verified: self.coins_verified,
             stars_requested: self.stars_requested,
-            index_40: self.index_40.as_ref().map(|moo| Cow::Borrowed(moo.borrow())),
+            index_40: self.index_40.as_ref().map(|moo| moo.borrow()),
             is_epic: self.is_epic,
-            index_43: Cow::Borrowed(self.index_43.borrow()),
+            index_43: self.index_43.borrow(),
             object_amount: self.object_amount,
-            index_46: self.index_46.as_ref().map(|moo| Cow::Borrowed(moo.borrow())),
-            index_47: self.index_47.as_ref().map(|moo| Cow::Borrowed(moo.borrow())),
+            index_46: self.index_46.as_ref().map(|moo| moo.borrow()),
+            index_47: self.index_47.as_ref().map(|moo| moo.borrow()),
         }
     }
 
     fn from_internal(int: Self::Internal) -> Self {
         PartialLevel {
             level_id: int.level_id,
-            name: int.name,
+            name: Cow::Borrowed(int.name),
             description: int.description.map(|internal| internal.0),
             version: int.version,
             creator: int.creator,
@@ -279,17 +279,17 @@ impl<'a> HasRobtopFormat<'a> for PartialLevel<'a, Option<u64>, u64> {
             stars: int.stars,
             featured: int.featured,
             copy_of: int.copy_of,
-            index_31: int.index_31,
+            index_31: int.index_31.map(Cow::Borrowed),
             custom_song: int.custom_song,
             coin_amount: int.coin_amount,
             coins_verified: int.coins_verified,
             stars_requested: int.stars_requested,
-            index_40: int.index_40,
+            index_40: int.index_40.map(Cow::Borrowed),
             is_epic: int.is_epic,
-            index_43: int.index_43,
+            index_43: Cow::Borrowed(int.index_43),
             object_amount: int.object_amount,
-            index_46: int.index_46,
-            index_47: int.index_47,
+            index_46: int.index_46.map(Cow::Borrowed),
+            index_47: int.index_47.map(Cow::Borrowed),
         }
     }
 }
