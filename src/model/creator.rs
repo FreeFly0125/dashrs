@@ -11,7 +11,7 @@ mod internal {
         pub user_id: u64,
 
         #[serde(borrow)]
-        pub name: Cow<'a, str>,
+        pub name: &'a str,
 
         #[serde(with = "crate::util::default_to_none")]
         pub account_id: Option<u64>,
@@ -26,7 +26,7 @@ mod internal {
         fn as_internal(&'a self) -> Self::Internal {
             InternalCreator {
                 user_id: self.user_id,
-                name: Cow::Borrowed(self.name.as_ref()),
+                name: self.name.as_ref(),
                 account_id: self.account_id,
             }
         }
@@ -34,7 +34,7 @@ mod internal {
         fn from_internal(int: Self::Internal) -> Self {
             Creator {
                 user_id: int.user_id,
-                name: int.name,
+                name: Cow::Borrowed(int.name),
                 account_id: int.account_id,
             }
         }

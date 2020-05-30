@@ -19,25 +19,25 @@ mod internal {
         pub song_id: u64,
 
         #[serde(rename = "2", borrow)]
-        pub name: Cow<'a, str>,
+        pub name: &'a str,
 
         #[serde(rename = "3")]
         pub index_3: u64,
 
         #[serde(rename = "4")]
-        pub artist: Cow<'a, str>,
+        pub artist: &'a str,
 
         #[serde(rename = "5")]
         pub filesize: f64,
 
         #[serde(rename = "6")]
-        pub index_6: Option<Cow<'a, str>>,
+        pub index_6: Option<&'a str>,
 
         #[serde(rename = "7")]
-        pub index_7: Option<Cow<'a, str>>,
+        pub index_7: Option<&'a str>,
 
         #[serde(rename = "8")]
-        pub index_8: Cow<'a, str>,
+        pub index_8: &'a str,
 
         #[serde(rename = "10")]
         pub link: Internal<Thunk<'a, PercentDecoded<'a>>>,
@@ -52,13 +52,13 @@ mod internal {
         fn as_internal(&'a self) -> Self::Internal {
             InternalNewgroundsSong {
                 song_id: self.song_id,
-                name: Cow::Borrowed(self.name.as_ref()),
+                name: self.name.as_ref(),
                 index_3: self.index_3,
-                artist: Cow::Borrowed(self.artist.as_ref()),
+                artist: self.artist.as_ref(),
                 filesize: self.filesize,
-                index_6: self.index_6.as_ref().map(|moo| Cow::Borrowed(moo.as_ref())),
-                index_7: self.index_7.as_ref().map(|moo| Cow::Borrowed(moo.as_ref())),
-                index_8: Cow::Borrowed(self.index_8.as_ref()),
+                index_6: self.index_6.as_ref().map(|moo| moo.as_ref()),
+                index_7: self.index_7.as_ref().map(|moo| moo.as_ref()),
+                index_8: self.index_8.as_ref(),
                 link: match self.link {
                     Thunk::Unprocessed(s) => Internal(Thunk::Unprocessed(s)),
                     Thunk::Processed(ref decoded) => Internal(Thunk::Processed(PercentDecoded(Cow::Borrowed(decoded.0.as_ref())))),
@@ -69,13 +69,13 @@ mod internal {
         fn from_internal(int: Self::Internal) -> Self {
             NewgroundsSong {
                 song_id: int.song_id,
-                name: int.name,
+                name: Cow::Borrowed(int.name),
                 index_3: int.index_3,
-                artist: int.artist,
+                artist: Cow::Borrowed(int.artist),
                 filesize: int.filesize,
-                index_6: int.index_6,
-                index_7: int.index_7,
-                index_8: int.index_8,
+                index_6: int.index_6.map(Cow::Borrowed),
+                index_7: int.index_7.map(Cow::Borrowed),
+                index_8: Cow::Borrowed(int.index_8),
                 link: int.link.0,
             }
         }
@@ -160,15 +160,19 @@ impl<'a> NewgroundsSong<'a> {
 ///
 /// This data is not provided by the API and needs to be manually kept up to
 /// date
-#[derive(Debug, Eq, PartialEq, Clone, Copy)]
+#[derive(Debug, Eq, PartialEq, Clone, Copy, Serialize, Deserialize)]
 pub struct MainSong {
     /// The ID of this [`MainSong`]
     pub main_song_id: u8,
 
     /// The name of this [`MainSong`]
+    #[serde(skip)]
+    // even though we (de)serialize using From and Into, we have to mark these as skip so that the 'de lifetime isn't constrained by
+    // 'static
     pub name: &'static str,
 
     /// The artist of this [`MainSong`]
+    #[serde(skip)]
     pub artist: &'static str,
 }
 
@@ -209,8 +213,8 @@ pub const MAIN_SONGS: [MainSong; 21] = [
 
 /// Placeholder value for unknown [`MainSong`]s
 ///
-/// When resolving a main model.song by its ID, but you pass a wrong ID, or
-/// GDCF hasn't updated to include the new model.song yet, you will receive this object
+/// When resolving a ['MainSong'] by its ID, but you pass a wrong ID, or
+/// dash-rs hasn't updated to include the new model.song yet, you will receive this object
 pub const UNKNOWN: MainSong = MainSong::new(
     0xFF,
     "The model.song was added after the release of GDCF you're using",
@@ -223,8 +227,14 @@ impl Display for NewgroundsSong<'_> {
     }
 }
 
-impl From<u8> for &'static MainSong {
+impl From<u8> for MainSong {
     fn from(song_id: u8) -> Self {
-        MAIN_SONGS.get(song_id as usize).unwrap_or(&UNKNOWN)
+        *MAIN_SONGS.get(song_id as usize).unwrap_or(&UNKNOWN)
+    }
+}
+
+impl From<MainSong> for u8 {
+    fn from(song: MainSong) -> Self {
+        song.main_song_id
     }
 }

@@ -11,6 +11,7 @@
 //! version can produce a raw version by borrowing all fields (roughly speaking).
 
 use serde::{Deserialize, Serialize};
+use std::fmt::{Display, Formatter};
 
 pub mod creator;
 pub mod level;
@@ -18,7 +19,6 @@ pub mod song;
 
 /// Enum modelling the version of a Geometry Dash client
 #[derive(Debug, Clone, Copy, Ord, PartialOrd, Eq, PartialEq, Hash, Serialize, Deserialize)]
-#[serde(from = "u8", into = "u8")]
 pub enum GameVersion {
     /// Variant representing an unknown version. This variant is only used for
     /// levels that were uploaded before the game started tracking the
@@ -30,7 +30,6 @@ pub enum GameVersion {
     /// values in the form `major.minor`
     Version { minor: u8, major: u8 },
 }
-
 impl From<u8> for GameVersion {
     fn from(version: u8) -> Self {
         if version == 10 {
@@ -44,11 +43,20 @@ impl From<u8> for GameVersion {
     }
 }
 
-impl Into<u8> for GameVersion {
-    fn into(self) -> u8 {
-        match self {
+impl From<GameVersion> for u8 {
+    fn from(version: GameVersion) -> Self {
+        match version {
             GameVersion::Unknown => 10,
             GameVersion::Version { minor, major } => major * 10 + minor,
+        }
+    }
+}
+
+impl Display for GameVersion {
+    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
+        match self {
+            GameVersion::Unknown => write!(f, "Unknown"),
+            GameVersion::Version { minor, major } => write!(f, "{}.{}", major, minor),
         }
     }
 }
