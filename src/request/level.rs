@@ -169,31 +169,37 @@ pub struct SearchFilters {
 }
 
 impl SearchFilters {
+    /// Limit search results to star rated levels
     pub const fn rated(mut self) -> Self {
         self.rated = true;
         self
     }
 
+    /// Limit search results to epic levels
     pub const fn epic(mut self) -> Self {
         self.epic = true;
         self
     }
 
+    /// Limit search results to levels with coins
     pub const fn has_coins(mut self) -> Self {
         self.coins = true;
         self
     }
 
+    /// Limit search results to levels in two player mode (that is, where controls in dual mode are split)
     pub const fn two_player(mut self) -> Self {
         self.two_player = true;
         self
     }
 
+    /// Limit search results to levels that are not copies of other levels
     pub const fn original(mut self) -> Self {
         self.original = true;
         self
     }
 
+    /// Limit search results to featured levels
     pub const fn featured(mut self) -> Self {
         self.featured = true;
         self
@@ -204,6 +210,7 @@ impl SearchFilters {
         self
     }
 
+    /// Limit search results to levels with the given [`MainSong`]
     pub fn main_song(mut self, main_song: MainSong) -> Self {
         self.song = Some(SongFilter {
             song_id: main_song.main_song_id as u64,
@@ -212,6 +219,7 @@ impl SearchFilters {
         self
     }
 
+    /// Limit search results to levels that use a custom song matching the given id.
     pub fn custom_song(mut self, song_id: u64) -> Self {
         self.song = Some(SongFilter { song_id, is_custom: true });
         self
@@ -544,7 +552,7 @@ impl Serialize for DemonFilter {
     }
 }
 
-/// Newtype struct for [`DemonRating`] to implement robtop's serialization for requests on
+/// Newtype struct for [`LevelLength`] to implement robtop's serialization for requests on
 #[derive(Debug, Clone, Copy)]
 struct LengthFilter(LevelLength);
 
@@ -566,7 +574,7 @@ impl Serialize for LengthFilter {
     }
 }
 
-/// Newtype struct for [`DemonRating`] to implement robtop's serialization for requests on
+/// Newtype struct for [`LevelRating`] to implement robtop's serialization for requests on
 #[derive(Debug, Clone, Copy)]
 struct RatingFilter(LevelRating);
 
