@@ -3,6 +3,11 @@ use dash_rs::{
     PercentDecoded, Thunk,
 };
 use std::borrow::Cow;
+use dash_rs::Base64Decoded;
+use dash_rs::model::level::{LevelRating, DemonRating, LevelLength, LevelData, Password};
+use dash_rs::model::song::MainSong;
+use dash_rs::model::GameVersion;
+use dash_rs::model::level::Featured::Featured;
 
 const DARK_REALM_DATA: &str =
     "1:11774780:2:Dark \
@@ -57,6 +62,45 @@ const CREATOR_UNREGISTERED: Creator = Creator {
     user_id: 4170784,
     name: Cow::Borrowed("Serponge"),
     account_id: None,
+};
+
+const TIME_PRESSURE: Level<Option<u64>,u64> = Level {
+    level_id: 897837,
+    name: Cow::Borrowed("time pressure"),
+    description: Some(Thunk::Processed(Base64Decoded(Cow::Borrowed("please rate and like  8-9 stars mabye?")))),
+    version: 2,
+    creator: 842519,
+    difficulty: LevelRating::Demon(DemonRating::Easy),
+    downloads: 3189574,
+    main_song: Some(MainSong {
+        main_song_id: 14,
+        name: "Electrodynamix",
+        artist: "DJ-Nate",
+    }),
+    gd_version: GameVersion::Unknown,
+    likes: 198542,
+    length: LevelLength::Long,
+    stars: 10,
+    featured: Featured(700),
+    copy_of: None,
+    index_31: Some(Cow::Borrowed("0")),
+    custom_song: None,
+    coin_amount: 0,
+    coins_verified: false,
+    stars_requested: None,
+    index_40: None,
+    is_epic: false,
+    index_43: Cow::Borrowed("3"),
+    object_amount: None,
+    index_46: None,
+    index_47: None,
+    level_data: Some(LevelData {
+        level_data: Cow::Borrowed("REMOVED"),
+        password: Password::PasswordCopy(3101),
+        time_since_upload: Cow::Borrowed("5 years"),
+        time_since_update: Cow::Borrowed("5 years"),
+        index_36: None,
+    }),
 };
 
 #[test]
@@ -136,8 +180,6 @@ fn deserialize_partial_level() {
 fn deserialize_level() {
     let level = dash_rs::from_robtop_str::<Level<_, _>>(include_str!("data/11774780_dark_realm_gjdownload_response"));
 
-    assert!(level.is_ok(), "{:?}", level.unwrap_err());
-
     let mut level = level.unwrap();
 
     assert!(level.description.as_mut().unwrap().process().is_ok());
@@ -150,10 +192,12 @@ fn deserialize_level2() {
 
     let level = dash_rs::from_robtop_str::<Level<_, _>>(include_str!("data/897837_time_pressure_gjdownload_response"));
 
-    assert!(level.is_ok(), "{:?}", level.unwrap_err());
-
     let mut level = level.unwrap();
 
     assert!(level.description.as_mut().unwrap().process().is_ok());
     assert!(level.level_data.is_some());
+
+    level.level_data.as_mut().unwrap().level_data = Cow::Borrowed("REMOVED");
+
+    assert_eq!(level, TIME_PRESSURE);
 }
