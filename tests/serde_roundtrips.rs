@@ -105,6 +105,8 @@ const TIME_PRESSURE: Level<Option<u64>,u64> = Level {
 
 #[test]
 fn serialize_song() {
+    env_logger::builder().is_test(true).try_init();
+
     let mut buf: Vec<u8> = Vec::new();
     let result = dash_rs::write_robtop_data(&CREO_DUNE, &mut buf);
 
@@ -114,6 +116,8 @@ fn serialize_song() {
 
 #[test]
 fn deserialize_song() {
+    env_logger::builder().is_test(true).try_init();
+
     let song = dash_rs::from_robtop_str::<NewgroundsSong>(CREO_DUNE_DATA);
 
     assert!(song.is_ok(), "{:?}", song.unwrap_err());
@@ -126,6 +130,8 @@ fn deserialize_song() {
 
 #[test]
 fn serialize_registered_creator() {
+    env_logger::builder().is_test(true).try_init();
+
     let mut buf: Vec<u8> = Vec::new();
     let result = dash_rs::write_robtop_data(&CREATOR_REGISTERED, &mut buf);
 
@@ -135,6 +141,8 @@ fn serialize_registered_creator() {
 
 #[test]
 fn serialize_unregistered_creator() {
+    env_logger::builder().is_test(true).try_init();
+
     let mut buf: Vec<u8> = Vec::new();
     let result = dash_rs::write_robtop_data(&CREATOR_UNREGISTERED, &mut buf);
 
@@ -144,6 +152,8 @@ fn serialize_unregistered_creator() {
 
 #[test]
 fn deserialize_registered_creator() {
+    env_logger::builder().is_test(true).try_init();
+
     let creator = dash_rs::from_robtop_str::<Creator>(CREATOR_REGISTERED_DATA);
 
     assert!(creator.is_ok(), "{:?}", creator.unwrap_err());
@@ -152,6 +162,8 @@ fn deserialize_registered_creator() {
 
 #[test]
 fn deserialize_unregistered_creator() {
+    env_logger::builder().is_test(true).try_init();
+
     let creator = dash_rs::from_robtop_str::<Creator>(CREATOR_UNREGISTERED_DATA);
 
     assert!(creator.is_ok(), "{:?}", creator.unwrap_err());
@@ -160,6 +172,8 @@ fn deserialize_unregistered_creator() {
 
 #[test]
 fn deserialize_too_many_fields() {
+    env_logger::builder().is_test(true).try_init();
+
     let song = dash_rs::from_robtop_str::<NewgroundsSong>(CREO_DUNE_DATA_TOO_MANY_FIELDS);
 
     assert!(song.is_ok(), "{:?}", song.unwrap_err());
@@ -167,6 +181,8 @@ fn deserialize_too_many_fields() {
 
 #[test]
 fn deserialize_partial_level() {
+    env_logger::builder().is_test(true).try_init();
+
     let level = dash_rs::from_robtop_str::<Level<_, _>>(DARK_REALM_DATA);
 
     assert!(level.is_ok(), "{:?}", level.unwrap_err());
@@ -178,6 +194,8 @@ fn deserialize_partial_level() {
 
 #[test]
 fn deserialize_level() {
+    env_logger::builder().is_test(true).try_init();
+
     let level = dash_rs::from_robtop_str::<Level<_, _>>(include_str!("data/11774780_dark_realm_gjdownload_response"));
 
     let mut level = level.unwrap();
