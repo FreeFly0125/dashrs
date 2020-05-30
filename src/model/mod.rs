@@ -30,7 +30,6 @@ pub enum GameVersion {
     /// values in the form `major.minor`
     Version { minor: u8, major: u8 },
 }
-
 impl From<u8> for GameVersion {
     fn from(version: u8) -> Self {
         if version == 10 {
@@ -44,9 +43,9 @@ impl From<u8> for GameVersion {
     }
 }
 
-impl Into<u8> for GameVersion {
-    fn into(self) -> u8 {
-        match self {
+impl From<GameVersion> for u8 {
+    fn from(version: GameVersion) -> Self {
+        match version {
             GameVersion::Unknown => 10,
             GameVersion::Version { minor, major } => major * 10 + minor,
         }

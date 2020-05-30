@@ -233,8 +233,8 @@ impl From<u8> for MainSong {
     }
 }
 
-impl Into<u8> for MainSong {
-    fn into(self) -> u8 {
-        self.main_song_id
+impl From<MainSong> for u8 {
+    fn from(song: MainSong) -> Self {
+        song.main_song_id
     }
 }

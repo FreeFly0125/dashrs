@@ -248,9 +248,9 @@ impl From<i32> for Featured {
     }
 }
 
-impl Into<i32> for Featured {
-    fn into(self) -> i32 {
-        match self {
+impl From<Featured> for i32 {
+    fn from(featured: Featured) -> Self {
+        match featured {
             Featured::NotFeatured => -1,
             Featured::Unfeatured => 0,
             Featured::Featured(weight) => weight as i32,
