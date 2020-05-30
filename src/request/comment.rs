@@ -93,12 +93,12 @@ impl<'a> LevelCommentsRequest<'a> {
 
     const_setter!(page: u32);
 
-    pub const fn liked(mut self) -> Self {
+    pub const fn most_liked(mut self) -> Self {
         self.sort_mode = SortMode::Liked;
         self
     }
 
-    pub const fn recent(mut self) -> Self {
+    pub const fn most_recent(mut self) -> Self {
         self.sort_mode = SortMode::Recent;
         self
     }
@@ -163,5 +163,29 @@ impl<'a> ProfileCommentsRequest<'a> {
 impl Display for ProfileCommentsRequest<'_> {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         write!(f, "AccountCommentsRequest({})", self.account_id)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::request::comment::LevelCommentsRequest;
+    use crate::serde::RequestSerializer;
+    use serde::Serialize;
+
+    #[test]
+    fn serialize_level_comments() {
+        if let Err(err) = env_logger::builder().is_test(true).try_init() {
+            // nothing to make the tests fail over
+            eprintln!("Error setting up env_logger: {:?}", err)
+        }
+
+        let request = LevelCommentsRequest::new(1234).most_liked().page(2).limit(15);
+        let mut output = Vec::new();
+
+        let mut serializer = RequestSerializer::new(&mut output);
+
+        request.serialize(&mut serializer).unwrap();
+
+        assert_eq!(std::str::from_utf8(&output), Ok("gameVersion=21&binaryVersion=33&secret=Wmfd2893gb7&total=0&page=2&mode=1&levelID=1234&count=15"));
     }
 }

@@ -22,12 +22,21 @@ use serde::{
 use std::{fmt::Display, io::Write};
 
 #[allow(missing_debug_implementations)]
-pub(crate) struct RequestSerializer<W> {
+pub struct RequestSerializer<W> {
     writer: W,
 
     /// Value indicating whether this serializer has already serialized something. This is used to
     /// check if we need to prepend the delimiter to the next field.
     is_start: bool,
+}
+
+impl<W> RequestSerializer<W> {
+    pub fn new(writer: W) -> Self {
+        RequestSerializer {
+            writer,
+            is_start: true
+        }
+    }
 }
 
 macro_rules! unsupported {
@@ -136,6 +145,7 @@ impl<'a, W: Write> Serializer for &'a mut RequestSerializer<W> {
     fn serialize_struct_variant(
         self, _name: &'static str, _variant_index: u32, _variant: &'static str, _len: usize,
     ) -> Result<Self::SerializeStructVariant, Self::Error> {
+
         Err(Error::Unsupported("serialize_struct_variant"))
     }
 
