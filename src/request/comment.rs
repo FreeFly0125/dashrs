@@ -72,6 +72,12 @@ pub struct LevelCommentsRequest<'a> {
 }
 
 impl<'a> LevelCommentsRequest<'a> {
+    const_setter!(total: u32);
+
+    const_setter!(limit: u32);
+
+    const_setter!(page: u32);
+
     pub const fn new(level: u64) -> Self {
         Self::with_base(GD_21, level)
     }
@@ -86,12 +92,6 @@ impl<'a> LevelCommentsRequest<'a> {
             limit: 20,
         }
     }
-
-    const_setter!(total: u32);
-
-    const_setter!(limit: u32);
-
-    const_setter!(page: u32);
 
     pub const fn most_liked(mut self) -> Self {
         self.sort_mode = SortMode::Liked;
@@ -142,6 +142,12 @@ pub struct ProfileCommentsRequest<'a> {
 }
 
 impl<'a> ProfileCommentsRequest<'a> {
+    const_setter!(total: u32);
+
+    const_setter!(page: u32);
+
+    const_setter!(account_id: u64);
+
     pub const fn new(account: u64) -> Self {
         Self::with_base(GD_21, account)
     }
@@ -154,12 +160,6 @@ impl<'a> ProfileCommentsRequest<'a> {
             total: 0,
         }
     }
-
-    const_setter!(total: u32);
-
-    const_setter!(page: u32);
-
-    const_setter!(account_id: u64);
 }
 
 impl Display for ProfileCommentsRequest<'_> {
@@ -170,8 +170,10 @@ impl Display for ProfileCommentsRequest<'_> {
 
 #[cfg(test)]
 mod tests {
-    use crate::request::comment::{LevelCommentsRequest, ProfileCommentsRequest};
-    use crate::serde::RequestSerializer;
+    use crate::{
+        request::comment::{LevelCommentsRequest, ProfileCommentsRequest},
+        serde::RequestSerializer,
+    };
     use serde::Serialize;
 
     #[test]
@@ -188,7 +190,10 @@ mod tests {
 
         request.serialize(&mut serializer).unwrap();
 
-        assert_eq!(std::str::from_utf8(&output), Ok("gameVersion=21&binaryVersion=33&secret=Wmfd2893gb7&total=0&page=2&mode=1&levelID=1234&count=15"));
+        assert_eq!(
+            std::str::from_utf8(&output),
+            Ok("gameVersion=21&binaryVersion=33&secret=Wmfd2893gb7&total=0&page=2&mode=1&levelID=1234&count=15")
+        );
     }
 
     #[test]
@@ -205,6 +210,9 @@ mod tests {
 
         request.serialize(&mut serializer).unwrap();
 
-        assert_eq!(std::str::from_utf8(&output), Ok("gameVersion=21&binaryVersion=33&secret=Wmfd2893gb7&total=0&page=2&accountID=1710032"));
+        assert_eq!(
+            std::str::from_utf8(&output),
+            Ok("gameVersion=21&binaryVersion=33&secret=Wmfd2893gb7&total=0&page=2&accountID=1710032")
+        );
     }
 }

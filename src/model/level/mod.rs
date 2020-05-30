@@ -185,28 +185,6 @@ impl DemonRating {
         }
     }
 
-    fn from_request_value(value: i32) -> DemonRating {
-        match value {
-            1 => DemonRating::Easy,
-            2 => DemonRating::Medium,
-            3 => DemonRating::Hard,
-            4 => DemonRating::Insane,
-            5 => DemonRating::Extreme,
-            _ => DemonRating::Unknown(value),
-        }
-    }
-
-    fn into_request_value(self) -> i32 {
-        match self {
-            DemonRating::Unknown(value) => value,
-            DemonRating::Easy => 1,
-            DemonRating::Medium => 2,
-            DemonRating::Hard => 3,
-            DemonRating::Insane => 4,
-            DemonRating::Extreme => 5,
-        }
-    }
-
     fn into_response_value(self) -> i32 {
         match self {
             DemonRating::Unknown(value) => value,

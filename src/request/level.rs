@@ -1,5 +1,11 @@
-use crate::request::BaseRequest;
-use serde::{Deserialize, Serialize};
+use crate::{
+    model::{
+        level::{DemonRating, LevelLength, LevelRating},
+        song::MainSong,
+    },
+    request::BaseRequest,
+};
+use serde::{Deserialize, Serialize, Serializer};
 
 /// Struct modelled after a request to `downloadGJLevel22.php`.
 ///
@@ -87,27 +93,6 @@ impl CompletionFilter {
 /// client.
 #[derive(Debug, Default, Clone, Hash, Serialize, Deserialize)]
 pub struct SearchFilters {
-    /// In- or excluding levels that have already been beaten.
-    ///
-    /// Since outside the game the notion of "completing" a level is meaningless, this can be used
-    /// to restrict the result a subset of an arbitrary set of levels, or exclude an arbitrary
-    /// set of levels the result.
-    ///
-    /// ## GD Internals:
-    /// This field abstracts away the `uncompleted`, `onlyCompleted` and
-    /// `completedLevels` fields.
-    ///
-    /// * `uncompleted` is to be set to `1` if we wish to exclude completedlevels from the results
-    ///   (and to `0` otherwise).
-    /// * `onlyCompleted` is to be set to `1` if we wish to only search through completed levels
-    ///   (and to `0` otherwise)
-    /// * `completedLevels` is a list of levels ids that have been completed. It needs to be
-    ///   provided if, and only if, either `uncompleted` or `onlyCompleted` are set to `1`. The ids
-    ///   are comma seperated and enclosed by parenthesis.
-    /// If no completion filtering is desired, both boolean fields are set to `0` and
-    /// `completedLevels` is omitted.
-    pub completion: CompletionFilter,
-
     /// Only retrieve featured levels
     ///
     /// ## GD Internals:
@@ -160,10 +145,80 @@ pub struct SearchFilters {
     /// to `1` and `song` to the newgrounds ID of the custom song.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub song: Option<SongFilter>,
+
+    /// In- or excluding levels that have already been beaten.
+    ///
+    /// Since outside the game the notion of "completing" a level is meaningless, this can be used
+    /// to restrict the result a subset of an arbitrary set of levels, or exclude an arbitrary
+    /// set of levels the result.
+    ///
+    /// ## GD Internals:
+    /// This field abstracts away the `uncompleted`, `onlyCompleted` and
+    /// `completedLevels` fields.
+    ///
+    /// * `uncompleted` is to be set to `1` if we wish to exclude completedlevels from the results
+    ///   (and to `0` otherwise).
+    /// * `onlyCompleted` is to be set to `1` if we wish to only search through completed levels
+    ///   (and to `0` otherwise)
+    /// * `completedLevels` is a list of levels ids that have been completed. It needs to be
+    ///   provided if, and only if, either `uncompleted` or `onlyCompleted` are set to `1`. The ids
+    ///   are comma seperated and enclosed by parenthesis.
+    /// If no completion filtering is desired, both boolean fields are set to `0` and
+    /// `completedLevels` is omitted.
+    pub completion: CompletionFilter,
 }
 
-/// Enum containing the various types of
-/// [`LevelsRequest`] possible
+impl SearchFilters {
+    pub const fn rated(mut self) -> Self {
+        self.rated = true;
+        self
+    }
+
+    pub const fn epic(mut self) -> Self {
+        self.epic = true;
+        self
+    }
+
+    pub const fn has_coins(mut self) -> Self {
+        self.coins = true;
+        self
+    }
+
+    pub const fn two_player(mut self) -> Self {
+        self.two_player = true;
+        self
+    }
+
+    pub const fn is_original(mut self) -> Self {
+        self.original = true;
+        self
+    }
+
+    pub const fn featured(mut self) -> Self {
+        self.featured = true;
+        self
+    }
+
+    pub fn completion_filter(mut self, filter: CompletionFilter) -> Self {
+        self.completion = filter;
+        self
+    }
+
+    pub fn main_song(mut self, main_song: MainSong) -> Self {
+        self.song = Some(SongFilter {
+            song_id: main_song.main_song_id as u64,
+            is_custom: false,
+        });
+        self
+    }
+
+    pub fn custom_song(mut self, song_id: u64) -> Self {
+        self.song = Some(SongFilter { song_id, is_custom: true });
+        self
+    }
+}
+
+/// Enum containing the various types of [`LevelsRequest`] possible
 ///
 /// ## GD Internals:
 /// + Unused values: `8`, `9`, `14`
@@ -263,6 +318,12 @@ pub enum LevelRequestType {
     Unknown(i32),
 }
 
+impl Default for LevelRequestType {
+    fn default() -> Self {
+        LevelRequestType::Search
+    }
+}
+
 impl From<i32> for LevelRequestType {
     fn from(value: i32) -> Self {
         use LevelRequestType::*;
@@ -317,4 +378,255 @@ pub struct SongFilter {
 
 fn is_false(b: &bool) -> bool {
     !*b
+}
+
+/// Struct modelled after a request to `getGJLevels21.php`
+///
+/// In the Geometry Dash API, this endpoint is used to retrieve a list of
+/// levels matching the specified criteria, along with their
+/// [`NewgroundsSong`s](::model::song::NewgroundsSong) and [`Creator`s](::model::user::Creator).
+#[derive(Debug, Default, Clone, Serialize)]
+pub struct LevelsRequest<'a> {
+    /// The base request data
+    #[serde(borrow)]
+    pub base: BaseRequest<'a>,
+
+    /// The type of level list to retrieve
+    ///
+    /// ## GD Internals:
+    /// This field is called `type` in the boomlings API and needs to be
+    /// converted to an integer
+    #[serde(rename = "type")]
+    pub request_type: LevelRequestType,
+
+    /// A search string to filter the levels by
+    ///
+    /// This value is ignored unless [`LevelsRequest::request_type`] is set to
+    /// [`LevelRequestType::Search`] or [`LevelRequestType::User`]
+    ///
+    /// ## GD Internals:
+    /// This field is called `str` in the boomlings API
+    #[serde(rename = "str")]
+    pub search_string: &'a str,
+
+    /// A list of level lengths to filter by
+    ///
+    /// This value is ignored unless [`LevelsRequest::request_type`] is set to
+    /// [`LevelRequestType::Search`]
+    ///
+    /// ## GD Internals:
+    /// This field is called `len` in the boomlings API and needs to be
+    /// converted to a comma separated list of integers, or a single dash
+    /// (`-`) if filtering by level length isn't wanted.
+    #[serde(rename = "len")]
+    lengths: Vec<LengthFilter>,
+
+    /// A list of level ratings to filter by.
+    ///
+    /// To filter by any demon, add [`LevelRating::Demon`] with any arbitrary [`DemonRating`] value.
+    ///
+    /// `ratings` and [`LevelsRequest::demon_rating`] are mutually exlusive.
+    ///
+    /// This value is ignored unless [`LevelsRequest::request_type`] is set to
+    /// [`LevelRequestType::Search`]
+    ///
+    /// ## GD Internals:
+    /// This field is called `diff` in the boomlings API and needs to be
+    /// converted to a comma separated list of integers, or a single dash
+    /// (`-`) if filtering by level rating isn't wanted.
+    #[serde(rename = "diff")]
+    ratings: Vec<RatingFilter>,
+
+    /// Optionally, a single demon rating to filter by. To filter by any demon
+    /// rating, use [`LevelsRequest::ratings`]
+    ///
+    /// `demon_rating` and `ratings` are mutually exlusive.
+    ///
+    /// This value is ignored unless [`LevelsRequest::request_type`] is set to
+    /// [`LevelRequestType::Search`]
+    ///
+    /// ## GD Internals:
+    /// This field is called `demonFilter` in the boomlings API and needs to be
+    /// converted to an integer. If filtering by demon rating isn't wanted,
+    /// the value has to be omitted from the request.
+    #[serde(rename = "demonFilter")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    demon_rating: Option<DemonFilter>,
+
+    /// The page of results to retrieve
+    pub page: u32,
+
+    /// Some weird value the Geometry Dash client sends along
+    pub total: i32,
+
+    /// Search filters to apply.
+    ///
+    /// This value is ignored unless [`LevelsRequest::request_type`] is set to
+    /// [`LevelRequestType::Search`]
+    pub search_filters: SearchFilters,
+}
+
+impl<'a> LevelsRequest<'a> {
+    const_setter!(page: u32);
+
+    const_setter!(total: i32);
+
+    const_setter!(request_type: LevelRequestType);
+
+    pub fn with_base(base: BaseRequest<'a>) -> Self {
+        LevelsRequest {
+            base,
+            ..Default::default()
+        }
+    }
+
+    /// Turns this request into a [`LevelRequestType::Search`]-type request, with the search
+    /// parameter set to the given string
+    pub const fn search(mut self, search_string: &'a str) -> Self {
+        self.search_string = search_string;
+        self.request_type = LevelRequestType::Search;
+        self
+    }
+
+    /// Turns on filtering by level length (if not already on) and adds the given level length to
+    /// the list of lengths to include in the search results
+    pub fn with_length(mut self, length: LevelLength) -> Self {
+        self.lengths.push(LengthFilter(length));
+        self
+    }
+
+    /// Turns on filtering by level rating (if not already on) and adds the given level rating to
+    /// the list of ratings to include in the search results
+    ///
+    /// Passing [`LevelRating::Demon`] here will turn on filtering by _any_ demon difficulty. The
+    /// filter `demon_rating` for specific demon difficulties is reset to `None` when this method is
+    /// called, as these modes are mutually exclusive.
+    pub fn with_rating(mut self, rating: LevelRating) -> Self {
+        self.demon_rating = None;
+        self.ratings.push(RatingFilter(rating));
+        self
+    }
+
+    /// Turns on filtering by demon difficulty
+    ///
+    /// Resets any [`LevelRating`] filters set beforehand, as these modes are mutually exclusive.
+    pub fn demon_rating(mut self, demon_rating: DemonRating) -> Self {
+        self.ratings.clear();
+        self.demon_rating = Some(DemonFilter(demon_rating));
+        self
+    }
+
+    pub fn search_filters(mut self, filters: SearchFilters) -> Self {
+        self.search_filters = filters;
+        self
+    }
+}
+
+/// Newtype struct for [`DemonRating`] to implement robtop's serialization for requests on
+#[derive(Debug, Clone, Copy)]
+struct DemonFilter(DemonRating);
+
+impl Serialize for DemonFilter {
+    fn serialize<S>(&self, serializer: S) -> Result<<S as Serializer>::Ok, <S as Serializer>::Error>
+    where
+        S: Serializer,
+    {
+        let numerical_value = match self.0 {
+            DemonRating::Unknown(value) => value,
+            DemonRating::Easy => 1,
+            DemonRating::Medium => 2,
+            DemonRating::Hard => 3,
+            DemonRating::Insane => 4,
+            DemonRating::Extreme => 5,
+        };
+
+        serializer.serialize_i32(numerical_value)
+    }
+}
+
+/// Newtype struct for [`DemonRating`] to implement robtop's serialization for requests on
+#[derive(Debug, Clone, Copy)]
+struct LengthFilter(LevelLength);
+
+impl Serialize for LengthFilter {
+    fn serialize<S>(&self, serializer: S) -> Result<<S as Serializer>::Ok, <S as Serializer>::Error>
+    where
+        S: Serializer,
+    {
+        let numerical_value = match self.0 {
+            LevelLength::Unknown(unknown) => unknown,
+            LevelLength::Tiny => 0,
+            LevelLength::Short => 1,
+            LevelLength::Medium => 2,
+            LevelLength::Long => 3,
+            LevelLength::ExtraLong => 4,
+        };
+
+        serializer.serialize_i32(numerical_value)
+    }
+}
+
+/// Newtype struct for [`DemonRating`] to implement robtop's serialization for requests on
+#[derive(Debug, Clone, Copy)]
+struct RatingFilter(LevelRating);
+
+impl Serialize for RatingFilter {
+    fn serialize<S>(&self, serializer: S) -> Result<<S as Serializer>::Ok, <S as Serializer>::Error>
+    where
+        S: Serializer,
+    {
+        let numerical_value = match self.0 {
+            LevelRating::Unknown(value) => value,
+            LevelRating::NotAvailable => -1,
+            LevelRating::Auto => -3,
+            LevelRating::Easy => 1,
+            LevelRating::Normal => 2,
+            LevelRating::Hard => 3,
+            LevelRating::Harder => 4,
+            LevelRating::Insane => 5,
+            LevelRating::Demon(_) => -2, /* The value doesn't matter, since setting the request field "rating" to
+                                          * -2 means "search for any demon, regardless of difficulty" */
+        };
+
+        serializer.serialize_i32(numerical_value)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{
+        model::level::LevelLength,
+        request::level::{CompletionFilter, LevelRequestType, LevelsRequest, SearchFilters},
+        serde::RequestSerializer,
+    };
+    use serde::Serialize;
+
+    #[test]
+    fn serialize_levels_request() {
+        let request =
+            LevelsRequest::default()
+                .request_type(LevelRequestType::MostLiked)
+                .with_length(LevelLength::Medium)
+                .with_length(LevelLength::Long)
+                .search_filters(SearchFilters::default().featured().two_player().epic().rated().completion_filter(
+                    CompletionFilter::exclude(vec![
+                        18018958, 21373201, 22057275, 22488444, 22008823, 23144971, 17382902, 87600, 22031889, 22390740, 22243264, 21923305,
+                    ]),
+                ));
+
+        let mut output = Vec::new();
+
+        let mut serializer = RequestSerializer::new(&mut output);
+
+        request.serialize(&mut serializer).unwrap();
+
+        assert_eq!(
+            std::str::from_utf8(&output),
+            Ok(
+                "gameVersion=21&binaryVersion=35&secret=Wmfd2893gb7&type=2&str=&len=2,3&diff=-&page=0&total=0&featured=1&original=0&\
+                 twoPlayer=1&coins=0&epic=1&star=1&completedLevels=(18018958,21373201,22057275,22488444,22008823,23144971,17382902,87600,\
+                 22031889,22390740,22243264,21923305)&onlyCompleted=0&uncompleted=1"
+            )
+        );
+    }
 }

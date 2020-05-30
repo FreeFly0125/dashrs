@@ -32,10 +32,7 @@ pub struct RequestSerializer<W> {
 
 impl<W> RequestSerializer<W> {
     pub fn new(writer: W) -> Self {
-        RequestSerializer {
-            writer,
-            is_start: true
-        }
+        RequestSerializer { writer, is_start: true }
     }
 }
 
@@ -145,7 +142,6 @@ impl<'a, W: Write> Serializer for &'a mut RequestSerializer<W> {
     fn serialize_struct_variant(
         self, _name: &'static str, _variant_index: u32, _variant: &'static str, _len: usize,
     ) -> Result<Self::SerializeStructVariant, Self::Error> {
-
         Err(Error::Unsupported("serialize_struct_variant"))
     }
 
@@ -382,6 +378,12 @@ impl<'ser, 'a, W: Write> Serializer for &'a mut ValueSerializer<'ser, W> {
             return Err(Error::Unsupported("struct inside sequence"))
         }
 
+        // If we inline a struct, that struct might not be the first field we serialize. However, we do not
+        // know whether the value we serialize is a struct or not until we reach this method, so the value
+        // serializer will already have appended an '&' for us. This means that we do not want to add
+        // another one for the first field of this nested struct.
+        self.serializer.is_start = true;
+
         Ok(self.serializer)
     }
 
@@ -424,7 +426,7 @@ impl<'write, W: Write> serde::ser::SerializeSeq for SerializeSeq<'write, W> {
     }
 
     fn end(self) -> Result<Self::Ok, Self::Error> {
-        if !self.is_start {
+        if self.is_start {
             self.serializer.writer.write(b"-").map_err(Error::custom)?; // empty sequence
         }
         Ok(())

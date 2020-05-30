@@ -8,7 +8,6 @@
 use crate::model::GameVersion;
 use serde::{Deserialize, Serialize};
 
-
 macro_rules! const_setter {
     ($name: ident, $field: ident, $t: ty) => {
         pub const fn $name(mut self, $field: $t) -> Self {

@@ -81,21 +81,6 @@ impl LevelRating {
         }
     }
 
-    fn from_request_value(value: i32) -> LevelRating {
-        match value {
-            -3 => LevelRating::Auto,
-            -2 => LevelRating::Demon(DemonRating::Unknown(-1)), // The value doesn't matter, since setting the request field "rating" to
-            // -2 means "search for any demon, regardless of difficulty"
-            -1 => LevelRating::NotAvailable,
-            1 => LevelRating::Easy,
-            2 => LevelRating::Normal,
-            3 => LevelRating::Hard,
-            4 => LevelRating::Harder,
-            5 => LevelRating::Insane,
-            _ => LevelRating::Unknown(value),
-        }
-    }
-
     fn into_response_value(self) -> i32 {
         match self {
             LevelRating::Unknown(value) => value,
@@ -107,20 +92,6 @@ impl LevelRating {
             LevelRating::Insane => 60,
             LevelRating::Demon(demon_rating) => demon_rating.into_response_value(),
             _ => panic!("got {:?}, please handle before calling this function", self),
-        }
-    }
-
-    fn into_request_value(self) -> i32 {
-        match self {
-            LevelRating::Unknown(value) => value,
-            LevelRating::NotAvailable => -1,
-            LevelRating::Auto => -3,
-            LevelRating::Easy => 1,
-            LevelRating::Normal => 2,
-            LevelRating::Hard => 3,
-            LevelRating::Harder => 4,
-            LevelRating::Insane => 5,
-            LevelRating::Demon(_) => -2,
         }
     }
 }
