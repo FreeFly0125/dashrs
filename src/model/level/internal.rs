@@ -274,8 +274,8 @@ impl<'a> HasRobtopFormat<'a> for Level<'a, Option<u64>, u64> {
             index_36: self
                 .level_data
                 .as_ref()
-                .map(|data| data.index_36.as_ref().map(|moo| moo.borrow()))
-                .flatten(),
+                .and_then(|data| data.index_36.as_ref())
+                .map(|moo| moo.borrow()),
         }
     }
 
