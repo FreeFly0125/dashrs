@@ -1,10 +1,15 @@
 use dash_rs::{
-    model::{creator::Creator, song::NewgroundsSong},
-    PercentDecoded, Thunk,
+    model::{
+        creator::Creator,
+        level::{DemonRating, Featured::Featured, Level, LevelData, LevelLength, LevelRating, Password},
+        song::{MainSong, NewgroundsSong},
+        GameVersion,
+    },
+    Base64Decoded, PercentDecoded, Thunk,
 };
 use std::borrow::Cow;
 
-const _DARK_REALM_DATA: &str =
+const DARK_REALM_DATA: &str =
     "1:11774780:2:Dark \
      Realm:5:2:6:2073761:8:10:9:30:10:90786:12:0:13:20:14:10974:17:1:43:0:25::18:10:19:11994:42:0:45:0:3:\
      TXkgYmVzdCBsZXZlbCB5ZXQuIFZpZGVvIG9uIG15IFlvdVR1YmUuIEhhdmUgZnVuIGluIHRoaXMgZmFzdC1wYWNlZCBERU1PTiA-OikgdjIgRml4ZWQgc29tZSB0aGluZ3M=:\
@@ -59,8 +64,51 @@ const CREATOR_UNREGISTERED: Creator = Creator {
     account_id: None,
 };
 
+const TIME_PRESSURE: Level<Option<u64>, u64> = Level {
+    level_id: 897837,
+    name: Cow::Borrowed("time pressure"),
+    description: Some(Thunk::Processed(Base64Decoded(Cow::Borrowed(
+        "please rate and like  8-9 stars mabye?",
+    )))),
+    version: 2,
+    creator: 842519,
+    difficulty: LevelRating::Demon(DemonRating::Easy),
+    downloads: 3189574,
+    main_song: Some(MainSong {
+        main_song_id: 14,
+        name: "Electrodynamix",
+        artist: "DJ-Nate",
+    }),
+    gd_version: GameVersion::Unknown,
+    likes: 198542,
+    length: LevelLength::Long,
+    stars: 10,
+    featured: Featured(700),
+    copy_of: None,
+    index_31: Some(Cow::Borrowed("0")),
+    custom_song: None,
+    coin_amount: 0,
+    coins_verified: false,
+    stars_requested: None,
+    index_40: None,
+    is_epic: false,
+    index_43: Cow::Borrowed("3"),
+    object_amount: None,
+    index_46: None,
+    index_47: None,
+    level_data: Some(LevelData {
+        level_data: Cow::Borrowed("REMOVED"),
+        password: Password::PasswordCopy(3101),
+        time_since_upload: Cow::Borrowed("5 years"),
+        time_since_update: Cow::Borrowed("5 years"),
+        index_36: None,
+    }),
+};
+
 #[test]
 fn serialize_song() {
+    init_log();
+
     let mut buf: Vec<u8> = Vec::new();
     let result = dash_rs::write_robtop_data(&CREO_DUNE, &mut buf);
 
@@ -70,6 +118,8 @@ fn serialize_song() {
 
 #[test]
 fn deserialize_song() {
+    init_log();
+
     let song = dash_rs::from_robtop_str::<NewgroundsSong>(CREO_DUNE_DATA);
 
     assert!(song.is_ok(), "{:?}", song.unwrap_err());
@@ -82,6 +132,8 @@ fn deserialize_song() {
 
 #[test]
 fn serialize_registered_creator() {
+    init_log();
+
     let mut buf: Vec<u8> = Vec::new();
     let result = dash_rs::write_robtop_data(&CREATOR_REGISTERED, &mut buf);
 
@@ -91,6 +143,8 @@ fn serialize_registered_creator() {
 
 #[test]
 fn serialize_unregistered_creator() {
+    init_log();
+
     let mut buf: Vec<u8> = Vec::new();
     let result = dash_rs::write_robtop_data(&CREATOR_UNREGISTERED, &mut buf);
 
@@ -100,6 +154,8 @@ fn serialize_unregistered_creator() {
 
 #[test]
 fn deserialize_registered_creator() {
+    init_log();
+
     let creator = dash_rs::from_robtop_str::<Creator>(CREATOR_REGISTERED_DATA);
 
     assert!(creator.is_ok(), "{:?}", creator.unwrap_err());
@@ -108,6 +164,8 @@ fn deserialize_registered_creator() {
 
 #[test]
 fn deserialize_unregistered_creator() {
+    init_log();
+
     let creator = dash_rs::from_robtop_str::<Creator>(CREATOR_UNREGISTERED_DATA);
 
     assert!(creator.is_ok(), "{:?}", creator.unwrap_err());
@@ -116,7 +174,57 @@ fn deserialize_unregistered_creator() {
 
 #[test]
 fn deserialize_too_many_fields() {
+    init_log();
+
     let song = dash_rs::from_robtop_str::<NewgroundsSong>(CREO_DUNE_DATA_TOO_MANY_FIELDS);
 
     assert!(song.is_ok(), "{:?}", song.unwrap_err());
+}
+
+#[test]
+fn deserialize_partial_level() {
+    init_log();
+
+    let level = dash_rs::from_robtop_str::<Level<_, _>>(DARK_REALM_DATA);
+
+    assert!(level.is_ok(), "{:?}", level.unwrap_err());
+
+    let mut level = level.unwrap();
+
+    assert!(level.description.as_mut().unwrap().process().is_ok());
+}
+
+#[test]
+fn deserialize_level() {
+    init_log();
+
+    let level = dash_rs::from_robtop_str::<Level<_, _>>(include_str!("data/11774780_dark_realm_gjdownload_response"));
+
+    let mut level = level.unwrap();
+
+    assert!(level.description.as_mut().unwrap().process().is_ok());
+    assert!(level.level_data.is_some());
+}
+
+#[test]
+fn deserialize_level2() {
+    init_log();
+
+    let level = dash_rs::from_robtop_str::<Level<_, _>>(include_str!("data/897837_time_pressure_gjdownload_response"));
+
+    let mut level = level.unwrap();
+
+    assert!(level.description.as_mut().unwrap().process().is_ok());
+    assert!(level.level_data.is_some());
+
+    level.level_data.as_mut().unwrap().level_data = Cow::Borrowed("REMOVED");
+
+    assert_eq!(level, TIME_PRESSURE);
+}
+
+fn init_log() {
+    if let Err(err) = env_logger::builder().is_test(true).try_init() {
+        // nothing to make the tests fail over
+        eprintln!("Error setting up env_logger: {:?}", err)
+    }
 }
