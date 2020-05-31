@@ -19,6 +19,7 @@ pub mod song;
 
 /// Enum modelling the version of a Geometry Dash client
 #[derive(Debug, Clone, Copy, Ord, PartialOrd, Eq, PartialEq, Hash, Serialize, Deserialize)]
+#[serde(into = "u8", from = "u8")]
 pub enum GameVersion {
     /// Variant representing an unknown version. This variant is only used for
     /// levels that were uploaded before the game started tracking the

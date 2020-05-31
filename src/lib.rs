@@ -32,6 +32,7 @@
 )]
 
 pub mod model;
+pub mod request;
 pub(crate) mod serde;
 pub mod util;
 

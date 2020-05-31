@@ -3,7 +3,7 @@ mod ser;
 mod thunk;
 
 pub use de::{error::Error as DeError, indexed::IndexedDeserializer};
-pub use ser::{error::Error as SerError, indexed::IndexedSerializer};
+pub use ser::{error::Error as SerError, indexed::IndexedSerializer, request::RequestSerializer};
 use serde::{Deserialize, Serialize};
 pub(crate) use thunk::Internal;
 pub use thunk::{Base64Decoded, PercentDecoded, ProcessError, Thunk};
