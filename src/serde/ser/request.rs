@@ -352,7 +352,7 @@ impl<'ser, 'a, W: Write> Serializer for &'a mut ValueSerializer<'ser, W> {
         // This is a horrible hack. In `LevelsRequest` there is one particular field, namely
         // 'completedLevels`, that represents a list of values. In the entire freaking API, this is the only
         // vector where serialization is required to surround the value list with parenthesis. We cannot
-        // simply deal with this in a newtype wrapper around vec, since werde does not allows us (rightfully
+        // simply deal with this in a newtype wrapper around vec, since serde does not allows us (rightfully
         // so) to just randomly write parenthesis to an arbitrary serializer. Which is why we have to
         // special case that one field here, in the serializer for robtop's request data format.
         Ok(SerializeSeq {
