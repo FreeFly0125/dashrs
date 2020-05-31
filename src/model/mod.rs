@@ -1,14 +1,17 @@
 //! Module containing all data models Geometry Dash uses
 //!
 //! For each data model there are two versions:
-//! * A `Raw...` version which is the deserialization target. It can be constructed without any
-//!   allocations at all and references the input it was deserialized from. Furthermore, these are a
-//!   one-to-one mapping from response data into rust structures, meaning they also act as
+//! * A `Internal...` version which is the deserialization target. It can be constructed without any
+//!   allocations at all and references the input it was deserialized from. Furthermore, these are
+//!   nearly one-to-one mapping from response data into rust structures, meaning they also act as
 //!   documentation of RobTop's data formats.
-//! * A "Owned" version that owns all its fields
+//! * A version that's public API and which abstracts over robtop's data format in a sensible way.
+//!   These still borrow their data from the deserialization source, but can optionally own their
+//!   contents. All data that would require allocations to be completely processed (such as base64
+//!   encoded level descriptions) is put in [`Thunk`](crate::serde::thunk::Thunk)s and can be processed lazily on-demand. This
+//!   allows us to deserialize the input and construct these representations with zero allocations.
 //!
-//! The raw version can be converted into the owned version by cloning all the fields. The owned
-//! version can produce a raw version by borrowing all fields (roughly speaking).
+//! These versions can be converted to and from each other, simply by borrowing.
 
 use serde::{Deserialize, Serialize};
 use std::fmt::{Display, Formatter};

@@ -30,7 +30,7 @@ pub enum Error<'de> {
         value: Option<&'de str>,
     },
 
-    /// A given [`Deserializer`] function was not supported
+    /// A given [`Deserializer`](serde::Deserializer) function was not supported
     Unsupported(&'static str),
 }
 

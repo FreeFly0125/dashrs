@@ -7,16 +7,16 @@ use std::{borrow::Cow, fmt::Display, num::ParseIntError, str::Utf8Error, string:
 ///
 /// ## Why is this a seperate enum
 /// One might wonder why this enum exists, and why we don't simply reuse
-/// [`Error`](::serde.de::error::Error). The main reason is that I do not want to include variants
+/// [`Error`](::serde::de::error::Error). The main reason is that I do not want to include variants
 /// in that enum that do not occur during the actual deserialization phase. The second reason has to
-/// do with lifetimes: Just using `Error<'a>` for the error type in the [`TryFrom`] impls used by
-/// `Thunk` is not possible. The reason for that is that processing errors are returned in contexts
-/// where data is transformed into owned representations. This means we cannot simply reuse the
-/// lifetime the input data is bound to for our errors, as the errors potentially have to outlive
-/// the input data (in the worst case they have to be `'static`). Adding a new lifetime to `Thunk`
-/// just to use that for the error type is obviously impractical, however it is possible to use
-/// `Error<'static>`, which at least doesn't add more downsides. However it still leaves us with an
-/// error enum dealing with too much stuff.
+/// do with lifetimes: Just using `Error<'a>` for the return type in the [`ThunkContent`] functions
+/// used by [`Thunk`] is not possible. The reason for that is that processing errors are returned in
+/// contexts where data is transformed into owned representations. This means we cannot simply reuse
+/// the lifetime the input data is bound to for our errors, as the errors potentially have to
+/// outlive the input data (in the worst case they have to be `'static`). Adding a new lifetime to
+/// `Thunk` just to use that for the error type is obviously impractical, however it is possible to
+/// use `Error<'static>`, which at least doesn't add more downsides. However it still leaves us with
+/// an error enum dealing with too much stuff.
 #[derive(Debug)]
 pub enum ProcessError {
     /// Some utf8 encoding error occurred during processing
@@ -46,16 +46,11 @@ impl Display for ProcessError {
 /// Input value whose further deserialization has been delayed
 ///
 /// This is often used if further processing would require an allocation (for instance when using
-/// base64 decoding) or be very long (for instance parsing model.level data).
+/// base64 decoding) or be very long (for instance parsing level data).
 ///
-/// The required further processing should happen in the [`TryFrom`]
-/// implementation and is invoked by calling [`Thunk::process`]. Think of it as [`Cow`] with extra
-/// steps and potential new allocations instead of cloning.
-///
-/// The one requirement we impose on `P` is that it must implement [`Serialize`] and serialize to
-/// exactly the unprocessed string it was constructed from (unless it was manually changed of
-/// course, in which case it needs to correctly serialize to a string representation from which it
-/// can be reconstructed via [`TryFrom`])
+/// The required further processing should happen in the [`ThunkContent`] implementation, which is
+/// invoked by calling [`Thunk::process`]. Think of it as [`Cow`] with extra steps and potential new
+/// allocations instead of cloning.
 #[derive(Debug, Eq, PartialEq, Clone, Deserialize)]
 #[serde(untagged)]
 pub enum Thunk<'a, C: ThunkContent<'a>> {
@@ -79,7 +74,7 @@ impl<'a, C: ThunkContent<'a> + Serialize> Serialize for Thunk<'a, C> {
     }
 }
 
-/// Trait structs are used in the [`Thunk::Processed`] variant implement.
+/// Trait structs which are used in the [`Thunk::Processed`] variant have to implement.
 ///
 /// This trait provides the means to translate from and into RobTop's representation for thunked
 /// data, while not being used in the (de)serialization into any other data format.
@@ -95,6 +90,10 @@ pub trait ThunkContent<'a>: Sized {
 }
 
 // effectively pub(crate) since it's not reexported in lib.rs
+/// Marker type used to differentiate how [`Thunk`]s should serialize.
+///
+/// A `Internal<Thunk<C>>` should serialize its contents to RobTop's data format, while a `Thunk` in
+/// general should serialize to a sane format.
 #[derive(Debug)]
 pub struct Internal<I>(pub(crate) I);
 
@@ -124,8 +123,9 @@ impl<'de: 'a, 'a, C: ThunkContent<'a>> Deserialize<'de> for Internal<Thunk<'a, C
 }
 
 impl<'a, C: ThunkContent<'a>> Thunk<'a, C> {
-    /// If this is a [`Thunk::Unprocessed`] variant, invokes the [`TryFrom`] impl and returns
-    /// [`Thunk::Processed`]. Simply returns itself if this is a [`Thunk::Processed`] variant
+    /// If this is a [`Thunk::Unprocessed`] variant, calls [`ThunkContent::from_unprocessed`] and
+    /// returns [`Thunk::Processed`]. Simply returns `self` if this is a [`Thunk::Processed`]
+    /// variant
     pub fn process(&mut self) -> Result<&C, ProcessError> {
         if let Thunk::Unprocessed(raw_data) = self {
             *self = Thunk::Processed(C::from_unprocessed(raw_data)?)

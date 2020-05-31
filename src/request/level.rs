@@ -55,14 +55,14 @@ pub struct CompletionFilter {
     /// be searched, if `false`, the levels in [`ids`](CompletionFilter.ids) will
     /// be excluded.
     ///
-    /// Mutually exclusive with [`exclude_given`]
+    /// Mutually exclusive with [`CompletionFilter::exclude_given`]
     #[serde(rename = "onlyCompleted")]
     only_search_given: bool,
 
     /// if `true`, the levels in [`ids`](CompletionFilter.ids) will be excluded, if `false`, only
     /// the levels matching the ids in [`ids`](CompletionFilter.ids) will be searched.
     ///
-    /// Mutually exclusive with [`only_search_given`]
+    /// Mutually exclusive with [`CompletionFilter::only_search_given`]
     #[serde(rename = "uncompleted")]
     exclude_given: bool,
 }
@@ -276,7 +276,7 @@ pub enum LevelRequestType {
     User,
 
     /// Request to retrieve the list of featured levels, ordered by their
-    /// [featured weight](::model::level::Featured::Featured) weight
+    /// [featured weight](crate::model::level::Featured) weight
     ///
     /// ## GD Internals:
     /// This variant is represented by the value `6` in requests
@@ -393,7 +393,7 @@ fn is_false(b: &bool) -> bool {
 ///
 /// In the Geometry Dash API, this endpoint is used to retrieve a list of
 /// levels matching the specified criteria, along with their
-/// [`NewgroundsSong`s](::model::song::NewgroundsSong) and [`Creator`s](::model::user::Creator).
+/// [`NewgroundsSong`](crate::model::song::NewgroundsSong)s and [`Creator`](crate::model::creator::Creator)s
 #[derive(Debug, Default, Clone, Serialize)]
 pub struct LevelsRequest<'a> {
     /// The base request data

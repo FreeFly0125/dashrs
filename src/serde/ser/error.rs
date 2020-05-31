@@ -7,7 +7,7 @@ pub enum Error {
     /// Some custom error happened during serialization.
     Custom(String),
 
-    /// A given [`Serializer`] function was not supported
+    /// A given [`Serializer`](serde::Serializer) function was not supported
     Unsupported(&'static str),
 
     Io(io::Error),

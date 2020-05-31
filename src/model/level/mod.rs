@@ -1,3 +1,6 @@
+//! Module containing structs modelling Geometry Dash levels as they are returned from the boomlings
+//! servers
+
 use crate::{
     model::{song::MainSong, GameVersion},
     serde::{Base64Decoded, Internal, ProcessError},
@@ -122,6 +125,7 @@ pub enum LevelRating {
 }
 
 impl LevelRating {
+    /// Returns true iff this [`LevelRating`] is the [`LevelRating::Demon`] variant
     pub fn is_demon(&self) -> bool {
         match self {
             LevelRating::Demon(_) => true,
@@ -202,10 +206,16 @@ impl DemonRating {
 #[serde(from = "i32", into = "i32")]
 pub enum Featured {
     /// The level isn't featured, and has never been featured before
+    ///
+    /// ## GD Internals:
+    /// In server responses, this variant is represented by the value `"0"`
     NotFeatured,
 
     /// The level isn't featured, but used to be (it either got unrated, or
     /// unfeatured, like Sonic Wave)
+    ///
+    /// ## GD Internals:
+    /// In server responses, this variant is represented by the value `"-1"`
     Unfeatured,
 
     /// The level is featured, and has the contained value as its featured
@@ -213,6 +223,9 @@ pub enum Featured {
     ///
     /// The featured weight determines how high on the featured pages the level
     /// appear, where a higher value means a higher position.
+    ///
+    /// ## GD Internals:
+    /// In server responses, this variant is represented simply by the contained weight
     Featured(u32),
 }
 
@@ -268,12 +281,17 @@ pub enum Password {
     /// * XOR the resulting string with the key `"26364"` (note that the XOR operation is performed
     ///   using the ASCII value of the characters in that string)
     /// * base64 encode the result of that
+    /// In-Game, passwords are sometimes left-padded with zeros. However, this is not a requirement
+    /// for the game to be able to correctly process passwords, and merely an implementation detail
+    /// that changed at some point after 1.7
     PasswordCopy(u32),
 }
 
+/// The XOR key the game uses to encode level passwords
 pub const LEVEL_PASSWORD_XOR_KEY: &str = "26364";
 
-// Move this out of the (De)Serialize impl so we can more easily test the functions
+/// Encodes the given numerical password by padding it with zeros and applies the XOR-encoding with
+/// [`LEVEL_PASSWORD_XOR_KEY`]
 fn robtop_encode_level_password(pw: u32) -> [u8; 7] {
     let mut password = [b'0'; 7];
     password[0] = b'1';
@@ -294,6 +312,11 @@ fn robtop_encode_level_password(pw: u32) -> [u8; 7] {
 }
 
 impl Password {
+    /// Attempts to construct a [`Password`] instance from the raw-robtop provided data
+    ///
+    /// ## Arguments
+    /// + `raw_password_data`: The raw data returned from the servers. Assumed to be follow the
+    /// encoding described in [`Password`]'s documentation
     fn from_robtop(raw_password_data: &str) -> Result<Self, ProcessError> {
         Ok(match raw_password_data {
             "0" => Password::NoCopy,
@@ -361,31 +384,33 @@ impl Display for Password {
     }
 }
 
-/// Struct representing partial levels. These are returned to
-/// [`LevelsRequest`]s and only
-/// contain metadata
-/// on the level.
+/// Struct representing levels as returned by the boomlings API.
+///
+/// These can be retrieved using [`LevelRequest`](crate::request::level::LevelRequest)s or
+/// [`LevelsRequest`](crate::request::level::LevelsRequest). The `level_data` field is only set if
+/// the level was retrieved using a request of the former kind. For requests of the latter type, it
+/// will be set to [`None`]
 ///
 /// ## GD Internals:
 /// The Geometry Dash servers provide lists of partial levels via the
-/// `getGJLevels` endpoint.
+/// `getGJLevels` endpoint. Complete levels can be downloaded via `downloadGJLevel`
 ///
 /// ### Unmapped values:
 /// + Index `8`: Index 8 is a boolean value indicating whether the level has a
 /// difficulty rating that isn't N/A. This is equivalent to checking if
-/// [`PartialLevel::difficulty`] is unequal to
+/// [`Level::difficulty`] is unequal to
 /// [`LevelRating::NotAvailable`]
 /// + Index `17`: Index 17 is a boolean value indicating whether
 /// the level is a demon level. This is equivalent to checking if
-/// [`PartialLevel::difficulty`] is the [`LevelRating::Demon`] variant.
+/// [`Level::difficulty`] is the [`LevelRating::Demon`] variant.
 /// + Index `25`: Index 25 is a boolean value indicating
 /// whether the level is an auto level. This is equivalent to checking if
-/// [`PartialLevel::difficulty`] is equal to
-/// [`LevelRating::Auto`].
+/// [`Level::difficulty`] is equal to
+/// [`LevelRating::Auto`]
 ///
-/// ### Unprovided values:
+/// ### Value only provided via `downloadGJLevels`
 /// These values are not provided for by the `getGJLevels` endpoint and are
-/// thus only modelled in the [`Level`] struct: `4`, `27`,
+/// thus modelled in the [`LevelData`] struct: `4`, `27`,
 /// `28`, `29`, `36`
 ///
 /// ### Unused indices:
@@ -414,7 +439,7 @@ pub struct Level<'a, Song, User> {
     /// This value is provided at index `3` and encoded using urlsafe base 64.
     pub description: Option<Thunk<'a, Base64Decoded<'a>>>,
 
-    /// The [`PartialLevel`]'s version. The version get incremented every time
+    /// The [`Level`]'s version. The version get incremented every time
     /// the level is updated, and the initial version is always version 1.
     ///
     /// ## GD Internals:
@@ -427,7 +452,7 @@ pub struct Level<'a, Song, User> {
     /// This value is provided at index `6`.
     pub creator: User,
 
-    /// The difficulty of this [`PartialLevel`]
+    /// The difficulty of this [`Level`]
     ///
     /// ## GD Internals:
     /// This value is a construct from the value at the indices `9`, `17` and
@@ -461,33 +486,33 @@ pub struct Level<'a, Song, User> {
     /// This value is provided at index `13`
     pub gd_version: GameVersion,
 
-    /// The amount of likes this [`PartialLevel`] has received
+    /// The amount of likes this [`Level`] has received
     ///
     /// ## GD Internals:
     /// This value is provided at index `14`
     pub likes: i32,
 
-    /// The length of this [`PartialLevel`]
+    /// The length of this [`Level`]
     ///
     /// ## GD Internals:
     /// This value is provided as an integer representation of the
     /// [`LevelLength`] struct at index `15`
     pub length: LevelLength,
 
-    /// The amount of stars completion of this [`PartialLevel`] awards
+    /// The amount of stars completion of this [`Level`] awards
     ///
     /// ## GD Internals:
     /// This value is provided at index `18`
     pub stars: u8,
 
-    /// This [`PartialLevel`]s featured state
+    /// This [`Level`]s featured state
     ///
     /// ## GD Internals:
     /// This value is provided at index `19`
     pub featured: Featured,
 
-    /// The ID of the level this [`PartialLevel`] is a copy of, or [`None`], if
-    /// this [`PartialLevel`] isn't a copy.
+    /// The ID of the level this [`Level`] is a copy of, or [`None`], if
+    /// this [`Level`] isn't a copy.
     ///
     /// ## GD Internals:
     /// This value is provided at index `30`
@@ -498,7 +523,7 @@ pub struct Level<'a, Song, User> {
     /// This value is provided at index `31`
     pub index_31: Option<Cow<'a, str>>,
 
-    /// The id of the newgrounds song this [`PartialLevel`] uses, or [`None`]
+    /// The id of the newgrounds song this [`Level`] uses, or [`None`]
     /// if it useds a main song.
     ///
     /// ## GD Internals:
@@ -506,21 +531,21 @@ pub struct Level<'a, Song, User> {
     /// custom song is used.
     pub custom_song: Song,
 
-    /// The amount of coints in this [`PartialLevel`]
+    /// The amount of coints in this [`Level`]
     ///
     /// ## GD Internals:
     /// This value is provided at index `37`
     pub coin_amount: u8,
 
     /// Value indicating whether the user coins (if present) in this
-    /// [`PartialLevel`] are verified
+    /// [`Level`] are verified
     ///
     /// ## GD Internals:
     /// This value is provided at index `38`, as an integer
     pub coins_verified: bool,
 
     /// The amount of stars the level creator has requested when uploading this
-    /// [`PartialLevel`], or [`None`] if no stars were requested.
+    /// [`Level`], or [`None`] if no stars were requested.
     ///
     /// ## GD Internals:
     /// This value is provided at index `39`, and a value of `0` means no stars
@@ -532,7 +557,7 @@ pub struct Level<'a, Song, User> {
     /// This value is provided at index `40`
     pub index_40: Option<Cow<'a, str>>,
 
-    /// Value indicating whether this [`PartialLevel`] is epic
+    /// Value indicating whether this [`Level`] is epic
     ///
     /// ## GD Internals:
     /// This value is provided at index `42`, as an integer
@@ -546,7 +571,7 @@ pub struct Level<'a, Song, User> {
     /// This value is provided at index `43` and seems to be an integer
     pub index_43: Cow<'a, str>,
 
-    /// The amount of objects in this [`PartialLevel`]. Note that a value of `None` _does not_ mean
+    /// The amount of objects in this [`Level`]. Note that a value of `None` _does not_ mean
     /// that there are no objects in the level, but rather that the server's didn't provide an
     /// object count.
     ///

@@ -12,7 +12,7 @@ use std::io::Write;
 
 /// Trait implemented by objects that can be (de)serialized from/to RobTop's data formats
 ///
-/// Structs implementing this trait can be used with the [`from_robtop_str`]/[`to_robtop_data`]
+/// Structs implementing this trait can be used with the [`from_robtop_str`]/[`write_robtop_data`]
 /// functions.
 ///
 /// In general, all types implementing supporting (de)serialization using RobTop's data formats do
@@ -24,8 +24,8 @@ use std::io::Write;
 ///
 /// The lifetime `'a` is the lifetime of the borrowed data (either from the deserializer or from a
 /// Cow that's been processed) an implementing struct contains. The internal implementation may
-/// never required ownership over its values. It must always borrow from either a [`Deserializer`],
-/// or from the object implementing [`HasRobtopFormat`]c
+/// never required ownership over its values. It must always borrow from either a
+/// [`Deserializer`](serde::Deserializer), or from the object implementing [`HasRobtopFormat`]c
 pub trait HasRobtopFormat<'a> {
     /// The internal type used to (de)serialize this object into RobTop's data format
     type Internal: Deserialize<'a> + Serialize;
@@ -48,7 +48,8 @@ pub trait HasRobtopFormat<'a> {
     ///
     /// # Contract:
     /// This method performs no allocations. Unprocessed data should be wrapped inside a [`Thunk`]
-    /// to be processed on-demand later, the remaining data should stay in [`Cow`]s
+    /// to be processed on-demand later, the remaining data should stay in
+    /// [`Cow`](std::borrow::Cow)s
     fn from_internal(int: Self::Internal) -> Self;
 }
 

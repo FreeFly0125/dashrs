@@ -70,7 +70,7 @@ impl<'de> IndexedDeserializer<'de> {
 
     /// Returns the next token in the input string without consuming it.
     ///
-    /// If the input string has already been fully consumed, returns [`Error:Eof`]. If the
+    /// If the input string has already been fully consumed, returns [`Error::Eof`]. If the
     /// non-consumed part of the input starts with the delimiter, returns [`None`]. Otherwise
     /// returns the sub-slice into the source representing the next token.
     ///
