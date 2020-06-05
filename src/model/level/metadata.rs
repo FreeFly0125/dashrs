@@ -13,10 +13,11 @@ pub struct LevelMetadata {
 }
 
 mod internal {
-    use serde::{Serialize, Deserialize};
-    use crate::serde::HasRobtopFormat;
-    use crate::model::level::metadata::LevelMetadata;
-    use crate::model::level::object::speed::Speed;
+    use crate::{
+        model::level::{metadata::LevelMetadata, object::speed::Speed},
+        serde::HasRobtopFormat,
+    };
+    use serde::{Deserialize, Serialize};
 
     impl<'a> HasRobtopFormat<'a> for LevelMetadata {
         type Internal = InternalLevelMetadata;
@@ -39,7 +40,7 @@ mod internal {
                 song_fade_out: self.song_fade_out,
                 dual_start: self.dual_start,
                 two_player_controls: self.two_player_controls,
-                start_gravity_inverted: self.start_gravity_inverted
+                start_gravity_inverted: self.start_gravity_inverted,
             }
         }
 
@@ -51,14 +52,14 @@ mod internal {
                     2 => Speed::Medium,
                     3 => Speed::Fast,
                     4 => Speed::VeryFast,
-                    unknown => Speed::Unknown(unknown)
+                    unknown => Speed::Unknown(unknown),
                 },
                 song_offset: int.song_offset,
                 song_fade_in: int.song_fade_in,
                 song_fade_out: int.song_fade_out,
                 dual_start: int.dual_start,
                 two_player_controls: int.two_player_controls,
-                start_gravity_inverted: int.start_gravity_inverted
+                start_gravity_inverted: int.start_gravity_inverted,
             }
         }
     }
@@ -78,15 +79,13 @@ mod internal {
         song_fade_out: bool,
 
         #[serde(rename = "kA8")]
-        dual_start:bool,
+        dual_start: bool,
 
         #[serde(rename = "kA10")]
-        two_player_controls:bool,
+        two_player_controls: bool,
 
         #[serde(rename = "kA11")]
-        start_gravity_inverted: bool
-
-        //.. other fields
+        start_gravity_inverted: bool, //.. other fields
     }
 }
 

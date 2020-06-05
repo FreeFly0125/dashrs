@@ -1,5 +1,7 @@
 use crate::model::level::object::speed::Speed;
 
+pub mod ids;
+mod internal;
 pub mod speed;
 
 #[derive(Debug, PartialEq, Clone, Copy)]
@@ -17,5 +19,6 @@ pub struct LevelObject {
 #[derive(Debug, Clone, PartialEq, Copy)]
 pub enum ObjectData {
     None,
+    Unknown,
     SpeedPortal { checked: bool, speed: Speed },
 }
