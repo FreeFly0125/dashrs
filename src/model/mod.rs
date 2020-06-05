@@ -8,8 +8,9 @@
 //! * A version that's public API and which abstracts over robtop's data format in a sensible way.
 //!   These still borrow their data from the deserialization source, but can optionally own their
 //!   contents. All data that would require allocations to be completely processed (such as base64
-//!   encoded level descriptions) is put in [`Thunk`](crate::serde::thunk::Thunk)s and can be processed lazily on-demand. This
-//!   allows us to deserialize the input and construct these representations with zero allocations.
+//!   encoded level descriptions) is put in [`Thunk`](crate::serde::thunk::Thunk)s and can be
+//!   processed lazily on-demand. This allows us to deserialize the input and construct these
+//!   representations with zero allocations.
 //!
 //! These versions can be converted to and from each other, simply by borrowing.
 

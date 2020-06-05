@@ -14,6 +14,8 @@ use std::{
 };
 
 mod internal;
+pub mod metadata;
+pub mod object;
 
 /// Enum representing the possible level lengths known to dash-rs
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, PartialOrd, Ord, Serialize, Deserialize)]

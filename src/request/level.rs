@@ -393,7 +393,8 @@ fn is_false(b: &bool) -> bool {
 ///
 /// In the Geometry Dash API, this endpoint is used to retrieve a list of
 /// levels matching the specified criteria, along with their
-/// [`NewgroundsSong`](crate::model::song::NewgroundsSong)s and [`Creator`](crate::model::creator::Creator)s
+/// [`NewgroundsSong`](crate::model::song::NewgroundsSong)s and
+/// [`Creator`](crate::model::creator::Creator)s
 #[derive(Debug, Default, Clone, Serialize)]
 pub struct LevelsRequest<'a> {
     /// The base request data
