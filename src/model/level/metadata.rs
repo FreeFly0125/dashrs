@@ -1,6 +1,7 @@
 use crate::model::level::object::speed::Speed;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, PartialEq, Clone, Default, Copy)]
+#[derive(Debug, PartialEq, Clone, Default, Copy, Serialize, Deserialize)]
 pub struct LevelMetadata {
     pub starting_speed: Speed,
     pub song_offset: f64,
@@ -69,22 +70,22 @@ mod internal {
         #[serde(rename = "kA4")]
         starting_speed: u8,
 
-        #[serde(rename = "kA13")]
+        #[serde(rename = "kA13", default)]
         song_offset: f64,
 
-        #[serde(rename = "kA15")]
+        #[serde(rename = "kA15", default)]
         song_fade_in: bool,
 
-        #[serde(rename = "kA16")]
+        #[serde(rename = "kA16", default)]
         song_fade_out: bool,
 
-        #[serde(rename = "kA8")]
+        #[serde(rename = "kA8", default)]
         dual_start: bool,
 
-        #[serde(rename = "kA10")]
+        #[serde(rename = "kA10", default)]
         two_player_controls: bool,
 
-        #[serde(rename = "kA11")]
+        #[serde(rename = "kA11", default)]
         start_gravity_inverted: bool, //.. other fields
     }
 }

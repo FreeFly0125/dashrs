@@ -97,7 +97,7 @@ const TIME_PRESSURE: Level<Option<u64>, u64> = Level {
     index_46: None,
     index_47: None,
     level_data: Some(LevelData {
-        level_data: Cow::Borrowed("REMOVED"),
+        level_data: Thunk::Unprocessed("REMOVED"),
         password: Password::PasswordCopy(3101),
         time_since_upload: Cow::Borrowed("5 years"),
         time_since_update: Cow::Borrowed("5 years"),
@@ -217,7 +217,9 @@ fn deserialize_level2() {
     assert!(level.description.as_mut().unwrap().process().is_ok());
     assert!(level.level_data.is_some());
 
-    level.level_data.as_mut().unwrap().level_data = Cow::Borrowed("REMOVED");
+    level.level_data.as_mut().unwrap().level_data.process().unwrap();
+
+    level.level_data.as_mut().unwrap().level_data = Thunk::Unprocessed("REMOVED");
 
     assert_eq!(level, TIME_PRESSURE);
 }

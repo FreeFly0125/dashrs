@@ -2,16 +2,28 @@
 //! servers
 
 use crate::{
-    model::{song::MainSong, GameVersion},
-    serde::{Base64Decoded, Internal, ProcessError},
+    from_robtop_str,
+    model::{
+        level::{metadata::LevelMetadata, object::LevelObject},
+        song::MainSong,
+        GameVersion,
+    },
+    serde::{Base64Decoded, Internal, ProcessError, ThunkContent},
     util, Thunk,
 };
 use base64::URL_SAFE;
+use flate2::{
+    read::{GzDecoder, ZlibDecoder},
+    Decompress,
+};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::{
     borrow::Cow,
     fmt::{Display, Formatter},
+    io::Read,
 };
+// use flate2::read::GzDecoder;
+// use std::io::Read;
 
 mod internal;
 pub mod metadata;
@@ -419,7 +431,7 @@ impl Display for Password {
 /// The following indices aren't used by the Geometry Dash servers: `11`, `16`,
 /// `17`, `20`, `21`, `22`, `23`, `24`, `26`, `31`, `32`, `33`, `34`, `40`,
 /// `41`, `44`
-#[derive(Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct Level<'a, Song, User> {
     /// The level's unique level id
     ///
@@ -604,7 +616,7 @@ pub struct Level<'a, Song, User> {
 }
 
 /// Struct encapsulating the additional level data returned when actually downloading a level
-#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct LevelData<'a> {
     /// The level's actual data.
     ///
@@ -612,7 +624,8 @@ pub struct LevelData<'a> {
     ///
     /// ## GD Internals:
     /// This value is provided at index `4`, and is urlsafe base64 encoded and `DEFLATE` compressed
-    pub level_data: Cow<'a, str>,
+    #[serde(borrow)]
+    pub level_data: Thunk<'a, Objects>,
 
     /// The level's password
     ///
@@ -642,6 +655,62 @@ pub struct LevelData<'a> {
     /// ## GD Internals:
     /// This value is provided at index `36`
     pub index_36: Option<Cow<'a, str>>,
+}
+
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+pub struct Objects {
+    meta: LevelMetadata,
+    objects: Vec<LevelObject>,
+}
+
+impl<'a> ThunkContent<'a> for Objects {
+    fn from_unprocessed(unprocessed: &'a str) -> Result<Self, ProcessError> {
+        let decoded = base64::decode_config(unprocessed, base64::URL_SAFE).unwrap();
+
+        // Here's the deal: Robtop decompresses all levels by calling the zlib function 'inflateInit2_' with
+        // the second argument set to 47. 47 basically tells zlib "this data might be compressed using zlib
+        // or gzip format, with window size at most 15, but you gotta figure it out yourself". However,
+        // flate2 doesnt expose this option, so we have to manually determine whether we have gzip or zlib
+        // compression.
+
+        let mut decompressed = String::new();
+
+        match &decoded[..2] {
+            // gz magic bytes
+            [0x1f, 0x8b] => {
+                let mut decoder = GzDecoder::new(&decoded[..]);
+
+                decoder.read_to_string(&mut decompressed).unwrap();
+            },
+            // There's no such thing as "zlib magic bytes", but the first byte stores some information about how the data is compressed.
+            // '0x78' is the first byte for the compression method robtop used (note: this is only used for very old levels, as he switched
+            // to gz for newer levels)
+            [0x78, _] => {
+                let mut decoder = ZlibDecoder::new(&decoded[..]);
+
+                decoder.read_to_string(&mut decompressed).unwrap();
+            },
+            _ => panic!("Unknown compression scheme!"),
+        }
+
+        let mut iter = decompressed.split(';');
+
+        let metadata_string = iter.next().unwrap();
+
+        let meta = from_robtop_str(metadata_string).unwrap();
+
+        Ok(Objects {
+            meta,
+            objects: iter
+                .filter(|&object| object != "")// end-of-level is always an empty object, for some obscure reason
+                .map(|object| from_robtop_str(object).unwrap())
+                .collect(),
+        })
+    }
+
+    fn as_unprocessed(&self) -> Cow<str> {
+        unimplemented!()
+    }
 }
 
 #[cfg(test)]

@@ -20,7 +20,7 @@
     unused_must_use,
     unused_mut,
     while_true,
-    unused_imports,
+    //unused_imports,
     unconditional_recursion,
     unknown_lints,
     unused_parens,

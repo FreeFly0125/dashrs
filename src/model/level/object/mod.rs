@@ -1,10 +1,11 @@
 use crate::model::level::object::speed::Speed;
+use serde::{Deserialize, Serialize};
 
 pub mod ids;
 mod internal;
 pub mod speed;
 
-#[derive(Debug, PartialEq, Clone, Copy)]
+#[derive(Debug, PartialEq, Clone, Copy, Serialize, Deserialize)]
 pub struct LevelObject {
     pub id: u16,
     pub x: f32,
@@ -16,7 +17,7 @@ pub struct LevelObject {
     pub metadata: ObjectData,
 }
 
-#[derive(Debug, Clone, PartialEq, Copy)]
+#[derive(Debug, Clone, PartialEq, Copy, Serialize, Deserialize)]
 pub enum ObjectData {
     None,
     Unknown,

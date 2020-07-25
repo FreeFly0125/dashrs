@@ -1,6 +1,6 @@
 use crate::{
     model::{
-        level::{DemonRating, Featured, Level, LevelData, LevelLength, LevelRating, Password},
+        level::{DemonRating, Featured, Level, LevelData, LevelLength, LevelRating, Objects, Password},
         song::MainSong,
         GameVersion,
     },
@@ -8,7 +8,7 @@ use crate::{
     Thunk,
 };
 use serde::{Deserialize, Serialize};
-use std::borrow::{Borrow, Cow};
+use std::borrow::Cow;
 
 mod level_length {
     use crate::model::level::LevelLength;
@@ -182,7 +182,7 @@ pub struct InternalLevel<'a> {
     pub index_47: Option<&'a str>,
 
     #[serde(rename = "4", default, skip_serializing_if = "Option::is_none")]
-    pub level_data: Option<&'a str>,
+    pub level_data: Option<Internal<Thunk<'a, Objects>>>,
 
     #[serde(rename = "27", default, skip_serializing_if = "Option::is_none")]
     pub password: Option<Internal<Password>>,
@@ -204,50 +204,51 @@ impl<'a> HasRobtopFormat<'a> for Level<'a, Option<u64>, u64> {
     const MAP_LIKE: bool = true;
 
     fn as_internal(&'a self) -> Self::Internal {
-        InternalLevel {
-            level_id: self.level_id,
-            name: self.name.borrow(),
-            description: self.description.as_ref().map(|thunk| {
-                Internal(match thunk {
-                    Thunk::Unprocessed(unproc) => Thunk::Unprocessed(unproc),
-                    Thunk::Processed(Base64Decoded(moo)) => Thunk::Processed(Base64Decoded(Cow::Borrowed(moo.as_ref()))),
-                })
-            }),
-            version: self.version,
-            creator: self.creator,
-            is_auto: self.difficulty == LevelRating::Auto,
-            has_difficulty_rating: self.difficulty != LevelRating::NotAvailable,
-            rating: self.difficulty.into_response_value(),
-            is_demon: self.difficulty.is_demon(),
-            downloads: self.downloads,
-            main_song: self.main_song.map(|song| song.main_song_id).unwrap_or(0),
-            gd_version: self.gd_version.into(),
-            likes: self.likes,
-            length: self.length,
-            stars: self.stars,
-            featured: self.featured,
-            copy_of: self.copy_of,
-            index_31: self.index_31.as_ref().map(|moo| moo.borrow()),
-            custom_song: self.custom_song,
-            coin_amount: self.coin_amount,
-            coins_verified: self.coins_verified,
-            stars_requested: self.stars_requested,
-            index_40: self.index_40.as_ref().map(|moo| moo.borrow()),
-            is_epic: self.is_epic,
-            index_43: self.index_43.borrow(),
-            object_amount: self.object_amount,
-            index_46: self.index_46.as_ref().map(|moo| moo.borrow()),
-            index_47: self.index_47.as_ref().map(|moo| moo.borrow()),
-            level_data: self.level_data.as_ref().map(|data| data.level_data.borrow()),
-            password: self.level_data.as_ref().map(|data| Internal(data.password)),
-            time_since_upload: self.level_data.as_ref().map(|data| data.time_since_upload.borrow()),
-            time_since_update: self.level_data.as_ref().map(|data| data.time_since_update.borrow()),
-            index_36: self
-                .level_data
-                .as_ref()
-                .and_then(|data| data.index_36.as_ref())
-                .map(|moo| moo.borrow()),
-        }
+        // InternalLevel {
+        // level_id: self.level_id,
+        // name: self.name.borrow(),
+        // description: self.description.as_ref().map(|thunk| {
+        // Internal(match thunk {
+        // Thunk::Unprocessed(unproc) => Thunk::Unprocessed(unproc),
+        // Thunk::Processed(Base64Decoded(moo)) =>
+        // Thunk::Processed(Base64Decoded(Cow::Borrowed(moo.as_ref()))), })
+        // }),
+        // version: self.version,
+        // creator: self.creator,
+        // is_auto: self.difficulty == LevelRating::Auto,
+        // has_difficulty_rating: self.difficulty != LevelRating::NotAvailable,
+        // rating: self.difficulty.into_response_value(),
+        // is_demon: self.difficulty.is_demon(),
+        // downloads: self.downloads,
+        // main_song: self.main_song.map(|song| song.main_song_id).unwrap_or(0),
+        // gd_version: self.gd_version.into(),
+        // likes: self.likes,
+        // length: self.length,
+        // stars: self.stars,
+        // featured: self.featured,
+        // copy_of: self.copy_of,
+        // index_31: self.index_31.as_ref().map(|moo| moo.borrow()),
+        // custom_song: self.custom_song,
+        // coin_amount: self.coin_amount,
+        // coins_verified: self.coins_verified,
+        // stars_requested: self.stars_requested,
+        // index_40: self.index_40.as_ref().map(|moo| moo.borrow()),
+        // is_epic: self.is_epic,
+        // index_43: self.index_43.borrow(),
+        // object_amount: self.object_amount,
+        // index_46: self.index_46.as_ref().map(|moo| moo.borrow()),
+        // index_47: self.index_47.as_ref().map(|moo| moo.borrow()),
+        // level_data: self.level_data.as_ref().map(|data| data.level_data.borrow()),
+        // password: self.level_data.as_ref().map(|data| Internal(data.password)),
+        // time_since_upload: self.level_data.as_ref().map(|data| data.time_since_upload.borrow()),
+        // time_since_update: self.level_data.as_ref().map(|data| data.time_since_update.borrow()),
+        // index_36: self
+        // .level_data
+        // .as_ref()
+        // .and_then(|data| data.index_36.as_ref())
+        // .map(|moo| moo.borrow()),
+        // }
+        unimplemented!()
     }
 
     fn from_internal(int: Self::Internal) -> Self {
@@ -255,7 +256,7 @@ impl<'a> HasRobtopFormat<'a> for Level<'a, Option<u64>, u64> {
             None => None,
             Some(data) =>
                 Some(LevelData {
-                    level_data: Cow::Borrowed(data),
+                    level_data: data.0,
                     password: int.password.map(|pw| pw.0).unwrap_or(Password::NoCopy),
                     time_since_upload: Cow::Borrowed(int.time_since_upload.unwrap_or("Unknown")),
                     time_since_update: Cow::Borrowed(int.time_since_update.unwrap_or("Unknown")),

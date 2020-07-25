@@ -1,7 +1,8 @@
 // TODO: Speed portals and stuff
+use serde::{Deserialize, Serialize};
 
 /// Enum modelling the different speeds a player can have during gameplay
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Speed {
     Slow,
     Normal,
