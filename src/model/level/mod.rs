@@ -690,7 +690,7 @@ impl<'a> ThunkContent<'a> for Objects {
 
                 decoder.read_to_string(&mut decompressed).unwrap();
             },
-            _ => panic!("Unknown compression scheme!"),
+            _ => return Err(ProcessError::Decompress),
         }
 
         let mut iter = decompressed.split(';');

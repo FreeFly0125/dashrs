@@ -28,8 +28,11 @@ pub enum ProcessError {
     /// Some base64 decoding error occurred during processing
     Base64(DecodeError),
 
-    // Some error occurred when parsing a number
+    /// Some error occurred when parsing a number
     IntParse(ParseIntError),
+
+    /// Unknown compression format for level data
+    Decompress,
 }
 
 impl Display for ProcessError {
@@ -39,6 +42,7 @@ impl Display for ProcessError {
             ProcessError::Base64(decode) => decode.fmt(f),
             ProcessError::IntParse(int) => int.fmt(f),
             ProcessError::FromUtf8(from_utf8) => from_utf8.fmt(f),
+            ProcessError::Decompress => write!(f, "Unknown compression format")
         }
     }
 }
