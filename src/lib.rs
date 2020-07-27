@@ -20,7 +20,7 @@
     unused_must_use,
     unused_mut,
     while_true,
-    //unused_imports,
+    unused_imports,
     unconditional_recursion,
     unknown_lints,
     unused_parens,
@@ -36,4 +36,4 @@ pub mod request;
 pub(crate) mod serde;
 pub mod util;
 
-pub use crate::serde::{from_robtop_str, to_robtop_string, write_robtop_data, Base64Decoded, DeError, PercentDecoded, SerError, Thunk};
+pub use crate::serde::{Base64Decoded, DeError, HasRobtopFormat, PercentDecoded, SerError, Thunk};

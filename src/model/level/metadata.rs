@@ -16,37 +16,17 @@ pub struct LevelMetadata {
 mod internal {
     use crate::{
         model::level::{metadata::LevelMetadata, object::speed::Speed},
-        serde::HasRobtopFormat,
+        serde::{HasRobtopFormat, IndexedDeserializer, IndexedSerializer},
+        DeError, SerError,
     };
     use serde::{Deserialize, Serialize};
+    use std::io::Write;
 
     impl<'a> HasRobtopFormat<'a> for LevelMetadata {
-        type Internal = InternalLevelMetadata;
+        fn from_robtop_str(input: &'a str) -> Result<Self, DeError> {
+            let int = InternalLevelMetadata::deserialize(&mut IndexedDeserializer::new(input, ",", true))?;
 
-        const DELIMITER: &'static str = ",";
-        const MAP_LIKE: bool = true;
-
-        fn as_internal(&'a self) -> Self::Internal {
-            InternalLevelMetadata {
-                starting_speed: match self.starting_speed {
-                    Speed::Slow => 0,
-                    Speed::Normal => 1,
-                    Speed::Medium => 2,
-                    Speed::Fast => 3,
-                    Speed::VeryFast => 4,
-                    Speed::Unknown(unknown) => unknown,
-                },
-                song_offset: self.song_offset,
-                song_fade_in: self.song_fade_in,
-                song_fade_out: self.song_fade_out,
-                dual_start: self.dual_start,
-                two_player_controls: self.two_player_controls,
-                start_gravity_inverted: self.start_gravity_inverted,
-            }
-        }
-
-        fn from_internal(int: Self::Internal) -> Self {
-            LevelMetadata {
+            Ok(LevelMetadata {
                 starting_speed: match int.starting_speed {
                     0 => Speed::Slow,
                     1 => Speed::Normal,
@@ -61,7 +41,28 @@ mod internal {
                 dual_start: int.dual_start,
                 two_player_controls: int.two_player_controls,
                 start_gravity_inverted: int.start_gravity_inverted,
-            }
+            })
+        }
+
+        fn write_robtop_data<W: Write>(&self, writer: W) -> Result<(), SerError> {
+            let internal = InternalLevelMetadata {
+                starting_speed: match self.starting_speed {
+                    Speed::Slow => 0,
+                    Speed::Normal => 1,
+                    Speed::Medium => 2,
+                    Speed::Fast => 3,
+                    Speed::VeryFast => 4,
+                    Speed::Unknown(unknown) => unknown,
+                },
+                song_offset: self.song_offset,
+                song_fade_in: self.song_fade_in,
+                song_fade_out: self.song_fade_out,
+                dual_start: self.dual_start,
+                two_player_controls: self.two_player_controls,
+                start_gravity_inverted: self.start_gravity_inverted,
+            };
+
+            internal.serialize(&mut IndexedSerializer::new(",", writer, true))
         }
     }
 

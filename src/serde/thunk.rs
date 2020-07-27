@@ -42,8 +42,14 @@ impl Display for ProcessError {
             ProcessError::Base64(decode) => decode.fmt(f),
             ProcessError::IntParse(int) => int.fmt(f),
             ProcessError::FromUtf8(from_utf8) => from_utf8.fmt(f),
-            ProcessError::Decompress => write!(f, "Unknown compression format")
+            ProcessError::Decompress => write!(f, "Unknown compression format"),
         }
+    }
+}
+
+impl From<base64::DecodeError> for ProcessError {
+    fn from(error: DecodeError) -> Self {
+        ProcessError::Base64(error)
     }
 }
 
@@ -66,6 +72,19 @@ pub enum Thunk<'a, C: ThunkContent<'a>> {
     Processed(C),
 }
 
+/// Essentially the same as [`Thunk`], but with the difference that the `Processed` variant is
+/// borrowed
+///
+/// This is used to serialize objects back into robtop's format.
+#[derive(Debug, Eq, PartialEq, Clone)]
+pub(crate) enum RefThunk<'input, 'content, C: ThunkContent<'input>> {
+    /// Unprocessed value
+    Unprocessed(&'input str),
+
+    /// Processed value
+    Processed(&'content C),
+}
+
 impl<'a, C: ThunkContent<'a> + Serialize> Serialize for Thunk<'a, C> {
     fn serialize<S>(&self, serializer: S) -> Result<<S as Serializer>::Ok, <S as Serializer>::Error>
     where
@@ -75,6 +94,31 @@ impl<'a, C: ThunkContent<'a> + Serialize> Serialize for Thunk<'a, C> {
             Thunk::Unprocessed(unprocessed) => C::from_unprocessed(unprocessed).map_err(S::Error::custom)?.serialize(serializer),
             Thunk::Processed(processed) => processed.serialize(serializer),
         }
+    }
+}
+
+impl<'input, 'content, C: ThunkContent<'input>> Serialize for RefThunk<'input, 'content, C> {
+    fn serialize<S>(&self, serializer: S) -> Result<<S as Serializer>::Ok, <S as Serializer>::Error>
+    where
+        S: Serializer,
+    {
+        match self {
+            RefThunk::Unprocessed(unprocessed) => serializer.serialize_str(unprocessed),
+            RefThunk::Processed(ref processed) =>
+                match processed.as_unprocessed() {
+                    Cow::Borrowed(s) => serializer.serialize_str(s),
+                    Cow::Owned(s) => s.serialize(serializer),
+                },
+        }
+    }
+}
+
+impl<'de: 'input, 'input, 'content, C: ThunkContent<'input>> Deserialize<'de> for RefThunk<'input, 'content, C> {
+    fn deserialize<D>(deserializer: D) -> Result<Self, <D as Deserializer<'de>>::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        <&str>::deserialize(deserializer).map(RefThunk::Unprocessed)
     }
 }
 
@@ -146,6 +190,14 @@ impl<'a, C: ThunkContent<'a>> Thunk<'a, C> {
         match self {
             Thunk::Unprocessed(unprocessed) => C::from_unprocessed(unprocessed),
             Thunk::Processed(p) => Ok(p),
+        }
+    }
+
+    // TODO: uhh maybe AsRef or Borrow or something would be the appropriate trait here?
+    pub(crate) fn as_ref_thunk<'content>(&'content self) -> RefThunk<'a, 'content, C> {
+        match self {
+            Thunk::Unprocessed(raw) => RefThunk::Unprocessed(raw),
+            Thunk::Processed(processed) => RefThunk::Processed(processed),
         }
     }
 }

@@ -56,6 +56,8 @@ impl<'de> IndexedDeserializer<'de> {
     pub fn new(source: &'de str, delimiter: &'static str, map_like: bool) -> Self {
         let mut iter = delimiter.chars();
 
+        trace!("Deserializing {} with delimiter '{}', maplike {}", source, delimiter, map_like);
+
         IndexedDeserializer {
             source,
             delimiter: match (iter.next(), iter.next()) {

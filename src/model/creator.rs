@@ -2,9 +2,13 @@ use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 
 mod internal {
-    use crate::{model::creator::Creator, serde::HasRobtopFormat};
+    use crate::{
+        model::creator::Creator,
+        serde::{HasRobtopFormat, IndexedDeserializer, IndexedSerializer},
+        DeError, SerError,
+    };
     use serde::{Deserialize, Serialize};
-    use std::borrow::Cow;
+    use std::{borrow::Cow, io::Write};
 
     #[derive(Debug, Deserialize, Serialize)]
     pub struct InternalCreator<'a> {
@@ -18,25 +22,24 @@ mod internal {
     }
 
     impl<'a> HasRobtopFormat<'a> for Creator<'a> {
-        type Internal = InternalCreator<'a>;
+        fn from_robtop_str(input: &'a str) -> Result<Self, DeError> {
+            let internal = InternalCreator::deserialize(&mut IndexedDeserializer::new(input, ":", false))?;
 
-        const DELIMITER: &'static str = ":";
-        const MAP_LIKE: bool = false;
+            Ok(Creator {
+                user_id: internal.user_id,
+                name: Cow::Borrowed(internal.name),
+                account_id: internal.account_id,
+            })
+        }
 
-        fn as_internal(&'a self) -> Self::Internal {
-            InternalCreator {
+        fn write_robtop_data<W: Write>(&self, writer: W) -> Result<(), SerError> {
+            let internal = InternalCreator {
                 user_id: self.user_id,
                 name: self.name.as_ref(),
                 account_id: self.account_id,
-            }
-        }
+            };
 
-        fn from_internal(int: Self::Internal) -> Self {
-            Creator {
-                user_id: int.user_id,
-                name: Cow::Borrowed(int.name),
-                account_id: int.account_id,
-            }
+            internal.serialize(&mut IndexedSerializer::new(":", writer, false))
         }
     }
 }

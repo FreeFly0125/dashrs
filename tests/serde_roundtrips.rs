@@ -5,7 +5,7 @@ use dash_rs::{
         song::{MainSong, NewgroundsSong},
         GameVersion,
     },
-    Base64Decoded, PercentDecoded, Thunk,
+    Base64Decoded, HasRobtopFormat, PercentDecoded, Thunk,
 };
 use std::borrow::Cow;
 
@@ -110,7 +110,7 @@ fn serialize_song() {
     init_log();
 
     let mut buf: Vec<u8> = Vec::new();
-    let result = dash_rs::write_robtop_data(&CREO_DUNE, &mut buf);
+    let result = CREO_DUNE.write_robtop_data(&mut buf);
 
     assert!(result.is_ok());
     assert_eq!(buf, CREO_DUNE_DATA_ORDERED.as_bytes());
@@ -120,7 +120,7 @@ fn serialize_song() {
 fn deserialize_song() {
     init_log();
 
-    let song = dash_rs::from_robtop_str::<NewgroundsSong>(CREO_DUNE_DATA);
+    let song = NewgroundsSong::from_robtop_str(CREO_DUNE_DATA);
 
     assert!(song.is_ok(), "{:?}", song.unwrap_err());
 
@@ -135,7 +135,7 @@ fn serialize_registered_creator() {
     init_log();
 
     let mut buf: Vec<u8> = Vec::new();
-    let result = dash_rs::write_robtop_data(&CREATOR_REGISTERED, &mut buf);
+    let result = CREATOR_REGISTERED.write_robtop_data(&mut buf);
 
     assert!(result.is_ok());
     assert_eq!(buf, CREATOR_REGISTERED_DATA.as_bytes());
@@ -146,7 +146,7 @@ fn serialize_unregistered_creator() {
     init_log();
 
     let mut buf: Vec<u8> = Vec::new();
-    let result = dash_rs::write_robtop_data(&CREATOR_UNREGISTERED, &mut buf);
+    let result = CREATOR_UNREGISTERED.write_robtop_data(&mut buf);
 
     assert!(result.is_ok());
     assert_eq!(buf, CREATOR_UNREGISTERED_DATA.as_bytes());
@@ -156,7 +156,7 @@ fn serialize_unregistered_creator() {
 fn deserialize_registered_creator() {
     init_log();
 
-    let creator = dash_rs::from_robtop_str::<Creator>(CREATOR_REGISTERED_DATA);
+    let creator = Creator::from_robtop_str(CREATOR_REGISTERED_DATA);
 
     assert!(creator.is_ok(), "{:?}", creator.unwrap_err());
     assert_eq!(creator.unwrap(), CREATOR_REGISTERED);
@@ -166,7 +166,7 @@ fn deserialize_registered_creator() {
 fn deserialize_unregistered_creator() {
     init_log();
 
-    let creator = dash_rs::from_robtop_str::<Creator>(CREATOR_UNREGISTERED_DATA);
+    let creator = Creator::from_robtop_str(CREATOR_UNREGISTERED_DATA);
 
     assert!(creator.is_ok(), "{:?}", creator.unwrap_err());
     assert_eq!(creator.unwrap(), CREATOR_UNREGISTERED);
@@ -176,7 +176,7 @@ fn deserialize_unregistered_creator() {
 fn deserialize_too_many_fields() {
     init_log();
 
-    let song = dash_rs::from_robtop_str::<NewgroundsSong>(CREO_DUNE_DATA_TOO_MANY_FIELDS);
+    let song = NewgroundsSong::from_robtop_str(CREO_DUNE_DATA_TOO_MANY_FIELDS);
 
     assert!(song.is_ok(), "{:?}", song.unwrap_err());
 }
@@ -185,7 +185,7 @@ fn deserialize_too_many_fields() {
 fn deserialize_partial_level() {
     init_log();
 
-    let level = dash_rs::from_robtop_str::<Level<_, _>>(DARK_REALM_DATA);
+    let level = Level::from_robtop_str(DARK_REALM_DATA);
 
     assert!(level.is_ok(), "{:?}", level.unwrap_err());
 
@@ -198,7 +198,7 @@ fn deserialize_partial_level() {
 fn deserialize_level() {
     init_log();
 
-    let level = dash_rs::from_robtop_str::<Level<_, _>>(include_str!("data/11774780_dark_realm_gjdownload_response"));
+    let level = Level::from_robtop_str(include_str!("data/11774780_dark_realm_gjdownload_response"));
 
     let mut level = level.unwrap();
 
@@ -210,7 +210,7 @@ fn deserialize_level() {
 fn deserialize_level2() {
     init_log();
 
-    let level = dash_rs::from_robtop_str::<Level<_, _>>(include_str!("data/897837_time_pressure_gjdownload_response"));
+    let level = Level::from_robtop_str(include_str!("data/897837_time_pressure_gjdownload_response"));
 
     let mut level = level.unwrap();
 

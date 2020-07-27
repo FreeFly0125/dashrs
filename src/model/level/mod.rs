@@ -1,27 +1,26 @@
 //! Module containing structs modelling Geometry Dash levels as they are returned from the boomlings
 //! servers
 
-use crate::{
-    from_robtop_str,
-    model::{
-        level::{metadata::LevelMetadata, object::LevelObject},
-        song::MainSong,
-        GameVersion,
-    },
-    serde::{Base64Decoded, Internal, ProcessError, ThunkContent},
-    util, Thunk,
-};
-use base64::URL_SAFE;
-use flate2::{
-    read::{GzDecoder, ZlibDecoder},
-    Decompress,
-};
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::{
     borrow::Cow,
     fmt::{Display, Formatter},
     io::Read,
 };
+
+use base64::URL_SAFE;
+use flate2::read::{GzDecoder, ZlibDecoder};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
+
+use crate::{
+    model::{
+        level::{metadata::LevelMetadata, object::LevelObject},
+        song::MainSong,
+        GameVersion,
+    },
+    serde::{Base64Decoded, HasRobtopFormat, Internal, ProcessError, ThunkContent},
+    util, Thunk,
+};
+
 // use flate2::read::GzDecoder;
 // use std::io::Read;
 
@@ -665,7 +664,9 @@ pub struct Objects {
 
 impl<'a> ThunkContent<'a> for Objects {
     fn from_unprocessed(unprocessed: &'a str) -> Result<Self, ProcessError> {
-        let decoded = base64::decode_config(unprocessed, base64::URL_SAFE).unwrap();
+        // Doing the entire base64 in one go is actually faster than using base64::read::DecoderReader and
+        // having the two readers go back and forth.
+        let decoded = base64::decode_config(unprocessed, base64::URL_SAFE)?;
 
         // Here's the deal: Robtop decompresses all levels by calling the zlib function 'inflateInit2_' with
         // the second argument set to 47. 47 basically tells zlib "this data might be compressed using zlib
@@ -693,17 +694,16 @@ impl<'a> ThunkContent<'a> for Objects {
             _ => return Err(ProcessError::Decompress),
         }
 
-        let mut iter = decompressed.split(';');
+        let mut iter = decompressed[..decompressed.len() - 1].split(';');
 
         let metadata_string = iter.next().unwrap();
 
-        let meta = from_robtop_str(metadata_string).unwrap();
+        let meta = LevelMetadata::from_robtop_str(metadata_string).unwrap();
 
         Ok(Objects {
             meta,
             objects: iter
-                .filter(|&object| object != "")// end-of-level is always an empty object, for some obscure reason
-                .map(|object| from_robtop_str(object).unwrap())
+                .map(|object_string| LevelObject::from_robtop_str(object_string).unwrap())
                 .collect(),
         })
     }
@@ -715,8 +715,9 @@ impl<'a> ThunkContent<'a> for Objects {
 
 #[cfg(test)]
 mod tests {
-    use crate::model::level::{robtop_encode_level_password, Password};
     use base64::URL_SAFE;
+
+    use crate::model::level::{robtop_encode_level_password, Password};
 
     #[test]
     fn deserialize_password() {
