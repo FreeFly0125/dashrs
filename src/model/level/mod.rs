@@ -659,8 +659,8 @@ pub struct LevelData<'a> {
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct Objects {
-    meta: LevelMetadata,
-    objects: Vec<LevelObject>,
+    pub meta: LevelMetadata,
+    pub objects: Vec<LevelObject>,
 }
 
 impl<'a> ThunkContent<'a> for Objects {

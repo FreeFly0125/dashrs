@@ -15,5 +15,10 @@ itoa = "0.4.4"
 dtoa = "0.4.4"
 flate2 = {version = "1.0.14", features = ["zlib"], default-features=false}
 
-[dev-dependencies.env_logger]
-version = "0.7.1"
+[dev-dependencies]
+env_logger = "0.7.1"
+criterion = "0.3"
+
+[[bench]]
+name = "level_processing_benchmark"
+harness = false

@@ -12,7 +12,7 @@ The goals for dash-rs are, in order:
 + Accurate modelling of all game related data
 + Efficient serialization routines for RobTop's HTTP response and local save file formats, using serde. 
 
-The benchmark we're trying to beat is parsing and calculating the length in seconds of the level 'Spacial Rent' in `56ms`, achieved on my Laptop's Intel:tm: Core i7-8850H using `gdcf_parse`.
+The benchmark we're trying to beat is parsing and calculating the length in seconds of the level 'Spacial Rend' in `56ms`, achieved on my Laptop's Intel:tm: Core i7-8850H using `gdcf_parse`.
 
 ## Disclaimer
 
