@@ -39,8 +39,6 @@ impl<'de> IndexedDeserializer<'de> {
     /// * *map_like*: Whether the input is in map-like format or not (meaning it is in list-like
     ///   format)
     pub fn new(source: &'de str, delimiter: &'static str, map_like: bool) -> Self {
-        // let mut iter = delimiter.chars();
-
         trace!("Deserializing {} with delimiter '{}', maplike {}", source, delimiter, map_like);
 
         IndexedDeserializer {

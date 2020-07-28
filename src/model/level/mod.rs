@@ -140,10 +140,7 @@ pub enum LevelRating {
 impl LevelRating {
     /// Returns true iff this [`LevelRating`] is the [`LevelRating::Demon`] variant
     pub fn is_demon(&self) -> bool {
-        match self {
-            LevelRating::Demon(_) => true,
-            _ => false,
-        }
+        matches!(self, LevelRating::Demon(_))
     }
 }
 
