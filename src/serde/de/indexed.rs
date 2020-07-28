@@ -7,22 +7,7 @@ use serde::{
     de::{DeserializeSeed, Error as _, Visitor},
     Deserializer,
 };
-use std::str::FromStr;
-
-#[derive(Copy, Clone, Eq, PartialEq, Debug)]
-enum Delimiter {
-    Char(char),
-    String(&'static str),
-}
-
-impl Delimiter {
-    fn len(&self) -> usize {
-        match self {
-            Delimiter::Char(_) => 1,
-            Delimiter::String(s) => s.len(),
-        }
-    }
-}
+use std::str::{FromStr, Split};
 
 /// Deserializer for RobTop's indexed data format
 ///
@@ -39,10 +24,10 @@ impl Delimiter {
 /// generates artificial indices (which just count up by 1 for each field) for error messages.
 #[derive(Debug)]
 pub struct IndexedDeserializer<'de> {
-    source: &'de str,
-    delimiter: Delimiter,
     map_like: bool,
-    current_item_len: Option<usize>,
+    // splitter: Splitter<'de>,
+    splitter: Split<'de, &'de str>,
+    peeked_token: Option<&'de str>,
 }
 
 impl<'de> IndexedDeserializer<'de> {
@@ -54,19 +39,14 @@ impl<'de> IndexedDeserializer<'de> {
     /// * *map_like*: Whether the input is in map-like format or not (meaning it is in list-like
     ///   format)
     pub fn new(source: &'de str, delimiter: &'static str, map_like: bool) -> Self {
-        let mut iter = delimiter.chars();
+        // let mut iter = delimiter.chars();
 
         trace!("Deserializing {} with delimiter '{}', maplike {}", source, delimiter, map_like);
 
         IndexedDeserializer {
-            source,
-            delimiter: match (iter.next(), iter.next()) {
-                (Some(ch), None) => Delimiter::Char(ch),
-                (None, None) => panic!("No delimiter given!"),
-                _ => Delimiter::String(delimiter),
-            },
+            splitter: source.split(delimiter),
             map_like,
-            current_item_len: None,
+            peeked_token: None,
         }
     }
 
@@ -79,48 +59,20 @@ impl<'de> IndexedDeserializer<'de> {
     /// The length of the token peeked is cached, so repeated calls to this function will not
     /// recalculate the bounds of the token.
     fn peek_token(&mut self) -> Result<Option<&'de str>, Error<'de>> {
-        if self.source == "" {
-            return Err(Error::Eof)
+        if self.peeked_token.is_none() {
+            self.peeked_token = self.splitter.next()
         }
 
-        if let Some(len) = self.current_item_len {
-            if len == 0 {
-                return Ok(None)
-            }
-
-            return Ok(Some(&self.source[..len]))
+        match self.peeked_token {
+            Some("") => Ok(None),
+            Some(token) => Ok(Some(token)),
+            None => Err(Error::Eof),
         }
-
-        let index = match self.delimiter {
-            Delimiter::Char(c) => self.source.find(c),
-            Delimiter::String(s) => self.source.find(s),
-        };
-
-        self.current_item_len = Some(index.unwrap_or_else(|| self.source.len()));
-
-        Ok(match index {
-            Some(index) if index == 0 => None,
-            Some(index) => Some(&self.source[..index]),
-            None => Some(&self.source[..]),
-        })
     }
 
     fn consume_token(&mut self) -> Result<Option<&'de str>, Error<'de>> {
         let item = self.peek_token()?;
-
-        // delimiter + length of potential content (0 is two consecutive delimiters)
-        let split_off = self.delimiter.len() + self.current_item_len.unwrap();
-
-        if split_off < self.source.len() {
-            self.source = &self.source[split_off..]
-        } else {
-            self.source = ""
-        }
-
-        self.current_item_len = None;
-
-        trace!("Dropped prefix from input, remaining is '{}'", self.source);
-
+        self.peeked_token = None;
         Ok(item)
     }
 }
