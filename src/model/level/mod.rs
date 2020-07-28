@@ -8,7 +8,7 @@ use std::{
 };
 
 use base64::URL_SAFE;
-use flate2::read::{GzDecoder, ZlibDecoder};
+use flate2::read::{GzDecoder, GzEncoder, ZlibDecoder};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 use crate::{
@@ -20,6 +20,7 @@ use crate::{
     serde::{Base64Decoded, HasRobtopFormat, Internal, ProcessError, ThunkContent},
     util, Thunk,
 };
+use flate2::Compression;
 
 // use flate2::read::GzDecoder;
 // use std::io::Read;
@@ -666,10 +667,10 @@ impl<'a> ThunkContent<'a> for Objects {
         let decoded = base64::decode_config(unprocessed, base64::URL_SAFE)?;
 
         // Here's the deal: Robtop decompresses all levels by calling the zlib function 'inflateInit2_' with
-        // the second argument set to 47. 47 basically tells zlib "this data might be compressed using zlib
-        // or gzip format, with window size at most 15, but you gotta figure it out yourself". However,
-        // flate2 doesnt expose this option, so we have to manually determine whether we have gzip or zlib
-        // compression.
+        // the second argument set to 47. This basically tells zlib "this data might be compressed using
+        // zlib or gzip format, with window size at most 15, but you gotta figure it out yourself".
+        // However, flate2 doesnt expose this option, so we have to manually determine whether we
+        // have gzip or zlib compression.
 
         let mut decompressed = String::new();
 
@@ -706,7 +707,27 @@ impl<'a> ThunkContent<'a> for Objects {
     }
 
     fn as_unprocessed(&self) -> Cow<str> {
-        unimplemented!()
+        let mut bytes = Vec::new();
+
+        self.meta.write_robtop_data(&mut bytes).unwrap();
+
+        bytes.push(b';');
+
+        for object in &self.objects {
+            object.write_robtop_data(&mut bytes).unwrap();
+            bytes.push(b';');
+        }
+
+        // FIXME(game specific): Should we remember the compression scheme (zlib or gz) from above, or just
+        // always re-compress using gz? Since the game dyncamially detects the compression method, we're
+        // compatible either way.
+
+        let mut encoder = GzEncoder::new(&bytes[..], Compression::new(9)); // TODO: idk what these values mean
+        let mut compressed = Vec::new();
+
+        encoder.read_to_end(&mut compressed).unwrap();
+
+        Cow::Owned(base64::encode_config(&compressed, base64::URL_SAFE))
     }
 }
 
