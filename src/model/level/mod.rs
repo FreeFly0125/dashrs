@@ -18,7 +18,7 @@ use crate::{
         GameVersion,
     },
     serde::{Base64Decoded, HasRobtopFormat, Internal, ProcessError, ThunkContent},
-    util, Thunk,
+    util, SerError, Thunk,
 };
 use flate2::Compression;
 
@@ -660,11 +660,46 @@ pub struct Objects {
     pub objects: Vec<LevelObject>,
 }
 
+#[derive(Debug)]
+pub enum LevelProcessError {
+    Deserialize(String),
+
+    Serialize(SerError),
+
+    Base64(base64::DecodeError),
+
+    /// Unknown compression format for level data
+    UnknownCompression,
+
+    /// Error during (de)compression
+    Compression(std::io::Error),
+
+    /// The given level string did not contain a metadata section
+    MissingMetadata,
+}
+
+impl Display for LevelProcessError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self  {
+            LevelProcessError::Deserialize(inner) => write!(f, "{}", inner),
+            LevelProcessError::Serialize(inner) => inner.fmt(f),
+            LevelProcessError::Base64(inner) => inner.fmt(f),
+            LevelProcessError::UnknownCompression => write!(f, "Unknown compression scheme"),
+            LevelProcessError::Compression(inner) => inner.fmt(f),
+            LevelProcessError::MissingMetadata => write!(f, "Missing metadata section in level string"),
+        }
+    }
+}
+
+impl<'a> std::error::Error for LevelProcessError {}
+
 impl<'a> ThunkContent<'a> for Objects {
-    fn from_unprocessed(unprocessed: &'a str) -> Result<Self, ProcessError> {
+    type Error = LevelProcessError;
+
+    fn from_unprocessed(unprocessed: &'a str) -> Result<Self, LevelProcessError> {
         // Doing the entire base64 in one go is actually faster than using base64::read::DecoderReader and
         // having the two readers go back and forth.
-        let decoded = base64::decode_config(unprocessed, base64::URL_SAFE)?;
+        let decoded = base64::decode_config(unprocessed, base64::URL_SAFE).map_err(LevelProcessError::Base64)?;
 
         // Here's the deal: Robtop decompresses all levels by calling the zlib function 'inflateInit2_' with
         // the second argument set to 47. This basically tells zlib "this data might be compressed using
@@ -679,7 +714,7 @@ impl<'a> ThunkContent<'a> for Objects {
             [0x1f, 0x8b] => {
                 let mut decoder = GzDecoder::new(&decoded[..]);
 
-                decoder.read_to_string(&mut decompressed).unwrap();
+                decoder.read_to_string(&mut decompressed).map_err(LevelProcessError::Compression)?;
             },
             // There's no such thing as "zlib magic bytes", but the first byte stores some information about how the data is compressed.
             // '0x78' is the first byte for the compression method robtop used (note: this is only used for very old levels, as he switched
@@ -687,34 +722,35 @@ impl<'a> ThunkContent<'a> for Objects {
             [0x78, _] => {
                 let mut decoder = ZlibDecoder::new(&decoded[..]);
 
-                decoder.read_to_string(&mut decompressed).unwrap();
+                decoder.read_to_string(&mut decompressed).map_err(LevelProcessError::Compression)?;
             },
-            _ => return Err(ProcessError::Decompress),
+            _ => return Err(LevelProcessError::UnknownCompression),
         }
 
         let mut iter = decompressed[..decompressed.len() - 1].split(';');
 
-        let metadata_string = iter.next().unwrap();
+        let metadata_string = match iter.next() {
+            Some(meta) => meta,
+            None => return Err(LevelProcessError::MissingMetadata),
+        };
 
-        let meta = LevelMetadata::from_robtop_str(metadata_string).unwrap();
+        let meta = LevelMetadata::from_robtop_str(metadata_string).map_err(|err| LevelProcessError::Deserialize(err.to_string()))?;
 
-        Ok(Objects {
-            meta,
-            objects: iter
-                .map(|object_string| LevelObject::from_robtop_str(object_string).unwrap())
-                .collect(),
-        })
+        iter.map(|object_string| LevelObject::from_robtop_str(object_string))
+            .collect::<Result<_, _>>()
+            .map(|objects| Objects { meta, objects })
+            .map_err(|err| LevelProcessError::Deserialize(err.to_string()))
     }
 
-    fn as_unprocessed(&self) -> Cow<str> {
+    fn as_unprocessed(&self) -> Result<Cow<str>, LevelProcessError> {
         let mut bytes = Vec::new();
 
-        self.meta.write_robtop_data(&mut bytes).unwrap();
+        self.meta.write_robtop_data(&mut bytes).map_err(LevelProcessError::Serialize)?;
 
         bytes.push(b';');
 
         for object in &self.objects {
-            object.write_robtop_data(&mut bytes).unwrap();
+            object.write_robtop_data(&mut bytes).map_err(LevelProcessError::Serialize)?;
             bytes.push(b';');
         }
 
@@ -725,9 +761,9 @@ impl<'a> ThunkContent<'a> for Objects {
         let mut encoder = GzEncoder::new(&bytes[..], Compression::new(9)); // TODO: idk what these values mean
         let mut compressed = Vec::new();
 
-        encoder.read_to_end(&mut compressed).unwrap();
+        encoder.read_to_end(&mut compressed).map_err(LevelProcessError::Compression)?;
 
-        Cow::Owned(base64::encode_config(&compressed, base64::URL_SAFE))
+        Ok(Cow::Owned(base64::encode_config(&compressed, base64::URL_SAFE)))
     }
 }
 
