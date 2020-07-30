@@ -1,14 +1,17 @@
 use crate::{
     model::{
-        level::{DemonRating, Featured, Level, LevelData, LevelLength, LevelRating, Password},
+        level::{DemonRating, Featured, Level, LevelData, LevelLength, LevelRating, Objects, Password},
         song::MainSong,
         GameVersion,
     },
-    serde::{Base64Decoded, HasRobtopFormat, Internal},
-    Thunk,
+    serde::{Base64Decoded, IndexedDeserializer, IndexedSerializer, Internal, RefThunk},
+    DeError, HasRobtopFormat, SerError, Thunk,
 };
 use serde::{Deserialize, Serialize};
-use std::borrow::{Borrow, Cow};
+use std::{
+    borrow::{Borrow, Cow},
+    io::Write,
+};
 
 mod level_length {
     use crate::model::level::LevelLength;
@@ -96,7 +99,7 @@ impl LevelRating {
     }
 }
 #[derive(Debug, Serialize, Deserialize)]
-pub struct InternalLevel<'a> {
+struct InternalLevel<'a, 'b> {
     #[serde(rename = "1")]
     pub level_id: u64,
 
@@ -182,7 +185,7 @@ pub struct InternalLevel<'a> {
     pub index_47: Option<&'a str>,
 
     #[serde(rename = "4", default, skip_serializing_if = "Option::is_none")]
-    pub level_data: Option<&'a str>,
+    pub level_data: Option<RefThunk<'a, 'b, Objects>>,
 
     #[serde(rename = "27", default, skip_serializing_if = "Option::is_none")]
     pub password: Option<Internal<Password>>,
@@ -198,13 +201,66 @@ pub struct InternalLevel<'a> {
 }
 
 impl<'a> HasRobtopFormat<'a> for Level<'a, Option<u64>, u64> {
-    type Internal = InternalLevel<'a>;
+    fn from_robtop_str(input: &'a str) -> Result<Self, DeError> {
+        let internal = InternalLevel::deserialize(&mut IndexedDeserializer::new(input, ":", true))?;
 
-    const DELIMITER: &'static str = ":";
-    const MAP_LIKE: bool = true;
+        let level_data = match internal.level_data {
+            None => None,
+            Some(RefThunk::Unprocessed(level_string)) =>
+                Some(LevelData {
+                    level_data: Thunk::Unprocessed(level_string),
+                    password: internal.password.map(|pw| pw.0).unwrap_or(Password::NoCopy),
+                    time_since_upload: Cow::Borrowed(internal.time_since_upload.unwrap_or("Unknown")),
+                    time_since_update: Cow::Borrowed(internal.time_since_update.unwrap_or("Unknown")),
+                    index_36: internal.index_36.map(Cow::Borrowed),
+                }),
+            _ => unreachable!(),
+        };
 
-    fn as_internal(&'a self) -> Self::Internal {
-        InternalLevel {
+        Ok(Level {
+            level_id: internal.level_id,
+            name: Cow::Borrowed(internal.name),
+            description: internal.description.map(|internal| internal.0),
+            version: internal.version,
+            creator: internal.creator,
+            difficulty: if !internal.has_difficulty_rating {
+                LevelRating::NotAvailable
+            } else if internal.is_auto {
+                LevelRating::Auto
+            } else if internal.is_demon {
+                LevelRating::Demon(DemonRating::from_response_value(internal.rating))
+            } else {
+                LevelRating::from_response_value(internal.rating)
+            },
+            downloads: internal.downloads,
+            main_song: if internal.custom_song.is_some() {
+                None
+            } else {
+                Some(MainSong::from(internal.main_song))
+            },
+            gd_version: GameVersion::from(internal.gd_version),
+            likes: internal.likes,
+            length: internal.length,
+            stars: internal.stars,
+            featured: internal.featured,
+            copy_of: internal.copy_of,
+            index_31: internal.index_31.map(Cow::Borrowed),
+            custom_song: internal.custom_song,
+            coin_amount: internal.coin_amount,
+            coins_verified: internal.coins_verified,
+            stars_requested: internal.stars_requested,
+            index_40: internal.index_40.map(Cow::Borrowed),
+            is_epic: internal.is_epic,
+            index_43: Cow::Borrowed(internal.index_43),
+            object_amount: internal.object_amount,
+            index_46: internal.index_46.map(Cow::Borrowed),
+            index_47: internal.index_47.map(Cow::Borrowed),
+            level_data,
+        })
+    }
+
+    fn write_robtop_data<W: Write>(&self, writer: W) -> Result<(), SerError> {
+        let internal = InternalLevel {
             level_id: self.level_id,
             name: self.name.borrow(),
             description: self.description.as_ref().map(|thunk| {
@@ -238,7 +294,7 @@ impl<'a> HasRobtopFormat<'a> for Level<'a, Option<u64>, u64> {
             object_amount: self.object_amount,
             index_46: self.index_46.as_ref().map(|moo| moo.borrow()),
             index_47: self.index_47.as_ref().map(|moo| moo.borrow()),
-            level_data: self.level_data.as_ref().map(|data| data.level_data.borrow()),
+            level_data: self.level_data.as_ref().map(|data| data.level_data.as_ref_thunk()),
             password: self.level_data.as_ref().map(|data| Internal(data.password)),
             time_since_upload: self.level_data.as_ref().map(|data| data.time_since_upload.borrow()),
             time_since_update: self.level_data.as_ref().map(|data| data.time_since_update.borrow()),
@@ -247,61 +303,8 @@ impl<'a> HasRobtopFormat<'a> for Level<'a, Option<u64>, u64> {
                 .as_ref()
                 .and_then(|data| data.index_36.as_ref())
                 .map(|moo| moo.borrow()),
-        }
-    }
-
-    fn from_internal(int: Self::Internal) -> Self {
-        let level_data = match int.level_data {
-            None => None,
-            Some(data) =>
-                Some(LevelData {
-                    level_data: Cow::Borrowed(data),
-                    password: int.password.map(|pw| pw.0).unwrap_or(Password::NoCopy),
-                    time_since_upload: Cow::Borrowed(int.time_since_upload.unwrap_or("Unknown")),
-                    time_since_update: Cow::Borrowed(int.time_since_update.unwrap_or("Unknown")),
-                    index_36: int.index_36.map(Cow::Borrowed),
-                }),
         };
 
-        Level {
-            level_id: int.level_id,
-            name: Cow::Borrowed(int.name),
-            description: int.description.map(|internal| internal.0),
-            version: int.version,
-            creator: int.creator,
-            difficulty: if !int.has_difficulty_rating {
-                LevelRating::NotAvailable
-            } else if int.is_auto {
-                LevelRating::Auto
-            } else if int.is_demon {
-                LevelRating::Demon(DemonRating::from_response_value(int.rating))
-            } else {
-                LevelRating::from_response_value(int.rating)
-            },
-            downloads: int.downloads,
-            main_song: if int.custom_song.is_some() {
-                None
-            } else {
-                Some(MainSong::from(int.main_song))
-            },
-            gd_version: GameVersion::from(int.gd_version),
-            likes: int.likes,
-            length: int.length,
-            stars: int.stars,
-            featured: int.featured,
-            copy_of: int.copy_of,
-            index_31: int.index_31.map(Cow::Borrowed),
-            custom_song: int.custom_song,
-            coin_amount: int.coin_amount,
-            coins_verified: int.coins_verified,
-            stars_requested: int.stars_requested,
-            index_40: int.index_40.map(Cow::Borrowed),
-            is_epic: int.is_epic,
-            index_43: Cow::Borrowed(int.index_43),
-            object_amount: int.object_amount,
-            index_46: int.index_46.map(Cow::Borrowed),
-            index_47: int.index_47.map(Cow::Borrowed),
-            level_data,
-        }
+        internal.serialize(&mut IndexedSerializer::new(":", writer, true))
     }
 }

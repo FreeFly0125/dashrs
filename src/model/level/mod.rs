@@ -1,19 +1,33 @@
 //! Module containing structs modelling Geometry Dash levels as they are returned from the boomlings
 //! servers
 
-use crate::{
-    model::{song::MainSong, GameVersion},
-    serde::{Base64Decoded, Internal, ProcessError},
-    util, Thunk,
-};
-use base64::URL_SAFE;
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::{
     borrow::Cow,
     fmt::{Display, Formatter},
+    io::Read,
 };
 
+use base64::URL_SAFE;
+use flate2::read::{GzDecoder, GzEncoder, ZlibDecoder};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
+
+use crate::{
+    model::{
+        level::{metadata::LevelMetadata, object::LevelObject},
+        song::MainSong,
+        GameVersion,
+    },
+    serde::{Base64Decoded, HasRobtopFormat, Internal, ProcessError, ThunkContent},
+    util, SerError, Thunk,
+};
+use flate2::Compression;
+
+// use flate2::read::GzDecoder;
+// use std::io::Read;
+
 mod internal;
+pub mod metadata;
+pub mod object;
 
 /// Enum representing the possible level lengths known to dash-rs
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
@@ -127,10 +141,7 @@ pub enum LevelRating {
 impl LevelRating {
     /// Returns true iff this [`LevelRating`] is the [`LevelRating::Demon`] variant
     pub fn is_demon(&self) -> bool {
-        match self {
-            LevelRating::Demon(_) => true,
-            _ => false,
-        }
+        matches!(self, LevelRating::Demon(_))
     }
 }
 
@@ -417,7 +428,7 @@ impl Display for Password {
 /// The following indices aren't used by the Geometry Dash servers: `11`, `16`,
 /// `17`, `20`, `21`, `22`, `23`, `24`, `26`, `31`, `32`, `33`, `34`, `40`,
 /// `41`, `44`
-#[derive(Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct Level<'a, Song, User> {
     /// The level's unique level id
     ///
@@ -602,7 +613,7 @@ pub struct Level<'a, Song, User> {
 }
 
 /// Struct encapsulating the additional level data returned when actually downloading a level
-#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct LevelData<'a> {
     /// The level's actual data.
     ///
@@ -610,7 +621,8 @@ pub struct LevelData<'a> {
     ///
     /// ## GD Internals:
     /// This value is provided at index `4`, and is urlsafe base64 encoded and `DEFLATE` compressed
-    pub level_data: Cow<'a, str>,
+    #[serde(borrow)]
+    pub level_data: Thunk<'a, Objects>,
 
     /// The level's password
     ///
@@ -642,10 +654,124 @@ pub struct LevelData<'a> {
     pub index_36: Option<Cow<'a, str>>,
 }
 
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+pub struct Objects {
+    pub meta: LevelMetadata,
+    pub objects: Vec<LevelObject>,
+}
+
+#[derive(Debug)]
+pub enum LevelProcessError {
+    Deserialize(String),
+
+    Serialize(SerError),
+
+    Base64(base64::DecodeError),
+
+    /// Unknown compression format for level data
+    UnknownCompression,
+
+    /// Error during (de)compression
+    Compression(std::io::Error),
+
+    /// The given level string did not contain a metadata section
+    MissingMetadata,
+}
+
+impl Display for LevelProcessError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self  {
+            LevelProcessError::Deserialize(inner) => write!(f, "{}", inner),
+            LevelProcessError::Serialize(inner) => inner.fmt(f),
+            LevelProcessError::Base64(inner) => inner.fmt(f),
+            LevelProcessError::UnknownCompression => write!(f, "Unknown compression scheme"),
+            LevelProcessError::Compression(inner) => inner.fmt(f),
+            LevelProcessError::MissingMetadata => write!(f, "Missing metadata section in level string"),
+        }
+    }
+}
+
+impl<'a> std::error::Error for LevelProcessError {}
+
+impl<'a> ThunkContent<'a> for Objects {
+    type Error = LevelProcessError;
+
+    fn from_unprocessed(unprocessed: &'a str) -> Result<Self, LevelProcessError> {
+        // Doing the entire base64 in one go is actually faster than using base64::read::DecoderReader and
+        // having the two readers go back and forth.
+        let decoded = base64::decode_config(unprocessed, base64::URL_SAFE).map_err(LevelProcessError::Base64)?;
+
+        // Here's the deal: Robtop decompresses all levels by calling the zlib function 'inflateInit2_' with
+        // the second argument set to 47. This basically tells zlib "this data might be compressed using
+        // zlib or gzip format, with window size at most 15, but you gotta figure it out yourself".
+        // However, flate2 doesnt expose this option, so we have to manually determine whether we
+        // have gzip or zlib compression.
+
+        let mut decompressed = String::new();
+
+        match &decoded[..2] {
+            // gz magic bytes
+            [0x1f, 0x8b] => {
+                let mut decoder = GzDecoder::new(&decoded[..]);
+
+                decoder.read_to_string(&mut decompressed).map_err(LevelProcessError::Compression)?;
+            },
+            // There's no such thing as "zlib magic bytes", but the first byte stores some information about how the data is compressed.
+            // '0x78' is the first byte for the compression method robtop used (note: this is only used for very old levels, as he switched
+            // to gz for newer levels)
+            [0x78, _] => {
+                let mut decoder = ZlibDecoder::new(&decoded[..]);
+
+                decoder.read_to_string(&mut decompressed).map_err(LevelProcessError::Compression)?;
+            },
+            _ => return Err(LevelProcessError::UnknownCompression),
+        }
+
+        let mut iter = decompressed[..decompressed.len() - 1].split(';');
+
+        let metadata_string = match iter.next() {
+            Some(meta) => meta,
+            None => return Err(LevelProcessError::MissingMetadata),
+        };
+
+        let meta = LevelMetadata::from_robtop_str(metadata_string).map_err(|err| LevelProcessError::Deserialize(err.to_string()))?;
+
+        iter.map(|object_string| LevelObject::from_robtop_str(object_string))
+            .collect::<Result<_, _>>()
+            .map(|objects| Objects { meta, objects })
+            .map_err(|err| LevelProcessError::Deserialize(err.to_string()))
+    }
+
+    fn as_unprocessed(&self) -> Result<Cow<str>, LevelProcessError> {
+        let mut bytes = Vec::new();
+
+        self.meta.write_robtop_data(&mut bytes).map_err(LevelProcessError::Serialize)?;
+
+        bytes.push(b';');
+
+        for object in &self.objects {
+            object.write_robtop_data(&mut bytes).map_err(LevelProcessError::Serialize)?;
+            bytes.push(b';');
+        }
+
+        // FIXME(game specific): Should we remember the compression scheme (zlib or gz) from above, or just
+        // always re-compress using gz? Since the game dyncamially detects the compression method, we're
+        // compatible either way.
+
+        let mut encoder = GzEncoder::new(&bytes[..], Compression::new(9)); // TODO: idk what these values mean
+        let mut compressed = Vec::new();
+
+        encoder.read_to_end(&mut compressed).map_err(LevelProcessError::Compression)?;
+
+        Ok(Cow::Owned(base64::encode_config(&compressed, base64::URL_SAFE)))
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use crate::model::level::{robtop_encode_level_password, Password};
     use base64::URL_SAFE;
+
+    use crate::model::level::{robtop_encode_level_password, Password};
 
     #[test]
     fn deserialize_password() {
