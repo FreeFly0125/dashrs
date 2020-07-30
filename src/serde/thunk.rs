@@ -96,11 +96,10 @@ impl<'input, 'content, C: ThunkContent<'input>> Serialize for RefThunk<'input, '
     {
         match self {
             RefThunk::Unprocessed(unprocessed) => serializer.serialize_str(unprocessed),
-            RefThunk::Processed(ref processed) =>
-                match processed.as_unprocessed().map_err(serde::ser::Error::custom)? {
-                    Cow::Borrowed(s) => serializer.serialize_str(s),
-                    Cow::Owned(s) => s.serialize(serializer),
-                },
+            RefThunk::Processed(ref processed) => match processed.as_unprocessed().map_err(serde::ser::Error::custom)? {
+                Cow::Borrowed(s) => serializer.serialize_str(s),
+                Cow::Owned(s) => s.serialize(serializer),
+            },
         }
     }
 }
@@ -146,11 +145,10 @@ impl<'a, C: ThunkContent<'a>> Serialize for Internal<Thunk<'a, C>> {
     {
         match self.0 {
             Thunk::Unprocessed(unprocessed) => serializer.serialize_str(unprocessed),
-            Thunk::Processed(ref processed) =>
-                match processed.as_unprocessed().map_err(serde::ser::Error::custom)? {
-                    Cow::Borrowed(s) => serializer.serialize_str(s),
-                    Cow::Owned(s) => s.serialize(serializer),
-                },
+            Thunk::Processed(ref processed) => match processed.as_unprocessed().map_err(serde::ser::Error::custom)? {
+                Cow::Borrowed(s) => serializer.serialize_str(s),
+                Cow::Owned(s) => s.serialize(serializer),
+            },
         }
     }
 }

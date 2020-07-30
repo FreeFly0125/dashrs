@@ -143,12 +143,11 @@ impl<'a, 'de> Deserializer<'de> for &'a mut IndexedDeserializer<'de> {
             Ok(None) | Err(Error::Eof) => visitor.visit_bool(false),
             Ok(Some("0")) => visitor.visit_bool(false),
             Ok(Some("1")) => visitor.visit_bool(true),
-            Ok(value) =>
-                Err(Error::Custom {
-                    message: "Expected 0, 1 or the empty string".to_owned(),
-                    index: None,
-                    value,
-                }),
+            Ok(value) => Err(Error::Custom {
+                message: "Expected 0, 1 or the empty string".to_owned(),
+                index: None,
+                value,
+            }),
             Err(err) => Err(err),
         }
     }
@@ -213,7 +212,7 @@ impl<'a, 'de> Deserializer<'de> for &'a mut IndexedDeserializer<'de> {
                 let _ = self.consume_token(); // potentially skip the empty string. Explicitly ignore the return value in case we have Error::Eof
 
                 visitor.visit_none()
-            },
+            }
             Err(err) => Err(err),
             Ok(Some(_)) => visitor.visit_some(self),
         }
@@ -354,12 +353,11 @@ impl<'a, 'de> de::SeqAccess<'de> for SeqAccess<'a, 'de> {
 
         match seed.deserialize(&mut *self.deserializer) {
             Err(Error::Eof) => Ok(None),
-            Err(Error::Custom { message, value, .. }) =>
-                Err(Error::Custom {
-                    message,
-                    index: Some(INDICES.get(self.index - 1).unwrap_or(&">=50")),
-                    value: value.or(next_value),
-                }),
+            Err(Error::Custom { message, value, .. }) => Err(Error::Custom {
+                message,
+                index: Some(INDICES.get(self.index - 1).unwrap_or(&">=50")),
+                value: value.or(next_value),
+            }),
             Err(err) => Err(err),
             Ok(item) => Ok(Some(item)),
         }
@@ -413,12 +411,11 @@ impl<'a, 'de> de::MapAccess<'de> for MapAccess<'a, 'de> {
         let next_value = self.deserializer.peek_token().ok().flatten();
 
         match seed.deserialize(&mut *self.deserializer) {
-            Err(Error::Custom { message, value, .. }) =>
-                Err(Error::Custom {
-                    message,
-                    index: self.current_index,
-                    value: value.or(next_value),
-                }),
+            Err(Error::Custom { message, value, .. }) => Err(Error::Custom {
+                message,
+                index: self.current_index,
+                value: value.or(next_value),
+            }),
             r => r,
         }
     }

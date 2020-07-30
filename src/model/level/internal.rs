@@ -206,14 +206,13 @@ impl<'a> HasRobtopFormat<'a> for Level<'a, Option<u64>, u64> {
 
         let level_data = match internal.level_data {
             None => None,
-            Some(RefThunk::Unprocessed(level_string)) =>
-                Some(LevelData {
-                    level_data: Thunk::Unprocessed(level_string),
-                    password: internal.password.map(|pw| pw.0).unwrap_or(Password::NoCopy),
-                    time_since_upload: Cow::Borrowed(internal.time_since_upload.unwrap_or("Unknown")),
-                    time_since_update: Cow::Borrowed(internal.time_since_update.unwrap_or("Unknown")),
-                    index_36: internal.index_36.map(Cow::Borrowed),
-                }),
+            Some(RefThunk::Unprocessed(level_string)) => Some(LevelData {
+                level_data: Thunk::Unprocessed(level_string),
+                password: internal.password.map(|pw| pw.0).unwrap_or(Password::NoCopy),
+                time_since_upload: Cow::Borrowed(internal.time_since_upload.unwrap_or("Unknown")),
+                time_since_update: Cow::Borrowed(internal.time_since_update.unwrap_or("Unknown")),
+                index_36: internal.index_36.map(Cow::Borrowed),
+            }),
             _ => unreachable!(),
         };
 

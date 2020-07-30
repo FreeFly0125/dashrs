@@ -40,7 +40,7 @@ pub fn decoding_ocular_miracle_benchmark(c: &mut Criterion) {
                     let mut decoder = GzDecoder::new(&decoded[..]);
 
                     decoder.read_to_string(&mut decompressed).unwrap();
-                },
+                }
                 Thunk::Processed(_) => unreachable!(),
             }
         })
@@ -60,7 +60,7 @@ pub fn decoding_spacial_rend_benchmark(c: &mut Criterion) {
                     let mut decoder = GzDecoder::new(&decoded[..]);
 
                     decoder.read_to_string(&mut decompressed).unwrap();
-                },
+                }
                 Thunk::Processed(_) => unreachable!(),
             }
         })

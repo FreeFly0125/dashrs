@@ -37,26 +37,22 @@ impl<'a> HasRobtopFormat<'a> for LevelObject {
         let internal = InternalLevelObject::deserialize(&mut IndexedDeserializer::new(input, ",", true))?;
 
         let metadata = match internal.id {
-            ids::SLOW_PORTAL =>
-                ObjectData::SpeedPortal {
-                    checked: internal.checked,
-                    speed: Speed::Slow,
-                },
-            ids::NORMAL_PORTAL =>
-                ObjectData::SpeedPortal {
-                    checked: internal.checked,
-                    speed: Speed::Normal,
-                },
-            ids::FAST_PORTAL =>
-                ObjectData::SpeedPortal {
-                    checked: internal.checked,
-                    speed: Speed::Fast,
-                },
-            ids::VERY_FAST_PORTAL =>
-                ObjectData::SpeedPortal {
-                    checked: internal.checked,
-                    speed: Speed::VeryFast,
-                },
+            ids::SLOW_PORTAL => ObjectData::SpeedPortal {
+                checked: internal.checked,
+                speed: Speed::Slow,
+            },
+            ids::NORMAL_PORTAL => ObjectData::SpeedPortal {
+                checked: internal.checked,
+                speed: Speed::Normal,
+            },
+            ids::FAST_PORTAL => ObjectData::SpeedPortal {
+                checked: internal.checked,
+                speed: Speed::Fast,
+            },
+            ids::VERY_FAST_PORTAL => ObjectData::SpeedPortal {
+                checked: internal.checked,
+                speed: Speed::VeryFast,
+            },
             _ => ObjectData::Unknown,
         };
 
@@ -83,10 +79,10 @@ impl<'a> HasRobtopFormat<'a> for LevelObject {
         };
 
         match self.metadata {
-            ObjectData::None | ObjectData::Unknown => {},
+            ObjectData::None | ObjectData::Unknown => {}
             ObjectData::SpeedPortal { checked, .. } => {
                 internal.checked = checked;
-            },
+            }
         };
 
         internal.serialize(&mut IndexedSerializer::new(",", writer, true))
