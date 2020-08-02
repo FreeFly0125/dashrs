@@ -27,7 +27,7 @@ pub struct IndexedDeserializer<'de> {
     map_like: bool,
     splitter: Split<'de, &'de str>,
     input: &'de str,
-    current: &'de str,
+    end_of_current_token: usize,
     delimiter: &'de str,
 }
 
@@ -46,7 +46,7 @@ impl<'de> IndexedDeserializer<'de> {
             splitter: source.split(delimiter),
             map_like,
             input: source,
-            current: source,
+            end_of_current_token: source.as_ptr() as usize,
             delimiter,
         }
     }
@@ -57,14 +57,16 @@ impl<'de> IndexedDeserializer<'de> {
     /// non-consumed part of the input starts with the delimiter, returns the empty string.
     /// Otherwise returns the sub-slice into the source representing the next token.
     fn consume_token(&mut self) -> Option<&'de str> {
-        self.current = self.splitter.next()?;
-        //self.position += tok.len() + self.delimiter.len();
-        trace!("Splitting off token {}, remaining input: {}", self.current, &self.input[self.position()..]);
-        Some(self.current)
+        let tok = self.splitter.next()?;
+        self.end_of_current_token = tok.as_ptr() as usize + tok.len();
+
+        trace!("Splitting off token {}, remaining input: {}", tok, &self.input[self.position()..]);
+
+        Some(tok)
     }
 
     fn position(&self) -> usize {
-        self.current.as_ptr() as usize - self.input.as_ptr() as usize + self.current.len() + self.delimiter.len()
+        self.end_of_current_token - self.input.as_ptr() as usize
     }
 
     fn nth_last(&self, nth: usize) -> Option<&'de str> {
@@ -72,7 +74,7 @@ impl<'de> IndexedDeserializer<'de> {
     }
 
     fn is_next_empty(&self) -> bool {
-        &self.input[self.position()..self.position() + self.delimiter.len()] == self.delimiter
+        &self.input[self.position() + self.delimiter.len()..self.position() + 2 * self.delimiter.len()] == self.delimiter
     }
 
     fn is_eof(&self) -> bool {
