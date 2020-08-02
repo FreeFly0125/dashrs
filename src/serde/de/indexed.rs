@@ -4,13 +4,10 @@ use super::error::Error;
 use log::{trace, warn};
 use serde::{
     de,
-    de::{DeserializeSeed, Error as _, Visitor},
+    de::{DeserializeSeed, Visitor},
     Deserializer,
 };
-use std::{
-    iter::Peekable,
-    str::{FromStr, Split},
-};
+use std::str::Split;
 
 /// Deserializer for RobTop's indexed data format
 ///
@@ -28,8 +25,10 @@ use std::{
 #[derive(Debug)]
 pub struct IndexedDeserializer<'de> {
     map_like: bool,
-    // splitter: Splitter<'de>,
-    splitter: Peekable<Split<'de, &'de str>>,
+    splitter: Split<'de, &'de str>,
+    input: &'de str,
+    current: &'de str,
+    delimiter: &'de str,
 }
 
 impl<'de> IndexedDeserializer<'de> {
@@ -44,33 +43,40 @@ impl<'de> IndexedDeserializer<'de> {
         trace!("Deserializing {} with delimiter '{}', maplike {}", source, delimiter, map_like);
 
         IndexedDeserializer {
-            splitter: source.split(delimiter).peekable(),
+            splitter: source.split(delimiter),
             map_like,
+            input: source,
+            current: source,
+            delimiter,
         }
     }
 
-    /// Returns the next token in the input string without consuming it.
+    /// Returns the next token in the input string and consumes it.
     ///
     /// If the input string has already been fully consumed, returns [`Error::Eof`]. If the
-    /// non-consumed part of the input starts with the delimiter, returns [`None`]. Otherwise
-    /// returns the sub-slice into the source representing the next token.
-    ///
-    /// The length of the token peeked is cached, so repeated calls to this function will not
-    /// recalculate the bounds of the token.
-    fn peek_token(&mut self) -> Result<Option<&'de str>, Error<'de>> {
-        match self.splitter.peek() {
-            Some(&"") => Ok(None),
-            Some(&token) => Ok(Some(token)),
-            None => Err(Error::Eof),
-        }
+    /// non-consumed part of the input starts with the delimiter, returns the empty string.
+    /// Otherwise returns the sub-slice into the source representing the next token.
+    fn consume_token(&mut self) -> Option<&'de str> {
+        self.current = self.splitter.next()?;
+        //self.position += tok.len() + self.delimiter.len();
+        trace!("Splitting off token {}, remaining input: {}", self.current, &self.input[self.position()..]);
+        Some(self.current)
     }
 
-    fn consume_token(&mut self) -> Result<Option<&'de str>, Error<'de>> {
-        match self.splitter.next() {
-            Some("") => Ok(None),
-            Some(token) => Ok(Some(token)),
-            None => Err(Error::Eof),
-        }
+    fn position(&self) -> usize {
+        self.current.as_ptr() as usize - self.input.as_ptr() as usize + self.current.len() + self.delimiter.len()
+    }
+
+    fn nth_last(&self, nth: usize) -> Option<&'de str> {
+        self.input[..self.position()].rsplit(self.delimiter).skip(nth - 1).next()
+    }
+
+    fn is_next_empty(&self) -> bool {
+        &self.input[self.position()..self.position() + self.delimiter.len()] == self.delimiter
+    }
+
+    fn is_eof(&self) -> bool {
+        self.input.len() <= self.position()
     }
 }
 
@@ -80,16 +86,24 @@ macro_rules! delegate_to_from_str {
         where
             V: Visitor<'de>,
         {
+            let token = self.consume_token();
+
             trace!(
                 "RobtopDeserializer::{} called called on {:?}",
                 stringify!($deserialize_method),
-                self.peek_token()
+                token
             );
 
-            match self.consume_token()?.map(FromStr::from_str) {
-                Some(Ok(parsed)) => visitor.$visitor_method(parsed),
-                Some(Err(error)) => Err(Error::custom(error)),
-                None => visitor.visit_none(),
+            let token = token.ok_or(Error::Eof)?;
+
+            match token.parse() {
+                Ok(parsed) => visitor.$visitor_method(parsed),
+                Err(error) =>
+                    Err(Error::Custom {
+                        message: error.to_string(),
+                        index: None,
+                        value: Some(token),
+                    }),
             }
         }
     };
@@ -140,15 +154,14 @@ impl<'a, 'de> Deserializer<'de> for &'a mut IndexedDeserializer<'de> {
         // use a custom deserialization routine via 'deserialize_with'.
 
         match token {
-            Ok(None) | Err(Error::Eof) => visitor.visit_bool(false),
-            Ok(Some("0")) => visitor.visit_bool(false),
-            Ok(Some("1")) => visitor.visit_bool(true),
-            Ok(value) => Err(Error::Custom {
-                message: "Expected 0, 1 or the empty string".to_owned(),
-                index: None,
-                value,
-            }),
-            Err(err) => Err(err),
+            Some("0") | Some("") | None => visitor.visit_bool(false),
+            Some("1") => visitor.visit_bool(true),
+            Some(value) =>
+                Err(Error::Custom {
+                    message: "Expected 0, 1 or the empty string".to_owned(),
+                    index: None,
+                    value: Some(value),
+                }),
         }
     }
 
@@ -167,10 +180,7 @@ impl<'a, 'de> Deserializer<'de> for &'a mut IndexedDeserializer<'de> {
 
         trace!("RobtopDeserializer::deserialize_str called on {:?}", token);
 
-        match token? {
-            Some(string) => visitor.visit_borrowed_str(string),
-            None => visitor.visit_none(),
-        }
+        visitor.visit_borrowed_str(token.ok_or(Error::Eof)?)
     }
 
     fn deserialize_string<V>(self, visitor: V) -> Result<<V as Visitor<'de>>::Value, Error<'de>>
@@ -181,10 +191,7 @@ impl<'a, 'de> Deserializer<'de> for &'a mut IndexedDeserializer<'de> {
 
         trace!("RobtopDeserializer::deserialize_string called on {:?}", token);
 
-        match token? {
-            Some(string) => visitor.visit_borrowed_str(string),
-            None => visitor.visit_none(),
-        }
+        visitor.visit_borrowed_str(token.ok_or(Error::Eof)?)
     }
 
     fn deserialize_bytes<V>(self, _visitor: V) -> Result<<V as Visitor<'de>>::Value, Error<'de>>
@@ -205,16 +212,16 @@ impl<'a, 'de> Deserializer<'de> for &'a mut IndexedDeserializer<'de> {
     where
         V: Visitor<'de>,
     {
-        trace!("RobtopDeserializer::deserialize_option called on {:?}", self.peek_token());
+        if self.is_eof() || self.is_next_empty() {
+            trace!("RobtopDeserializer::deserialize_option called on empty string or EOF");
 
-        match self.peek_token() {
-            Ok(None) | Err(Error::Eof) => {
-                let _ = self.consume_token(); // potentially skip the empty string. Explicitly ignore the return value in case we have Error::Eof
+            let _ = self.consume_token(); // potentially skip the empty string. Explicitly ignore the return value in case we have Error::Eof
 
-                visitor.visit_none()
-            }
-            Err(err) => Err(err),
-            Ok(Some(_)) => visitor.visit_some(self),
+            visitor.visit_none()
+        } else {
+            trace!("RobtopDeserializer::deserialize_option called 'Some(_)')");
+
+            visitor.visit_some(self)
         }
     }
 
@@ -267,25 +274,17 @@ impl<'a, 'de> Deserializer<'de> for &'a mut IndexedDeserializer<'de> {
     where
         V: Visitor<'de>,
     {
-        visitor.visit_map(MapAccess {
-            deserializer: self,
-            current_index: None,
-            expected_fields: None,
-        })
+        visitor.visit_map(MapAccess { deserializer: self })
     }
 
     fn deserialize_struct<V>(
-        self, _name: &'static str, fields: &'static [&'static str], visitor: V,
+        self, _name: &'static str, _fields: &'static [&'static str], visitor: V,
     ) -> Result<<V as Visitor<'de>>::Value, Error<'de>>
     where
         V: Visitor<'de>,
     {
         if self.map_like {
-            visitor.visit_map(MapAccess {
-                deserializer: self,
-                current_index: None,
-                expected_fields: Some(fields),
-            })
+            visitor.visit_map(MapAccess { deserializer: self })
         } else {
             self.deserialize_seq(visitor)
         }
@@ -317,7 +316,7 @@ impl<'a, 'de> Deserializer<'de> for &'a mut IndexedDeserializer<'de> {
         // indices. By the time this is called, they key itself will already have been popped in our
         // `MapAccess` implementation. This means we need to skip exactly one item! We'll feed a `None` to
         // the visitor. Because idk what we really wanna do here otherwise
-        let token = self.consume_token()?;
+        let token = self.consume_token();
 
         warn!("Ignored token {:?}. Maybe some index is unmapped?", token);
 
@@ -343,21 +342,18 @@ impl<'a, 'de> de::SeqAccess<'de> for SeqAccess<'a, 'de> {
     where
         T: DeserializeSeed<'de>,
     {
-        trace!("Deserializing list entry '{:?}'", self.deserializer.peek_token());
-
         self.index += 1;
 
-        // don't use '?' here as we might be at the end of the input and need to interpret this as a `None`
-        // value
-        let next_value = self.deserializer.peek_token().ok().flatten();
+        trace!("Deserializing list entry at index {}", self.index);
 
         match seed.deserialize(&mut *self.deserializer) {
             Err(Error::Eof) => Ok(None),
-            Err(Error::Custom { message, value, .. }) => Err(Error::Custom {
-                message,
-                index: Some(INDICES.get(self.index - 1).unwrap_or(&">=50")),
-                value: value.or(next_value),
-            }),
+            Err(Error::Custom { message, value, .. }) =>
+                Err(Error::Custom {
+                    message,
+                    value: value.or_else(|| self.deserializer.nth_last(1)),
+                    index: Some(INDICES.get(self.index - 1).unwrap_or(&">=51")),
+                }),
             Err(err) => Err(err),
             Ok(item) => Ok(Some(item)),
         }
@@ -366,8 +362,6 @@ impl<'a, 'de> de::SeqAccess<'de> for SeqAccess<'a, 'de> {
 
 struct MapAccess<'a, 'de> {
     deserializer: &'a mut IndexedDeserializer<'de>,
-    current_index: Option<&'de str>,
-    expected_fields: Option<&'static [&'static str]>,
 }
 
 impl<'a, 'de> de::MapAccess<'de> for MapAccess<'a, 'de> {
@@ -377,20 +371,16 @@ impl<'a, 'de> de::MapAccess<'de> for MapAccess<'a, 'de> {
     where
         K: DeserializeSeed<'de>,
     {
-        self.current_index = match self.deserializer.peek_token() {
-            Err(Error::Eof) => return Ok(None),
-            Ok(idx) => idx,
-            _ => unreachable!(),
-        };
-
-        if let (Some(expected), Some(index)) = (self.expected_fields, self.current_index) {
-            if !expected.contains(&index) {
-                warn!("Unexpected index {}", index);
-            }
-        }
+        trace!("Processing a map key");
 
         match seed.deserialize(&mut *self.deserializer) {
             Err(Error::Eof) => Ok(None),
+            Err(Error::Custom { message, .. }) =>
+                Err(Error::Custom {
+                    message,
+                    value: None,
+                    index: self.deserializer.nth_last(1),
+                }),
             Err(err) => Err(err),
             Ok(item) => Ok(Some(item)),
         }
@@ -400,22 +390,15 @@ impl<'a, 'de> de::MapAccess<'de> for MapAccess<'a, 'de> {
     where
         V: DeserializeSeed<'de>,
     {
-        trace!(
-            "Processing map entry '{:?}' '{:?}'",
-            self.current_index,
-            self.deserializer.peek_token()
-        );
-
-        // don't use '?' here as we might be at the end of the input and need to interpret this as a `None`
-        // value
-        let next_value = self.deserializer.peek_token().ok().flatten();
+        trace!("Processing a map value",);
 
         match seed.deserialize(&mut *self.deserializer) {
-            Err(Error::Custom { message, value, .. }) => Err(Error::Custom {
-                message,
-                index: self.current_index,
-                value: value.or(next_value),
-            }),
+            Err(Error::Custom { message, value, .. }) =>
+                Err(Error::Custom {
+                    message,
+                    value: value.or_else(|| self.deserializer.nth_last(1)),
+                    index: self.deserializer.nth_last(2),
+                }),
             r => r,
         }
     }
