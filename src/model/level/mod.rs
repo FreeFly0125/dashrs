@@ -351,7 +351,7 @@ impl Password {
                 let password = decoded_str.parse().map_err(ProcessError::IntParse)?;
 
                 Password::PasswordCopy(password)
-            }
+            },
         })
     }
 }
@@ -367,7 +367,7 @@ impl Serialize for Internal<Password> {
             Password::PasswordCopy(pw) => {
                 // serialize_bytes does the base64 encode by itself
                 serializer.serialize_bytes(&robtop_encode_level_password(pw))
-            }
+            },
         }
     }
 }
@@ -715,7 +715,7 @@ impl<'a> ThunkContent<'a> for Objects {
                 let mut decoder = GzDecoder::new(&decoded[..]);
 
                 decoder.read_to_string(&mut decompressed).map_err(LevelProcessError::Compression)?;
-            }
+            },
             // There's no such thing as "zlib magic bytes", but the first byte stores some information about how the data is compressed.
             // '0x78' is the first byte for the compression method robtop used (note: this is only used for very old levels, as he switched
             // to gz for newer levels)
@@ -723,7 +723,7 @@ impl<'a> ThunkContent<'a> for Objects {
                 let mut decoder = ZlibDecoder::new(&decoded[..]);
 
                 decoder.read_to_string(&mut decompressed).map_err(LevelProcessError::Compression)?;
-            }
+            },
             _ => return Err(LevelProcessError::UnknownCompression),
         }
 
