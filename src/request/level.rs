@@ -3,7 +3,7 @@ use crate::{
         level::{DemonRating, LevelLength, LevelRating},
         song::MainSong,
     },
-    request::{BaseRequest, REQUEST_BASE_URL},
+    request::{BaseRequest, GD_21, REQUEST_BASE_URL},
 };
 use serde::{Deserialize, Serialize, Serializer};
 
@@ -42,7 +42,48 @@ pub struct LevelRequest<'a> {
     pub extra: bool,
 }
 
+impl From<u64> for LevelRequest<'_> {
+    fn from(lid: u64) -> Self {
+        LevelRequest::new(lid)
+    }
+}
+
 impl<'a> LevelRequest<'a> {
+    const_setter! {
+        /// Sets the [`BaseRequest`] to be used
+        ///
+        /// Allows builder-style creation of requests
+        base[with_base]: BaseRequest<'a>
+    }
+
+    const_setter! {
+        /// Sets the value of the `inc` field
+        ///
+        /// Allows builder-style creation of requests
+        inc: bool
+    }
+
+    const_setter! {
+        /// Sets the value of the `extra` field
+        ///
+        /// Allows builder-style creation of requests
+        extra: bool
+    }
+
+    /// Constructs a new `LevelRequest` to retrieve the level with the given id
+    ///
+    /// Uses a default [`BaseRequest`], and sets the
+    /// `inc` field to `true` and `extra` to `false`, as are the default
+    /// values set the by the Geometry Dash Client
+    pub const fn new(level_id: u64) -> LevelRequest<'static> {
+        LevelRequest {
+            base: GD_21,
+            level_id,
+            inc: true,
+            extra: false,
+        }
+    }
+
     pub fn to_url(&self) -> String {
         format!("{}{}{}", REQUEST_BASE_URL, super::to_string(self), DOWNLOAD_LEVEL_ENDPOINT)
     }
