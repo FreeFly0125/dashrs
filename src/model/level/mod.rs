@@ -21,6 +21,7 @@ use crate::{
     util, SerError, Thunk,
 };
 use flate2::Compression;
+use serde::de::Error;
 
 // use flate2::read::GzDecoder;
 // use std::io::Read;
@@ -328,6 +329,8 @@ impl Password {
     /// ## Arguments
     /// + `raw_password_data`: The raw data returned from the servers. Assumed to be follow the
     /// encoding described in [`Password`]'s documentation
+    ///
+
     fn from_robtop(raw_password_data: &str) -> Result<Self, ProcessError> {
         Ok(match raw_password_data {
             "0" => Password::NoCopy,
@@ -346,9 +349,14 @@ impl Password {
                 // skip it
                 // The cost of UTF8 checking here is pretty much nothing since the password is so
                 // small, no need to go unsafe
-                // FIXME: no need to go through std::str APIs
-                let decoded_str = std::str::from_utf8(&decoded_buffer[1..password_len]).expect("Password wasn't UTF-8 after a xor cycle.");
-                let password = decoded_str.parse().map_err(ProcessError::IntParse)?;
+                // FIXME: no need to go through std::str APIs ---I AM FIXED---
+                // let decoded_str = std::str::from_utf8(&decoded_buffer[1..password_len]).expect("Password wasn't UTF-8 after a xor cycle.");
+                // let password = decoded_str.parse().map_err(ProcessError::IntParse)?;
+
+                let mut password = 0;
+                for byte in &decoded_buffer[1..password_len] {
+                    password = password * 10 + (byte - b'0') as u32
+                }
 
                 Password::PasswordCopy(password)
             }
@@ -542,7 +550,7 @@ pub struct Level<'a, Song, User> {
     /// custom song is used.
     pub custom_song: Song,
 
-    /// The amount of coints in this [`Level`]
+    /// The amount of coins in this [`Level`]
     ///
     /// ## GD Internals:
     /// This value is provided at index `37`
