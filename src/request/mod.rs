@@ -44,7 +44,7 @@ pub mod comment;
 pub mod level;
 pub mod user;
 
-pub const REQUEST_BASE_URL: &'static str = "http://www.boomlings.com/database/";
+pub const REQUEST_BASE_URL: &str = "http://www.boomlings.com/database/";
 
 /// A `BaseRequest` instance that has all its fields set to the
 /// same values a Geometry Dash 2.1 client would use

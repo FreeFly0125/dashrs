@@ -7,8 +7,8 @@ use crate::{
 };
 use serde::{Deserialize, Serialize, Serializer};
 
-pub const DOWNLOAD_LEVEL_ENDPOINT: &'static str = "downloadGJLevel22.php";
-pub const SEARCH_LEVEL_ENDPOINT: &'static str = "getGJLevels21.php";
+pub const DOWNLOAD_LEVEL_ENDPOINT: &str = "downloadGJLevel22.php";
+pub const SEARCH_LEVEL_ENDPOINT: &str = "getGJLevels21.php";
 
 /// Struct modelled after a request to `downloadGJLevel22.php`.
 ///

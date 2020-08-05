@@ -4,8 +4,8 @@ use crate::request::{BaseRequest, GD_21, REQUEST_BASE_URL};
 use serde::Serialize;
 use std::fmt::{Display, Error, Formatter};
 
-pub const GET_USER_ENDPOINT: &'static str = "getGJUserInfo20";
-pub const SEARCH_USER_ENDPOINT: &'static str = "getGJUsers20";
+pub const GET_USER_ENDPOINT: &str = "getGJUserInfo20";
+pub const SEARCH_USER_ENDPOINT: &str = "getGJUsers20";
 
 /// Struct modelled after a request to `getGJUserInfo20.php`.
 ///

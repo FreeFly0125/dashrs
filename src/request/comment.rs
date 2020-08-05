@@ -4,8 +4,8 @@ use crate::request::{BaseRequest, GD_21, REQUEST_BASE_URL};
 use serde::Serialize;
 use std::fmt::{Display, Formatter};
 
-pub const LEVEL_COMMENTS_ENDPOINT: &'static str = "getGJComments21.php";
-pub const PROFILE_COMMENT_ENDPOINT: &'static str = "getGJAccountComments20.php";
+pub const LEVEL_COMMENTS_ENDPOINT: &str = "getGJComments21.php";
+pub const PROFILE_COMMENT_ENDPOINT: &str = "getGJAccountComments20.php";
 
 /// The different orderings that can be requested for level comments
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize)]
