@@ -3,9 +3,12 @@ use crate::{
         level::{DemonRating, LevelLength, LevelRating},
         song::MainSong,
     },
-    request::BaseRequest,
+    request::{BaseRequest, REQUEST_BASE_URL},
 };
 use serde::{Deserialize, Serialize, Serializer};
+
+pub const DOWNLOAD_LEVEL_ENDPOINT: &'static str = "downloadGJLevel22.php";
+pub const SEARCH_LEVEL_ENDPOINT: &'static str = "getGJLevels21.php";
 
 /// Struct modelled after a request to `downloadGJLevel22.php`.
 ///
@@ -37,6 +40,12 @@ pub struct LevelRequest<'a> {
     /// This field is called `extras` in the boomlings API and needs to be
     /// converted to an integer
     pub extra: bool,
+}
+
+impl<'a> LevelRequest<'a> {
+    pub fn to_url(&self) -> String {
+        format!("{}{}{}", REQUEST_BASE_URL, super::to_string(self), DOWNLOAD_LEVEL_ENDPOINT)
+    }
 }
 
 /// Enum representing the various filter states that can be achieved using the
@@ -483,6 +492,10 @@ impl<'a> LevelsRequest<'a> {
 
     const_setter!(request_type: LevelRequestType);
 
+    pub fn to_url(&self) -> String {
+        format!("{}{}{}", REQUEST_BASE_URL, super::to_string(self), SEARCH_LEVEL_ENDPOINT)
+    }
+
     pub fn with_base(base: BaseRequest<'a>) -> Self {
         LevelsRequest {
             base,
@@ -607,9 +620,7 @@ mod tests {
     use crate::{
         model::level::LevelLength,
         request::level::{CompletionFilter, LevelRequestType, LevelsRequest, SearchFilters},
-        serde::RequestSerializer,
     };
-    use serde::Serialize;
 
     #[test]
     fn serialize_levels_request() {
@@ -624,19 +635,11 @@ mod tests {
                     ]),
                 ));
 
-        let mut output = Vec::new();
-
-        let mut serializer = RequestSerializer::new(&mut output);
-
-        request.serialize(&mut serializer).unwrap();
-
         assert_eq!(
-            std::str::from_utf8(&output),
-            Ok(
-                "gameVersion=21&binaryVersion=33&secret=Wmfd2893gb7&type=2&str=&len=2,3&diff=-&page=0&total=0&featured=1&original=0&\
-                 twoPlayer=1&coins=0&epic=1&star=1&completedLevels=(18018958,21373201,22057275,22488444,22008823,23144971,17382902,87600,\
-                 22031889,22390740,22243264,21923305)&onlyCompleted=0&uncompleted=1"
-            )
+            super::super::to_string(request),
+            "gameVersion=21&binaryVersion=33&secret=Wmfd2893gb7&type=2&str=&len=2,3&diff=-&page=0&total=0&featured=1&original=0&\
+             twoPlayer=1&coins=0&epic=1&star=1&completedLevels=(18018958,21373201,22057275,22488444,22008823,23144971,17382902,87600,\
+             22031889,22390740,22243264,21923305)&onlyCompleted=0&uncompleted=1"
         );
     }
 }

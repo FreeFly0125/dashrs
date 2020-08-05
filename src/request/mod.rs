@@ -5,7 +5,7 @@
 //! making/proxying requests for the boomlings servers seems rather useless to me, as they already
 //! contain a lot of boomlings-specific fields.
 
-use crate::model::GameVersion;
+use crate::{model::GameVersion, serde::RequestSerializer};
 use serde::{Deserialize, Serialize};
 
 macro_rules! const_setter {
@@ -43,6 +43,8 @@ macro_rules! const_setter {
 pub mod comment;
 pub mod level;
 pub mod user;
+
+pub const REQUEST_BASE_URL: &'static str = "http://www.boomlings.com/database/";
 
 /// A `BaseRequest` instance that has all its fields set to the
 /// same values a Geometry Dash 2.1 client would use
@@ -102,4 +104,13 @@ impl Default for BaseRequest<'static> {
     fn default() -> Self {
         GD_21
     }
+}
+
+pub(crate) fn to_string<S: Serialize>(request: S) -> String {
+    let mut output = Vec::new();
+    let mut serializer = RequestSerializer::new(&mut output);
+
+    request.serialize(&mut serializer).unwrap();
+
+    String::from_utf8(output).unwrap()
 }

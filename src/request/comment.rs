@@ -1,8 +1,11 @@
 //! Module containing request structs for retrieving profile/level comments
 
-use crate::request::{BaseRequest, GD_21};
+use crate::request::{BaseRequest, GD_21, REQUEST_BASE_URL};
 use serde::Serialize;
 use std::fmt::{Display, Formatter};
+
+pub const LEVEL_COMMENTS_ENDPOINT: &'static str = "getGJComments21.php";
+pub const PROFILE_COMMENT_ENDPOINT: &'static str = "getGJAccountComments20.php";
 
 /// The different orderings that can be requested for level comments
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize)]
@@ -78,6 +81,10 @@ impl<'a> LevelCommentsRequest<'a> {
 
     const_setter!(page: u32);
 
+    pub fn to_url(&self) -> String {
+        format!("{}{}{}", REQUEST_BASE_URL, super::to_string(self), LEVEL_COMMENTS_ENDPOINT)
+    }
+
     pub const fn new(level: u64) -> Self {
         Self::with_base(GD_21, level)
     }
@@ -148,6 +155,10 @@ impl<'a> ProfileCommentsRequest<'a> {
 
     const_setter!(account_id: u64);
 
+    pub fn to_url(&self) -> String {
+        format!("{}{}{}", REQUEST_BASE_URL, super::to_string(self), PROFILE_COMMENT_ENDPOINT)
+    }
+
     pub const fn new(account: u64) -> Self {
         Self::with_base(GD_21, account)
     }
@@ -170,11 +181,7 @@ impl Display for ProfileCommentsRequest<'_> {
 
 #[cfg(test)]
 mod tests {
-    use crate::{
-        request::comment::{LevelCommentsRequest, ProfileCommentsRequest},
-        serde::RequestSerializer,
-    };
-    use serde::Serialize;
+    use crate::request::comment::{LevelCommentsRequest, ProfileCommentsRequest};
 
     #[test]
     fn serialize_level_comments() {
@@ -184,15 +191,10 @@ mod tests {
         }
 
         let request = LevelCommentsRequest::new(1234).most_liked().page(2).limit(15);
-        let mut output = Vec::new();
-
-        let mut serializer = RequestSerializer::new(&mut output);
-
-        request.serialize(&mut serializer).unwrap();
 
         assert_eq!(
-            std::str::from_utf8(&output),
-            Ok("gameVersion=21&binaryVersion=33&secret=Wmfd2893gb7&total=0&page=2&mode=1&levelID=1234&count=15")
+            super::super::to_string(request),
+            "gameVersion=21&binaryVersion=33&secret=Wmfd2893gb7&total=0&page=2&mode=1&levelID=1234&count=15"
         );
     }
 
@@ -204,15 +206,10 @@ mod tests {
         }
 
         let request = ProfileCommentsRequest::new(1710032).page(2);
-        let mut output = Vec::new();
-
-        let mut serializer = RequestSerializer::new(&mut output);
-
-        request.serialize(&mut serializer).unwrap();
 
         assert_eq!(
-            std::str::from_utf8(&output),
-            Ok("gameVersion=21&binaryVersion=33&secret=Wmfd2893gb7&total=0&page=2&accountID=1710032")
+            super::super::to_string(request),
+            "gameVersion=21&binaryVersion=33&secret=Wmfd2893gb7&total=0&page=2&accountID=1710032"
         );
     }
 }

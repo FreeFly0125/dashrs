@@ -1,8 +1,11 @@
 //! Module containing request definitions for retrieving users
 
-use crate::request::{BaseRequest, GD_21};
+use crate::request::{BaseRequest, GD_21, REQUEST_BASE_URL};
 use serde::Serialize;
 use std::fmt::{Display, Error, Formatter};
+
+pub const GET_USER_ENDPOINT: &'static str = "getGJUserInfo20";
+pub const SEARCH_USER_ENDPOINT: &'static str = "getGJUsers20";
 
 /// Struct modelled after a request to `getGJUserInfo20.php`.
 ///
@@ -27,6 +30,10 @@ impl UserRequest<'_> {
             base: GD_21,
             user: user_id,
         }
+    }
+
+    pub fn to_url(&self) -> String {
+        format!("{}{}{}", REQUEST_BASE_URL, super::to_string(self), GET_USER_ENDPOINT)
     }
 }
 
@@ -80,6 +87,10 @@ impl<'a> UserSearchRequest<'a> {
             page: 0,
             search_string,
         }
+    }
+
+    pub fn to_url(&self) -> String {
+        format!("{}{}{}", REQUEST_BASE_URL, super::to_string(self), SEARCH_USER_ENDPOINT)
     }
 }
 
