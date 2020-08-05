@@ -389,7 +389,7 @@ impl<'de> Deserialize<'de> for Internal<Password> {
 
         Password::from_robtop(raw_password_data)
             .map(Internal)
-            .map_err(serde::de::Error::custom)
+            .map_err(Error::custom)
     }
 }
 
