@@ -348,8 +348,9 @@ impl Password {
                 // The cost of UTF8 checking here is pretty much nothing since the password is so
                 // small, no need to go unsafe
                 // FIXME: no need to go through std::str APIs ---I AM FIXED---
-                // let decoded_str = std::str::from_utf8(&decoded_buffer[1..password_len]).expect("Password wasn't UTF-8 after a xor cycle.");
-                // let password = decoded_str.parse().map_err(ProcessError::IntParse)?;
+                // let decoded_str = std::str::from_utf8(&decoded_buffer[1..password_len]).expect("Password wasn't
+                // UTF-8 after a xor cycle."); let password =
+                // decoded_str.parse().map_err(ProcessError::IntParse)?;
 
                 let mut password = 0;
                 for byte in &decoded_buffer[1..password_len] {
@@ -384,9 +385,7 @@ impl<'de> Deserialize<'de> for Internal<Password> {
     {
         let raw_password_data = <&str>::deserialize(deserializer)?;
 
-        Password::from_robtop(raw_password_data)
-            .map(Internal)
-            .map_err(Error::custom)
+        Password::from_robtop(raw_password_data).map(Internal).map_err(Error::custom)
     }
 }
 
