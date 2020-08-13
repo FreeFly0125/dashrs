@@ -122,43 +122,43 @@ pub struct Profile<'a> {
     /// This value is provided at index `20`. The value provided is only the `username` section of an `https://www.youtube.com/user/{username}` URL
     pub youtube_url: Option<Youtube<'a>>,
 
-    /// The 1-based index of the cube this [`Profile`] currently uses. Indexing of icons starts at the
-    /// top left corner and then goes left-to-right and top-to-bottom
+    /// The 1-based index of the cube this [`Profile`] currently uses. Indexing of icons starts at
+    /// the top left corner and then goes left-to-right and top-to-bottom
     ///
     /// ## GD Internals:
     /// This value is provided at index `21`
     pub cube_index: u16,
 
-    /// The 1-based index of the ship this [`Profile`] currently uses. Indexing of icons starts at the
-    /// top left corner and then goes left-to-right and top-to-bottom
+    /// The 1-based index of the ship this [`Profile`] currently uses. Indexing of icons starts at
+    /// the top left corner and then goes left-to-right and top-to-bottom
     ///
     /// ## GD Internals:
     /// This value is provided at index `22`
     pub ship_index: u8,
 
-    /// The 1-based index of the ball this [`Profile`] currently uses. Indexing of icons starts at the
-    /// top left corner and then goes left-to-right and top-to-bottom
+    /// The 1-based index of the ball this [`Profile`] currently uses. Indexing of icons starts at
+    /// the top left corner and then goes left-to-right and top-to-bottom
     ///
     /// ## GD Internals:
     /// This value is provided at index `23`
     pub ball_index: u8,
 
-    /// The 1-based index of the UFO this [`Profile`] currently uses. Indexing of icons starts at the
-    /// top left corner and then goes left-to-right and top-to-bottom
+    /// The 1-based index of the UFO this [`Profile`] currently uses. Indexing of icons starts at
+    /// the top left corner and then goes left-to-right and top-to-bottom
     ///
     /// ## GD Internals:
     /// This value is provided at index `24`
     pub ufo_index: u8,
 
-    /// The 1-based index of the wave this [`Profile`] currently uses. Indexing of icons starts at the
-    /// top left corner and then goes left-to-right and top-to-bottom
+    /// The 1-based index of the wave this [`Profile`] currently uses. Indexing of icons starts at
+    /// the top left corner and then goes left-to-right and top-to-bottom
     ///
     /// ## GD Internals:
     /// This value is provided at index `25`
     pub wave_index: u8,
 
-    /// The 1-based index of the robot this [`Profile`] currently uses. Indexing of icons starts at the
-    /// top left corner and then goes left-to-right and top-to-bottom
+    /// The 1-based index of the robot this [`Profile`] currently uses. Indexing of icons starts at
+    /// the top left corner and then goes left-to-right and top-to-bottom
     ///
     /// ## GD Internals:
     /// This value is provided at index `26`
