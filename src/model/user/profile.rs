@@ -4,15 +4,15 @@ use std::{borrow::Cow, fmt::Display};
 
 #[derive(Debug, Eq, PartialEq, Clone, Serialize, Deserialize)]
 #[serde(transparent)]
-pub struct Youtube<'a>(Cow<'a, str>);
+pub struct Youtube<'a>(pub Cow<'a, str>);
 
 #[derive(Debug, Eq, PartialEq, Clone, Serialize, Deserialize)]
 #[serde(transparent)]
-pub struct Twitch<'a>(Cow<'a, str>);
+pub struct Twitch<'a>(pub Cow<'a, str>);
 
 #[derive(Debug, Eq, PartialEq, Clone, Serialize, Deserialize)]
 #[serde(transparent)]
-pub struct Twitter<'a>(Cow<'a, str>);
+pub struct Twitter<'a>(pub Cow<'a, str>);
 
 impl Display for Youtube<'_> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
@@ -126,48 +126,48 @@ pub struct Profile<'a> {
     /// top left corner and then goes left-to-right and top-to-bottom
     ///
     /// ## GD Internals:
-    /// This value is provied at index `21`
+    /// This value is provided at index `21`
     pub cube_index: u16,
 
     /// The 1-based index of the ship this [`User`] currently uses. Indexing of icons starts at the
     /// top left corner and then goes left-to-right and top-to-bottom
     ///
     /// ## GD Internals:
-    /// This value is provied at index `22`
+    /// This value is provided at index `22`
     pub ship_index: u8,
 
     /// The 1-based index of the ball this [`User`] currently uses. Indexing of icons starts at the
     /// top left corner and then goes left-to-right and top-to-bottom
     ///
     /// ## GD Internals:
-    /// This value is provied at index `23`
+    /// This value is provided at index `23`
     pub ball_index: u8,
 
     /// The 1-based index of the UFO this [`User`] currently uses. Indexing of icons starts at the
     /// top left corner and then goes left-to-right and top-to-bottom
     ///
     /// ## GD Internals:
-    /// This value is provied at index `24`
+    /// This value is provided at index `24`
     pub ufo_index: u8,
 
     /// The 1-based index of the wave this [`User`] currently uses. Indexing of icons starts at the
     /// top left corner and then goes left-to-right and top-to-bottom
     ///
     /// ## GD Internals:
-    /// This value is provied at index `25`
+    /// This value is provided at index `25`
     pub wave_index: u8,
 
     /// The 1-based index of the robot this [`User`] currently uses. Indexing of icons starts at the
     /// top left corner and then goes left-to-right and top-to-bottom
     ///
     /// ## GD Internals:
-    /// This value is provied at index `26`
+    /// This value is provided at index `26`
     pub robot_index: u8,
 
     /// Values indicating whether this [`User`] has glow activated or not.
     ///
     /// ## GD Internals:
-    /// This value is provied at index `27`, as an integer
+    /// This value is provided at index `28`, as an integer
     pub has_glow: bool,
 
     // TODO: figure this value out
@@ -190,7 +190,7 @@ pub struct Profile<'a> {
     /// the top left corner and then goes left-to-right and top-to-bottom
     ///
     /// ## GD Internals:
-    /// This value is provied at index `43`
+    /// This value is provided at index `43`
     pub spider_index: u8,
 
     /// The link to the [`User`]'s [Twitter](https://twitter.com) account, if provided
@@ -215,7 +215,7 @@ pub struct Profile<'a> {
     /// starts at the top left corner and then goes left-to-right and top-to-bottom
     ///
     /// ## GD Internals:
-    /// This value is provied at index `48`
+    /// This value is provided at index `48`
     pub death_effect_index: u8,
 
     /// The level of moderator this [`User`] is
@@ -228,4 +228,153 @@ pub struct Profile<'a> {
     /// ## GD Internals:
     /// This value is provided at index `50`
     pub index_50: Cow<'a, str>,
+}
+
+mod internal {
+    use crate::{
+        model::user::{
+            profile::{Profile, Twitch, Twitter, Youtube},
+            Color, ModLevel,
+        },
+        serde::IndexedDeserializer,
+        DeError, HasRobtopFormat, SerError,
+    };
+    use serde::{Deserialize, Serialize};
+    use std::{borrow::Cow, io::Write};
+
+    #[derive(Serialize, Deserialize)]
+    struct InternalProfile<'a> {
+        #[serde(rename = "1")]
+        pub name: &'a str,
+
+        #[serde(rename = "2")]
+        pub user_id: u64,
+
+        #[serde(rename = "3")]
+        pub stars: u32,
+
+        #[serde(rename = "4")]
+        pub demons: u16,
+
+        #[serde(rename = "8")]
+        pub creator_points: u16,
+
+        #[serde(rename = "10")]
+        pub primary_color: u8,
+
+        #[serde(rename = "11")]
+        pub secondary_color: u8,
+
+        #[serde(rename = "13")]
+        pub secret_coins: u8,
+
+        #[serde(rename = "16")]
+        pub account_id: u64,
+
+        #[serde(rename = "17")]
+        pub user_coins: u16,
+
+        #[serde(rename = "18")]
+        pub index_18: &'a str,
+
+        #[serde(rename = "19")]
+        pub index_19: &'a str,
+
+        #[serde(rename = "20")]
+        pub youtube_url: Option<&'a str>,
+
+        #[serde(rename = "21")]
+        pub cube_index: u16,
+
+        #[serde(rename = "22")]
+        pub ship_index: u8,
+
+        #[serde(rename = "23")]
+        pub ball_index: u8,
+
+        #[serde(rename = "24")]
+        pub ufo_index: u8,
+
+        #[serde(rename = "25")]
+        pub wave_index: u8,
+
+        #[serde(rename = "26")]
+        pub robot_index: u8,
+
+        #[serde(rename = "28")]
+        pub has_glow: bool,
+
+        #[serde(rename = "29")]
+        pub index_29: &'a str,
+
+        #[serde(rename = "30")]
+        pub global_rank: Option<u32>,
+
+        #[serde(rename = "31")]
+        pub index_31: &'a str,
+
+        #[serde(rename = "43")]
+        pub spider_index: u8,
+
+        #[serde(rename = "44")]
+        pub twitter_url: Option<&'a str>,
+
+        #[serde(rename = "45")]
+        pub twitch_url: Option<&'a str>,
+
+        #[serde(rename = "46")]
+        pub diamonds: u16,
+
+        #[serde(rename = "48")]
+        pub death_effect_index: u8,
+
+        #[serde(rename = "49")]
+        pub mod_level: u8,
+
+        #[serde(rename = "50")]
+        pub index_50: &'a str,
+    }
+
+    impl<'a> HasRobtopFormat<'a> for Profile<'a> {
+        fn from_robtop_str(input: &'a str) -> Result<Self, DeError<'a>> {
+            let internal = InternalProfile::deserialize(&mut IndexedDeserializer::new(input, ":", true))?;
+
+            Ok(Profile {
+                name: Cow::Borrowed(internal.name),
+                user_id: internal.user_id,
+                stars: internal.stars,
+                demons: internal.demons,
+                creator_points: internal.creator_points,
+                primary_color: Color::from(internal.primary_color),
+                secondary_color: Color::from(internal.secondary_color),
+                secret_coins: internal.secret_coins,
+                account_id: internal.account_id,
+                user_coins: internal.user_coins,
+                index_18: Cow::Borrowed(internal.index_18),
+                index_19: Cow::Borrowed(internal.index_19),
+                youtube_url: internal.youtube_url.map(Cow::Borrowed).map(Youtube),
+                cube_index: internal.cube_index,
+                ship_index: internal.ship_index,
+                ball_index: internal.ball_index,
+                ufo_index: internal.ufo_index,
+                wave_index: internal.wave_index,
+                robot_index: internal.robot_index,
+                has_glow: internal.has_glow,
+                index_29: Cow::Borrowed(internal.index_29),
+                global_rank: internal.global_rank,
+                index_31: Cow::Borrowed(internal.index_31),
+                spider_index: internal.spider_index,
+                twitter_url: internal.twitter_url.map(Cow::Borrowed).map(Twitter),
+                twitch_url: internal.twitch_url.map(Cow::Borrowed).map(Twitch),
+                diamonds: internal.diamonds,
+                death_effect_index: internal.death_effect_index,
+                mod_level: ModLevel::from(internal.mod_level),
+                index_50: Cow::Borrowed(internal.index_50),
+            })
+        }
+
+        fn write_robtop_data<W: Write>(&self, writer: W) -> Result<(), SerError> {
+            unimplemented!()
+        }
+    }
 }
