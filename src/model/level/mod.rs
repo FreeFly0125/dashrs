@@ -433,7 +433,7 @@ impl Display for Password {
 /// `17`, `20`, `21`, `22`, `23`, `24`, `26`, `31`, `32`, `33`, `34`, `40`,
 /// `41`, `44`
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
-pub struct Level<'a, Song, User> {
+pub struct Level<'a, Song = Option<u64>, User = u64> {
     /// The level's unique level id
     ///
     /// ## GD Internals:

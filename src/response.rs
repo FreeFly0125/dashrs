@@ -109,3 +109,13 @@ pub fn parse_get_gj_levels_response(response: &str) -> Result<Vec<Level<Option<N
         })
         .collect::<Result<_, _>>()
 }
+
+pub fn parse_download_gj_level_response(response: &str) -> Result<Level, ResponseError> {
+    if response == "-1" {
+        return Err(ResponseError::NotFound)
+    }
+
+    let mut sections = response.split('#');
+
+    Ok(Level::from_robtop_str(section!(sections))?)
+}
