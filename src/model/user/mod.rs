@@ -44,7 +44,7 @@ impl From<u8> for ModLevel {
 }
 
 /// The type of icon displayed next a user's comment of next to their search result
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum IconType {
     Cube,
     Ship,
