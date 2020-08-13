@@ -216,7 +216,7 @@ pub const MAIN_SONGS: [MainSong; 21] = [
 /// dash-rs hasn't updated to include the new model.song yet, you will receive this object
 pub const UNKNOWN: MainSong = MainSong::new(
     0xFF,
-    "The model.song was added after the release of GDCF you're using",
+    "The model.song was added after the release of dash-rs you're using",
     "Please either update to the newest version, or bug stadust about adding the new songs",
 );
 

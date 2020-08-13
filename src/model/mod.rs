@@ -20,6 +20,7 @@ use std::fmt::{Display, Formatter};
 pub mod creator;
 pub mod level;
 pub mod song;
+pub mod user;
 
 /// Enum modelling the version of a Geometry Dash client
 #[derive(Debug, Clone, Copy, Ord, PartialOrd, Eq, PartialEq, Hash, Serialize, Deserialize)]
