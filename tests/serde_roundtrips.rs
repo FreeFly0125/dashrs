@@ -3,6 +3,10 @@ use dash_rs::{
         creator::Creator,
         level::{DemonRating, Featured::Featured, Level, LevelData, LevelLength, LevelRating, Password},
         song::{MainSong, NewgroundsSong},
+        user::{
+            profile::{Profile, Twitter, Youtube},
+            Color, ModLevel,
+        },
         GameVersion,
     },
     Base64Decoded, HasRobtopFormat, PercentDecoded, Thunk,
@@ -33,6 +37,10 @@ const CREO_DUNE_DATA_TOO_MANY_FIELDS: &str = "1~|~771277~|~54~|~should be ignore
                                               03~|~6~|~~|~7~|~UCsCWA3Y3JppL6feQiMRgm6Q~|~8~|~1~|~10~|~https%3A%2F%2Faudio.ngfiles.com%\
                                               2F771000%2F771277_Creo---Dune.mp3%3Ff1508708604~|~9~|~should be ignored";
 
+const PROFILE_STARDUST1971_DATA: &str = "1:stardust1971:2:2073761:13:149:17:498:10:9:11:10:3:13723:46:2312:4:484:8:19:18:0:19:0:50:0:20:\
+                                         stardust19710:21:95:22:48:23:33:24:18:25:11:26:10:28:1:43:2:48:13:30:0:16:8451:31:0:44:\
+                                         stadust1971:45::49:0:38:0:39:579:40:0:29:1";
+
 const CREO_DUNE: NewgroundsSong<'static> = NewgroundsSong {
     song_id: 771277,
     name: Cow::Borrowed("Creo - Dune"),
@@ -62,6 +70,39 @@ const CREATOR_UNREGISTERED: Creator = Creator {
     user_id: 4170784,
     name: Cow::Borrowed("Serponge"),
     account_id: None,
+};
+
+const PROFILE_STARDUST1971: Profile = Profile {
+    name: Cow::Borrowed("stardust1971"),
+    user_id: 2073761,
+    stars: 13723,
+    demons: 484,
+    creator_points: 19,
+    primary_color: Color::Known(255, 0, 0),
+    secondary_color: Color::Known(255, 125, 0),
+    secret_coins: 149,
+    account_id: 8451,
+    user_coins: 498,
+    index_18: Cow::Borrowed("0"),
+    index_19: Cow::Borrowed("0"),
+    youtube_url: Some(Youtube(Cow::Borrowed("stardust19710"))),
+    cube_index: 95,
+    ship_index: 48,
+    ball_index: 33,
+    ufo_index: 18,
+    wave_index: 11,
+    robot_index: 10,
+    has_glow: true,
+    index_29: Cow::Borrowed("1"),
+    global_rank: Some(0),
+    index_31: Cow::Borrowed("0"),
+    spider_index: 2,
+    twitter_url: Some(Twitter(Cow::Borrowed("stadust1971"))),
+    twitch_url: None,
+    diamonds: 2312,
+    death_effect_index: 13,
+    mod_level: ModLevel::None,
+    index_50: Cow::Borrowed("0"),
 };
 
 const TIME_PRESSURE: Level<Option<u64>, u64> = Level {
@@ -222,6 +263,32 @@ fn deserialize_level2() {
     level.level_data.as_mut().unwrap().level_data = Thunk::Unprocessed("REMOVED");
 
     assert_eq!(level, TIME_PRESSURE);
+}
+
+#[test]
+fn deserialize_profile() {
+    init_log();
+
+    let profile = Profile::from_robtop_str(PROFILE_STARDUST1971_DATA);
+
+    assert!(profile.is_ok(), "{:?}", profile.unwrap_err());
+    assert_eq!(profile.unwrap(), PROFILE_STARDUST1971);
+}
+
+#[test]
+fn profile_roundtrip() {
+    init_log();
+
+    let data = PROFILE_STARDUST1971.to_robtop_string();
+
+    assert!(data.is_ok(), "{:?}", data.unwrap_err());
+
+    let data = data.unwrap();
+
+    let profile = Profile::from_robtop_str(&data);
+
+    assert!(profile.is_ok(), "{:?}", profile.unwrap_err());
+    assert_eq!(profile.unwrap(), PROFILE_STARDUST1971);
 }
 
 fn init_log() {
