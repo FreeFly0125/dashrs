@@ -236,13 +236,14 @@ mod internal {
             profile::{Profile, Twitch, Twitter, Youtube},
             Color, ModLevel,
         },
-        serde::IndexedDeserializer,
+        serde::{IndexedDeserializer, IndexedSerializer},
         DeError, HasRobtopFormat, SerError,
     };
     use serde::{Deserialize, Serialize};
-    use std::{borrow::Cow, io::Write};
-    use crate::serde::IndexedSerializer;
-    use std::borrow::Borrow;
+    use std::{
+        borrow::{Borrow, Cow},
+        io::Write,
+    };
 
     #[derive(Serialize, Deserialize)]
     struct InternalProfile<'a> {
@@ -389,7 +390,7 @@ mod internal {
                 user_coins: self.user_coins,
                 index_18: self.index_18.borrow(),
                 index_19: self.index_19.borrow(),
-                youtube_url: self.youtube_url.as_ref().map(|y|y.0.borrow()),
+                youtube_url: self.youtube_url.as_ref().map(|y| y.0.borrow()),
                 cube_index: self.cube_index,
                 ship_index: self.ship_index,
                 ball_index: self.ball_index,
@@ -401,14 +402,14 @@ mod internal {
                 global_rank: self.global_rank,
                 index_31: self.index_31.borrow(),
                 spider_index: self.spider_index,
-                twitter_url: self.twitter_url.as_ref().map(|t|t.0.borrow()),
-                twitch_url: self.twitch_url.as_ref().map(|t|t.0.borrow()),
+                twitter_url: self.twitter_url.as_ref().map(|t| t.0.borrow()),
+                twitch_url: self.twitch_url.as_ref().map(|t| t.0.borrow()),
                 diamonds: self.diamonds,
                 death_effect_index: self.death_effect_index,
                 mod_level: self.mod_level.into(),
-                index_50: self.index_50.borrow()
+                index_50: self.index_50.borrow(),
             };
-            
+
             internal.serialize(&mut IndexedSerializer::new(":", writer, true))
         }
     }

@@ -151,7 +151,7 @@ impl From<Color> for u8 {
             Color::Known(125, 255, 175) => 40,
             Color::Known(125, 125, 255) => 41,
             Color::Unknown(idx) => idx,
-            _ => 0 // default color
+            _ => 0, // default color
         }
     }
 }
