@@ -1,6 +1,9 @@
 //! Module containing request definitions for retrieving users
 
-use crate::request::{BaseRequest, GD_21, REQUEST_BASE_URL};
+use crate::{
+    model::creator::Creator,
+    request::{BaseRequest, GD_21, REQUEST_BASE_URL},
+};
 use serde::Serialize;
 use std::fmt::{Display, Error, Formatter};
 
@@ -37,9 +40,15 @@ impl UserRequest<'_> {
     }
 }
 
-impl<'a> Into<UserRequest<'a>> for u64 {
-    fn into(self) -> UserRequest<'a> {
-        UserRequest::new(self)
+impl From<u64> for UserRequest<'_> {
+    fn from(user_id: u64) -> Self {
+        UserRequest::new(user_id)
+    }
+}
+
+impl From<Creator<'_>> for UserRequest<'_> {
+    fn from(creator: Creator<'_>) -> Self {
+        UserRequest::from(creator.user_id)
     }
 }
 
@@ -94,9 +103,15 @@ impl<'a> UserSearchRequest<'a> {
     }
 }
 
-impl<'a> Into<UserSearchRequest<'a>> for &'a str {
-    fn into(self) -> UserSearchRequest<'a> {
-        UserSearchRequest::new(self)
+impl<'a> From<&'a str> for UserSearchRequest<'a> {
+    fn from(search_string: &'a str) -> Self {
+        UserSearchRequest::new(search_string)
+    }
+}
+
+impl<'a: 'b, 'b> From<&'b Creator<'a>> for UserSearchRequest<'b> {
+    fn from(creator: &'b Creator<'a>) -> Self {
+        UserSearchRequest::from(&*creator.name)
     }
 }
 

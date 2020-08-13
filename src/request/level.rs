@@ -406,9 +406,9 @@ impl From<i32> for LevelRequestType {
     }
 }
 
-impl Into<i32> for LevelRequestType {
-    fn into(self) -> i32 {
-        match self {
+impl From<LevelRequestType> for i32 {
+    fn from(request_type: LevelRequestType) -> Self {
+        match request_type {
             LevelRequestType::Search => 0,
             LevelRequestType::MostDownloaded => 1,
             LevelRequestType::MostLiked => 2,
@@ -426,6 +426,7 @@ impl Into<i32> for LevelRequestType {
         }
     }
 }
+
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq, Serialize, Deserialize)]
 pub struct SongFilter {
     #[serde(rename = "song")]

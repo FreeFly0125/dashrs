@@ -1,6 +1,9 @@
 //! Module containing request structs for retrieving profile/level comments
 
-use crate::request::{BaseRequest, GD_21, REQUEST_BASE_URL};
+use crate::{
+    model::level::Level,
+    request::{BaseRequest, GD_21, REQUEST_BASE_URL},
+};
 use serde::Serialize;
 use std::fmt::{Display, Formatter};
 
@@ -20,13 +23,13 @@ pub enum SortMode {
     /// Sort the comments from newest to oldest
     ///
     /// ## GD Internals:
-    /// This variant is represented by the numeric value `0` in the boomlings API
+    /// This variant is represented by the numeric value `0` in the boomlings APII
     Recent,
 }
 
-impl Into<u8> for SortMode {
-    fn into(self) -> u8 {
-        match self {
+impl From<SortMode> for u8 {
+    fn from(mode: SortMode) -> Self {
+        match mode {
             SortMode::Liked => 1,
             SortMode::Recent => 0,
         }
@@ -117,9 +120,15 @@ impl Display for LevelCommentsRequest<'_> {
     }
 }
 
-impl<'a> Into<LevelCommentsRequest<'a>> for u64 {
-    fn into(self) -> LevelCommentsRequest<'a> {
-        LevelCommentsRequest::new(self)
+impl From<u64> for LevelCommentsRequest<'_> {
+    fn from(level_id: u64) -> Self {
+        LevelCommentsRequest::new(level_id)
+    }
+}
+
+impl<S, U> From<Level<'_, S, U>> for LevelCommentsRequest<'_> {
+    fn from(level: Level<'_, S, U>) -> Self {
+        LevelCommentsRequest::from(level.level_id)
     }
 }
 
