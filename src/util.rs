@@ -44,3 +44,28 @@ pub(crate) mod default_to_none {
         }
     }
 }
+
+pub mod two_bool {
+    use serde::{de::Error, Deserialize, Deserializer, Serializer};
+
+    pub fn serialize<S>(to_serialize: &bool, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        match to_serialize {
+            true => serializer.serialize_str("2"),
+            false => serializer.serialize_str("0"),
+        }
+    }
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<bool, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        match <&str>::deserialize(deserializer)? {
+            "2" => Ok(true),
+            "0" | "" => Ok(false),
+            _ => Err(D::Error::custom("expected '2', '0' or the empty string")),
+        }
+    }
+}

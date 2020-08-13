@@ -80,7 +80,8 @@ pub struct SearchedUser<'a> {
     /// Values indicating whether this [`SearchedUser`] has glow activated or not.
     ///
     /// ## GD Internals:
-    /// This value is provided at index `15`
+    /// This value is provided at index `15`. A value of `"2"` means `true`, a value of `"0"` means
+    /// `false` (yes, this is different from how the field is encoded in [`Profile`])
     pub has_glow: bool,
 
     /// The [`SearchedUser`]'s unique account ID
@@ -143,7 +144,7 @@ mod internal {
         #[serde(rename = "14")]
         pub icon_type: u8,
 
-        #[serde(rename = "15")]
+        #[serde(rename = "15", with = "crate::util::two_bool")]
         pub has_glow: bool,
 
         #[serde(rename = "16")]
@@ -166,7 +167,7 @@ mod internal {
                 creator_points: internal.creator_points,
                 icon_index: internal.icon_index,
                 primary_color: internal.primary_color.into(),
-                secondary_color: internal.secret_coins.into(),
+                secondary_color: internal.secondary_color.into(),
                 secret_coins: internal.secret_coins,
                 icon_type: internal.icon_type.into(),
                 has_glow: internal.has_glow,
