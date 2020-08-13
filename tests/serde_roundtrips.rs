@@ -5,7 +5,8 @@ use dash_rs::{
         song::{MainSong, NewgroundsSong},
         user::{
             profile::{Profile, Twitter, Youtube},
-            Color, ModLevel,
+            searched::SearchedUser,
+            Color, IconType, ModLevel,
         },
         GameVersion,
     },
@@ -41,6 +42,8 @@ const PROFILE_STARDUST1971_DATA: &str = "1:stardust1971:2:2073761:13:149:17:498:
                                          stardust19710:21:95:22:48:23:33:24:18:25:11:26:10:28:1:43:2:48:13:30:0:16:8451:31:0:44:\
                                          stadust1971:45::49:0:38:0:39:579:40:0:29:1";
 
+const SEARCHED_MICHIGUN_DATA: &str = "1:Michigun:2:703929:13:149:17:12312:6::9:22:10:15:11:12:14:0:15:2:16:34499:3:61161:8:16:4:997";
+
 const CREO_DUNE: NewgroundsSong<'static> = NewgroundsSong {
     song_id: 771277,
     name: Cow::Borrowed("Creo - Dune"),
@@ -70,6 +73,23 @@ const CREATOR_UNREGISTERED: Creator = Creator {
     user_id: 4170784,
     name: Cow::Borrowed("Serponge"),
     account_id: None,
+};
+
+const SEARCHED_MICHIGUN: SearchedUser = SearchedUser {
+    name: Cow::Borrowed("Michigun"),
+    user_id: 703929,
+    stars: 61161,
+    demons: 997,
+    index_6: None,
+    creator_points: 16,
+    icon_index: 22,
+    primary_color: Color::Known(0, 0, 0),
+    secondary_color: Color::Known(255, 255, 255),
+    secret_coins: 149,
+    icon_type: IconType::Cube,
+    has_glow: true,
+    account_id: 34499,
+    user_coins: 12312,
 };
 
 const PROFILE_STARDUST1971: Profile = Profile {
@@ -289,6 +309,32 @@ fn profile_roundtrip() {
 
     assert!(profile.is_ok(), "{:?}", profile.unwrap_err());
     assert_eq!(profile.unwrap(), PROFILE_STARDUST1971);
+}
+
+#[test]
+fn deserialize_searched_user() {
+    init_log();
+
+    let user = SearchedUser::from_robtop_str(SEARCHED_MICHIGUN_DATA);
+
+    assert!(user.is_ok(), "{:?}", user.unwrap_err());
+    assert_eq!(user.unwrap(), SEARCHED_MICHIGUN);
+}
+
+#[test]
+fn searched_user_roundtrip() {
+    init_log();
+
+    let data = SEARCHED_MICHIGUN.to_robtop_string();
+
+    assert!(data.is_ok(), "{:?}", data.unwrap_err());
+
+    let data = data.unwrap();
+
+    let user = SearchedUser::from_robtop_str(&data);
+
+    assert!(user.is_ok(), "{:?}", user.unwrap_err());
+    assert_eq!(user.unwrap(), SEARCHED_MICHIGUN);
 }
 
 fn init_log() {

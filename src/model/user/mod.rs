@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 pub mod profile;
+pub mod searched;
 
 /// Enum representing the different types of moderator a user can be
 #[derive(Debug, PartialEq, Eq, Hash, Copy, Clone, Serialize, Deserialize)]
@@ -38,6 +39,49 @@ impl From<u8> for ModLevel {
             1 => ModLevel::Normal,
             2 => ModLevel::Elder,
             i => ModLevel::Unknown(i),
+        }
+    }
+}
+
+/// The type of icon displayed next a user's comment of next to their search result
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum IconType {
+    Cube,
+    Ship,
+    Ball,
+    Ufo,
+    Wave,
+    Robot,
+    Spider,
+    Unknown(u8),
+}
+
+impl From<u8> for IconType {
+    fn from(i: u8) -> Self {
+        match i {
+            0 => IconType::Cube,
+            1 => IconType::Ship,
+            2 => IconType::Ball,
+            3 => IconType::Ufo,
+            4 => IconType::Wave,
+            5 => IconType::Robot,
+            6 => IconType::Spider,
+            i => IconType::Unknown(i),
+        }
+    }
+}
+
+impl From<IconType> for u8 {
+    fn from(mode: IconType) -> u8 {
+        match mode {
+            IconType::Cube => 0,
+            IconType::Ship => 1,
+            IconType::Ball => 2,
+            IconType::Ufo => 3,
+            IconType::Wave => 4,
+            IconType::Robot => 5,
+            IconType::Spider => 6,
+            IconType::Unknown(idx) => idx,
         }
     }
 }
