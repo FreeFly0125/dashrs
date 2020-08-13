@@ -206,7 +206,7 @@ pub const ROBTOP_SET: &AsciiSet = &CONTROLS
     .add(b'?')
     .add(b'~');
 
-#[derive(Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Eq, PartialEq, Serialize, Deserialize, Clone)]
 #[serde(transparent)]
 pub struct PercentDecoded<'a>(#[serde(borrow)] pub Cow<'a, str>);
 
