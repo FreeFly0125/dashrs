@@ -20,7 +20,7 @@ fn process_get_gj_levels_response() {
         }
         if level.level_id == 63260507 {
             assert!(level.custom_song.is_none());
-            assert_eq!(level.main_song, Some(MAIN_SONGS[0]))
+            assert!(level.main_song.is_none()) // The custom song was missing from the response, but this does _NOT_ mean that the level does not use one. Therefore, having a main song set to Some here would be wrong.
         } else {
             assert!(level.custom_song.is_some())
         }
