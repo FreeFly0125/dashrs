@@ -241,6 +241,8 @@ mod internal {
     };
     use serde::{Deserialize, Serialize};
     use std::{borrow::Cow, io::Write};
+    use crate::serde::IndexedSerializer;
+    use std::borrow::Borrow;
 
     #[derive(Serialize, Deserialize)]
     struct InternalProfile<'a> {
@@ -374,7 +376,40 @@ mod internal {
         }
 
         fn write_robtop_data<W: Write>(&self, writer: W) -> Result<(), SerError> {
-            unimplemented!()
+            let internal = InternalProfile {
+                name: self.name.borrow(),
+                user_id: self.user_id,
+                stars: self.stars,
+                demons: self.demons,
+                creator_points: self.creator_points,
+                primary_color: self.primary_color.into(),
+                secondary_color: self.secondary_color.into(),
+                secret_coins: self.secret_coins,
+                account_id: self.account_id,
+                user_coins: self.user_coins,
+                index_18: self.index_18.borrow(),
+                index_19: self.index_19.borrow(),
+                youtube_url: self.youtube_url.as_ref().map(|y|y.0.borrow()),
+                cube_index: self.cube_index,
+                ship_index: self.ship_index,
+                ball_index: self.ball_index,
+                ufo_index: self.ufo_index,
+                wave_index: self.wave_index,
+                robot_index: self.robot_index,
+                has_glow: self.has_glow,
+                index_29: self.index_29.borrow(),
+                global_rank: self.global_rank,
+                index_31: self.index_31.borrow(),
+                spider_index: self.spider_index,
+                twitter_url: self.twitter_url.as_ref().map(|t|t.0.borrow()),
+                twitch_url: self.twitch_url.as_ref().map(|t|t.0.borrow()),
+                diamonds: self.diamonds,
+                death_effect_index: self.death_effect_index,
+                mod_level: self.mod_level.into(),
+                index_50: self.index_50.borrow()
+            };
+            
+            internal.serialize(&mut IndexedSerializer::new(":", writer, true))
         }
     }
 }

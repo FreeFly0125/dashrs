@@ -103,3 +103,55 @@ impl From<u8> for Color {
         }
     }
 }
+
+impl From<Color> for u8 {
+    fn from(color: Color) -> Self {
+        // in this house we are thankful for regular expressions
+        match color {
+            Color::Known(125, 255, 0) => 0,
+            Color::Known(0, 255, 0) => 1,
+            Color::Known(0, 255, 125) => 2,
+            Color::Known(0, 255, 255) => 3,
+            Color::Known(0, 200, 255) => 16,
+            Color::Known(0, 125, 255) => 4,
+            Color::Known(0, 0, 255) => 5,
+            Color::Known(125, 0, 255) => 6,
+            Color::Known(185, 0, 255) => 13,
+            Color::Known(255, 0, 255) => 7,
+            Color::Known(255, 0, 125) => 8,
+            Color::Known(255, 0, 0) => 9,
+            Color::Known(255, 75, 0) => 29,
+            Color::Known(255, 125, 0) => 10,
+            Color::Known(255, 185, 0) => 14,
+            Color::Known(255, 255, 0) => 11,
+            Color::Known(255, 255, 255) => 12,
+            Color::Known(175, 175, 175) => 17,
+            Color::Known(80, 80, 80) => 18,
+            Color::Known(0, 0, 0) => 15,
+            Color::Known(125, 125, 0) => 27,
+            Color::Known(100, 150, 0) => 32,
+            Color::Known(75, 175, 0) => 28,
+            Color::Known(0, 150, 0) => 38,
+            Color::Known(0, 175, 75) => 20,
+            Color::Known(0, 150, 100) => 33,
+            Color::Known(0, 125, 125) => 21,
+            Color::Known(0, 100, 150) => 34,
+            Color::Known(0, 75, 175) => 22,
+            Color::Known(0, 0, 150) => 39,
+            Color::Known(75, 0, 175) => 23,
+            Color::Known(100, 0, 150) => 35,
+            Color::Known(125, 0, 125) => 24,
+            Color::Known(150, 0, 100) => 36,
+            Color::Known(175, 0, 75) => 25,
+            Color::Known(150, 0, 0) => 37,
+            Color::Known(150, 50, 0) => 30,
+            Color::Known(175, 75, 0) => 26,
+            Color::Known(150, 100, 0) => 31,
+            Color::Known(255, 255, 125) => 19,
+            Color::Known(125, 255, 175) => 40,
+            Color::Known(125, 125, 255) => 41,
+            Color::Unknown(idx) => idx,
+            _ => 0 // default color
+        }
+    }
+}

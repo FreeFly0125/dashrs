@@ -289,6 +289,22 @@ fn deserialize_profile() {
     assert_eq!(profile.unwrap(), PROFILE_STARDUST1971);
 }
 
+#[test]
+fn profile_roundtrip() {
+    init_log();
+
+    let data = PROFILE_STARDUST1971.to_robtop_string();
+
+    assert!(data.is_ok(), "{:?}", data.unwrap_err());
+
+    let data = data.unwrap();
+
+    let profile = Profile::from_robtop_str(&data);
+
+    assert!(profile.is_ok(), "{:?}", profile.unwrap_err());
+    assert_eq!(profile.unwrap(), PROFILE_STARDUST1971);
+}
+
 fn init_log() {
     if let Err(err) = env_logger::builder().is_test(true).try_init() {
         // nothing to make the tests fail over
