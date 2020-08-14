@@ -1,7 +1,11 @@
 use std::borrow::Cow;
-use crate::model::user::{Color, IconType};
+
 use serde::{Deserialize, Serialize};
-use crate::{Thunk, Base64Decoded};
+
+use crate::{
+    model::user::{Color, IconType},
+    Base64Decoded, Thunk,
+};
 
 #[derive(Debug, Eq, PartialEq, Clone, Deserialize, Serialize)]
 pub struct LevelComment<'a> {
@@ -12,14 +16,15 @@ pub struct LevelComment<'a> {
     /// The actual content of the [`LevelComment`] made.
     ///
     /// ## GD Internals
-    /// This value is provided at index `2`
+    /// This value is provided at index `2` and is base64 encoded
+    #[serde(borrow)]
     pub content: Option<Thunk<'a, Base64Decoded<'a>>>,
 
     /// The unique user id of the player who made this [`LevelComment`]
     ///
     /// ## GD Internals
     /// This value is provided at index `3`
-    pub user_id: Cow<'a, str>,
+    pub user_id: u64,
 
     /// The amount of likes this [`LevelComment`] has received
     ///
@@ -57,7 +62,8 @@ pub struct LevelComment<'a> {
     /// Whether the player that made this [`LevelComment`] is an elder mod
     ///
     /// ## GD Internals
-    /// This value is provided at index `11`
+    /// This value is provided at index `11`, however the value `true` is encoded as `"2"` instead
+    /// of `"1"`
     pub is_elder_mod: bool,
 
     /// If this [`LevelComment`]'s text is displayed in a special color (blue for robtop, green for
@@ -118,4 +124,123 @@ pub struct CommentUser<'a> {
     /// ## GD Internals
     /// This value is provided at index `16`
     pub account_id: Option<u64>,
+}
+
+mod internal {
+    use std::borrow::{Borrow, Cow};
+
+    use serde::{Deserialize, Deserializer, Serialize, Serializer};
+
+    use crate::{
+        model::{comment::level::LevelComment, user::Color},
+        serde::{IndexedDeserializer, IndexedSerializer, Internal},
+        Base64Decoded, DeError, HasRobtopFormat, SerError, Thunk,
+    };
+    use std::io::Write;
+
+    struct RGBColor(u8, u8, u8);
+
+    impl Serialize for RGBColor {
+        fn serialize<S>(&self, serializer: S) -> Result<<S as Serializer>::Ok, <S as Serializer>::Error>
+        where
+            S: Serializer,
+        {
+            serializer.serialize_str(&format!("{},{},{}", self.0, self.1, self.2))
+        }
+    }
+
+    impl<'de> Deserialize<'de> for RGBColor {
+        fn deserialize<D>(deserializer: D) -> Result<Self, <D as Deserializer<'de>>::Error>
+        where
+            D: Deserializer<'de>,
+        {
+            let color_string = <&str>::deserialize(deserializer)?;
+            let mut split = color_string.split(',');
+
+            if let (Some(r), Some(g), Some(b)) = (split.next(), split.next(), split.next()) {
+                Ok(RGBColor(
+                    r.parse().map_err(serde::de::Error::custom)?,
+                    g.parse().map_err(serde::de::Error::custom)?,
+                    b.parse().map_err(serde::de::Error::custom)?,
+                ))
+            } else {
+                Err(serde::de::Error::custom(format!("Malformed color string {}", color_string)))
+            }
+        }
+    }
+
+    #[derive(Deserialize, Serialize)]
+    struct InternalLevelComment<'a> {
+        #[serde(rename = "2")]
+        pub content: Option<Internal<Thunk<'a, Base64Decoded<'a>>>>,
+
+        #[serde(rename = "3")]
+        pub user_id: u64,
+
+        #[serde(rename = "4")]
+        pub likes: i32,
+
+        #[serde(rename = "6")]
+        pub comment_id: u64,
+
+        #[serde(rename = "7")]
+        pub is_flagged_spam: bool,
+
+        #[serde(rename = "9")]
+        pub time_since_post: &'a str,
+
+        #[serde(rename = "10")]
+        pub progress: Option<u8>,
+
+        #[serde(rename = "11", with = "crate::util::two_bool")]
+        pub is_elder_mod: bool,
+
+        #[serde(rename = "12")]
+        pub special_color: Option<RGBColor>,
+    }
+
+    impl<'a> HasRobtopFormat<'a> for LevelComment<'a> {
+        fn from_robtop_str(input: &'a str) -> Result<Self, DeError<'a>> {
+            let internal = InternalLevelComment::deserialize(&mut IndexedDeserializer::new(input, "~", true))?;
+
+            Ok(LevelComment {
+                user: None,
+                content: internal.content.map(|i| i.0),
+                user_id: internal.user_id,
+                likes: internal.likes,
+                comment_id: internal.comment_id,
+                is_flagged_spam: internal.is_flagged_spam,
+                time_since_post: Cow::Borrowed(internal.time_since_post),
+                progress: internal.progress,
+                is_elder_mod: internal.is_elder_mod,
+                special_color: internal.special_color.map(|RGBColor(r, g, b)| Color::Known(r, g, b)),
+            })
+        }
+
+        fn write_robtop_data<W: Write>(&self, writer: W) -> Result<(), SerError> {
+            let internal = InternalLevelComment {
+                content: self.content.as_ref().map(|thunk| {
+                    Internal(match thunk {
+                        Thunk::Unprocessed(unproc) => Thunk::Unprocessed(unproc),
+                        Thunk::Processed(Base64Decoded(moo)) => Thunk::Processed(Base64Decoded(Cow::Borrowed(moo.borrow()))),
+                    })
+                }),
+                user_id: self.user_id,
+                likes: self.likes,
+                comment_id: self.comment_id,
+                is_flagged_spam: self.is_flagged_spam,
+                time_since_post: self.time_since_post.borrow(),
+                progress: self.progress,
+                is_elder_mod: self.is_elder_mod,
+                special_color: self.special_color.map(|color| {
+                    match color {
+                        Color::Known(r, g, b) => RGBColor(r, g, b),
+                        _ => panic!("Color::Unknown passed as color of level comment"),
+                    }
+                }),
+            };
+
+            internal.serialize(&mut IndexedSerializer::new("~", writer, true))
+        }
+    }
 }

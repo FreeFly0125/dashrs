@@ -1,6 +1,6 @@
+use crate::{Base64Decoded, Thunk};
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
-use crate::{Thunk, Base64Decoded};
 
 #[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone)]
 pub struct ProfileComment<'a> {
@@ -33,13 +33,16 @@ pub struct ProfileComment<'a> {
 }
 
 mod internal {
-    use crate::{model::comment::profile::ProfileComment, serde::{IndexedDeserializer, IndexedSerializer}, DeError, HasRobtopFormat, SerError, Thunk, Base64Decoded};
+    use crate::{
+        model::comment::profile::ProfileComment,
+        serde::{IndexedDeserializer, IndexedSerializer, Internal},
+        Base64Decoded, DeError, HasRobtopFormat, SerError, Thunk,
+    };
     use serde::{Deserialize, Serialize};
     use std::{
         borrow::{Borrow, Cow},
         io::Write,
     };
-    use crate::serde::Internal;
 
     #[derive(Serialize, Deserialize)]
     struct InternalProfileComment<'a> {
@@ -61,7 +64,7 @@ mod internal {
             let internal = InternalProfileComment::deserialize(&mut IndexedDeserializer::new(input, "~", true))?;
 
             Ok(ProfileComment {
-                content: internal.content.map(|i|i.0),
+                content: internal.content.map(|i| i.0),
                 likes: internal.likes,
                 comment_id: internal.comment_id,
                 time_since_post: Cow::Borrowed(internal.time_since_post),
