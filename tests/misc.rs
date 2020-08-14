@@ -1,21 +1,23 @@
 use dash_rs::{
     model::{
         creator::Creator,
-        level::{DemonRating, Featured::Featured, Level, LevelData, LevelLength, LevelRating, Password},
+        level::{DemonRating, Featured, Level, LevelLength, LevelRating},
         song::{MainSong, NewgroundsSong},
         GameVersion,
     },
-    Base64Decoded, HasRobtopFormat, Thunk,
+    Base64Decoded, Thunk,
 };
 use std::borrow::Cow;
+use dash_rs::model::level::{LevelData, Password};
 
+mod helper;
 
 const CREO_DUNE_DATA_TOO_MANY_FIELDS: &str = "1~|~771277~|~54~|~should be ignored~|~2~|~Creo - \
                                               Dune~|~3~|~50531~|~4~|~CreoMusic~|~5~|~8.\
                                               03~|~6~|~~|~7~|~UCsCWA3Y3JppL6feQiMRgm6Q~|~8~|~1~|~10~|~https%3A%2F%2Faudio.ngfiles.com%\
                                               2F771000%2F771277_Creo---Dune.mp3%3Ff1508708604~|~9~|~should be ignored";
 
-const _CREATOR_REGISTERED_DATA_TOO_MANY_FIELDS: &str = "4170784:Serponge:119741:34:fda:32:asd:3";
+const CREATOR_REGISTERED_DATA_TOO_MANY_FIELDS: &str = "4170784:Serponge:119741:34:fda:32:asd:3";
 
 
 const TIME_PRESSURE: Level<'static, Option<u64>, u64> = Level {
@@ -37,7 +39,7 @@ const TIME_PRESSURE: Level<'static, Option<u64>, u64> = Level {
     likes: 198542,
     length: LevelLength::Long,
     stars: 10,
-    featured: Featured(700),
+    featured: Featured::Featured(700),
     copy_of: None,
     index_31: Some(Cow::Borrowed("0")),
     custom_song: None,
@@ -63,18 +65,15 @@ const TIME_PRESSURE: Level<'static, Option<u64>, u64> = Level {
 fn deserialize_too_many_fields() {
     init_log();
 
-    let song = NewgroundsSong::from_robtop_str(CREO_DUNE_DATA_TOO_MANY_FIELDS);
-
-    assert!(song.is_ok(), "{:?}", song.unwrap_err());
+    helper::load::<NewgroundsSong>(CREO_DUNE_DATA_TOO_MANY_FIELDS);
+    helper::load::<Creator>(CREATOR_REGISTERED_DATA_TOO_MANY_FIELDS);
 }
 
 #[test]
 fn deserialize_level() {
     init_log();
 
-    let level = Level::from_robtop_str(include_str!("data/11774780_dark_realm_gjdownload_response"));
-
-    let mut level = level.unwrap();
+    let mut level = helper::load::<Level<Option<u64>, u64>>(include_str!("data/11774780_dark_realm_gjdownload_response"));
 
     assert!(level.description.as_mut().unwrap().process().is_ok());
     assert!(level.level_data.is_some());
@@ -84,9 +83,7 @@ fn deserialize_level() {
 fn deserialize_level2() {
     init_log();
 
-    let level = Level::from_robtop_str(include_str!("data/897837_time_pressure_gjdownload_response"));
-
-    let mut level = level.unwrap();
+    let mut level = helper::load::<Level<Option<u64>, u64>>(include_str!("data/897837_time_pressure_gjdownload_response"));
 
     assert!(level.description.as_mut().unwrap().process().is_ok());
     assert!(level.level_data.is_some());
