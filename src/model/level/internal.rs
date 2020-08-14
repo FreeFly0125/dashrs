@@ -298,11 +298,7 @@ impl<'a> HasRobtopFormat<'a> for Level<'a, Option<u64>, u64> {
             password: self.level_data.as_ref().map(|data| Internal(data.password)),
             time_since_upload: self.level_data.as_ref().map(|data| data.time_since_upload.borrow()),
             time_since_update: self.level_data.as_ref().map(|data| data.time_since_update.borrow()),
-            index_36: self
-                .level_data
-                .as_ref()
-                .and_then(|data| data.index_36.as_ref())
-                .map(Borrow::borrow),
+            index_36: self.level_data.as_ref().and_then(|data| data.index_36.as_ref()).map(Borrow::borrow),
         };
 
         internal.serialize(&mut IndexedSerializer::new(":", writer, true))

@@ -9,6 +9,12 @@ pub fn load<'a, T: HasRobtopFormat<'a> + Debug>(input: &'a str) -> T {
     loaded.unwrap()
 }
 
+pub fn load_processed<'a, T: HasRobtopFormat<'a> + ThunkProcessor + Debug>(input: &'a str) -> T {
+    let mut t: T = load(input);
+    t.process_all_thunks();
+    t
+}
+
 pub fn save<'a, T: HasRobtopFormat<'a> + Debug>(t: &T) -> String {
     let saved = t.to_robtop_string();
 
@@ -29,8 +35,7 @@ macro_rules! load_save_roundtrip {
 
             let _ = env_logger::builder().is_test(true).try_init();
 
-            let mut loaded: $t = load($load_from);
-            loaded.process_all_thunks();
+            let loaded: $t = load_processed($load_from);
             assert_eq!(loaded, $expected);
             let saved = save(&loaded);
             assert_eq_robtop(&saved, $load_from, $sep, $map_like);
@@ -50,8 +55,7 @@ macro_rules! save_load_roundtrip {
             let _ = env_logger::builder().is_test(true).try_init();
 
             let saved = save(&$to_save);
-            let mut loaded: $t = load(&saved);
-            loaded.process_all_thunks();
+            let loaded: $t = load_processed(&saved);
             assert_eq!(loaded, $to_save);
         }
     };
@@ -68,10 +72,7 @@ pub fn assert_eq_robtop(left: &str, right: &str, sep: &str, map_like: bool) {
     keys_left.sort();
     keys_right.sort();
 
-    assert_eq!(
-        keys_left, keys_right,
-        "Key sets differ:"
-    );
+    assert_eq!(keys_left, keys_right, "Key sets differ:");
 
     for key in data_left.keys() {
         assert_eq!(data_left[key], data_right[key], "Value mismatch at index '{}':", key)
