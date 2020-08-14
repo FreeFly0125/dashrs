@@ -3,10 +3,6 @@ use dash_rs::{
         creator::Creator,
         level::{DemonRating, Featured::Featured, Level, LevelData, LevelLength, LevelRating, Password},
         song::{MainSong, NewgroundsSong},
-        user::{
-            searched::SearchedUser,
-            Color, IconType,
-        },
         GameVersion,
     },
     Base64Decoded, HasRobtopFormat, Thunk,
@@ -24,8 +20,6 @@ const CREO_DUNE_DATA_TOO_MANY_FIELDS: &str = "1~|~771277~|~54~|~should be ignore
                                               03~|~6~|~~|~7~|~UCsCWA3Y3JppL6feQiMRgm6Q~|~8~|~1~|~10~|~https%3A%2F%2Faudio.ngfiles.com%\
                                               2F771000%2F771277_Creo---Dune.mp3%3Ff1508708604~|~9~|~should be ignored";
 
-const SEARCHED_MICHIGUN_DATA: &str = "1:Michigun:2:703929:13:149:17:12312:6::9:22:10:15:11:12:14:0:15:2:16:34499:3:61161:8:16:4:997";
-
 const CREATOR_REGISTERED_DATA: &str = "4170784:Serponge:119741";
 const _CREATOR_REGISTERED_DATA_TOO_MANY_FIELDS: &str = "4170784:Serponge:119741:34:fda:32:asd:3";
 
@@ -41,23 +35,6 @@ const CREATOR_UNREGISTERED: Creator = Creator {
     user_id: 4170784,
     name: Cow::Borrowed("Serponge"),
     account_id: None,
-};
-
-const SEARCHED_MICHIGUN: SearchedUser = SearchedUser {
-    name: Cow::Borrowed("Michigun"),
-    user_id: 703929,
-    stars: 61161,
-    demons: 997,
-    index_6: None,
-    creator_points: 16,
-    icon_index: 22,
-    primary_color: Color::Known(0, 0, 0),
-    secondary_color: Color::Known(255, 255, 255),
-    secret_coins: 149,
-    icon_type: IconType::Cube,
-    has_glow: true,
-    account_id: 34499,
-    user_coins: 12312,
 };
 
 const TIME_PRESSURE: Level<Option<u64>, u64> = Level {
@@ -193,32 +170,6 @@ fn deserialize_level2() {
     level.level_data.as_mut().unwrap().level_data = Thunk::Unprocessed("REMOVED");
 
     assert_eq!(level, TIME_PRESSURE);
-}
-
-#[test]
-fn deserialize_searched_user() {
-    init_log();
-
-    let user = SearchedUser::from_robtop_str(SEARCHED_MICHIGUN_DATA);
-
-    assert!(user.is_ok(), "{:?}", user.unwrap_err());
-    assert_eq!(user.unwrap(), SEARCHED_MICHIGUN);
-}
-
-#[test]
-fn searched_user_roundtrip() {
-    init_log();
-
-    let data = SEARCHED_MICHIGUN.to_robtop_string();
-
-    assert!(data.is_ok(), "{:?}", data.unwrap_err());
-
-    let data = data.unwrap();
-
-    let user = SearchedUser::from_robtop_str(&data);
-
-    assert!(user.is_ok(), "{:?}", user.unwrap_err());
-    assert_eq!(user.unwrap(), SEARCHED_MICHIGUN);
 }
 
 fn init_log() {
