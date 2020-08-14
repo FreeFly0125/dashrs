@@ -101,7 +101,6 @@ pub struct NewgroundsSong<'a> {
     ///
     /// ## GD Internals
     /// This value is provided at index `2`
-    #[serde(borrow)]
     pub name: Cow<'a, str>,
 
     /// ## GD Internals
@@ -136,6 +135,7 @@ pub struct NewgroundsSong<'a> {
     ///
     /// ## GD Internals
     /// This value is provided at index `10`, and is percent encoded.
+    #[serde(borrow)]
     pub link: Thunk<'a, PercentDecoded<'a>>,
 }
 

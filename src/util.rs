@@ -1,5 +1,7 @@
 //! Module containing various utility functions related to processing Geometry Dash data
 
+use serde::Serializer;
+
 /// Performs RobTop's XOR en-/decoding routine on `encoded` using `key`
 ///
 /// Note that although both `encrypted` and `key` are `str`s, the decryption
@@ -45,27 +47,23 @@ pub(crate) mod default_to_none {
     }
 }
 
-pub mod two_bool {
-    use serde::{de::Error, Deserialize, Deserializer, Serializer};
-
-    pub fn serialize<S>(to_serialize: &bool, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        match to_serialize {
-            true => serializer.serialize_str("2"),
-            false => serializer.serialize_str("0"),
-        }
+pub(crate) fn false_to_empty_string<S: Serializer>(b: &bool, serializer: S) -> Result<S::Ok, S::Error> {
+    match *b {
+        true => serializer.serialize_str("1"),
+        false => serializer.serialize_str(""),
     }
+}
 
-    pub fn deserialize<'de, D>(deserializer: D) -> Result<bool, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        match <&str>::deserialize(deserializer)? {
-            "2" => Ok(true),
-            "0" | "" => Ok(false),
-            _ => Err(D::Error::custom("expected '2', '0' or the empty string")),
-        }
+pub(crate) fn true_to_two<S: Serializer>(b: &bool, serializer: S) -> Result<S::Ok, S::Error> {
+    match *b {
+        true => serializer.serialize_str("2"),
+        false => serializer.serialize_str("0"),
+    }
+}
+
+pub(crate) fn true_to_ten<S: Serializer>(b: &bool, serializer: S) -> Result<S::Ok, S::Error> {
+    match *b {
+        true => serializer.serialize_str("10"),
+        false => serializer.serialize_str("0"),
     }
 }
