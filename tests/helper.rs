@@ -62,9 +62,14 @@ pub fn assert_eq_robtop(left: &str, right: &str, sep: &str, map_like: bool) {
     let data_right = collect_fields(right.split(sep), map_like);
 
     // check if key sets are equal
+    let mut keys_left: Vec<_> = data_left.keys().collect();
+    let mut keys_right: Vec<_> = data_right.keys().collect();
+
+    keys_left.sort();
+    keys_right.sort();
+
     assert_eq!(
-        data_left.keys().collect::<Vec<_>>().sort(),
-        data_right.keys().collect::<Vec<_>>().sort(),
+        keys_left, keys_right,
         "Key sets differ:"
     );
 
