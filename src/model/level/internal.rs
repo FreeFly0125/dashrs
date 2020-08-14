@@ -166,9 +166,6 @@ struct InternalLevel<'a, 'b> {
     #[serde(rename = "39", with = "crate::util::default_to_none")]
     pub stars_requested: Option<u8>,
 
-    #[serde(rename = "40")]
-    pub index_40: Option<&'a str>,
-
     #[serde(rename = "42")]
     pub is_epic: bool,
 
@@ -249,7 +246,6 @@ impl<'a> HasRobtopFormat<'a> for Level<'a, Option<u64>, u64> {
             coin_amount: internal.coin_amount,
             coins_verified: internal.coins_verified,
             stars_requested: internal.stars_requested,
-            index_40: internal.index_40.map(Cow::Borrowed),
             is_epic: internal.is_epic,
             index_43: Cow::Borrowed(internal.index_43),
             object_amount: internal.object_amount,
@@ -288,7 +284,6 @@ impl<'a> HasRobtopFormat<'a> for Level<'a, Option<u64>, u64> {
             coin_amount: self.coin_amount,
             coins_verified: self.coins_verified,
             stars_requested: self.stars_requested,
-            index_40: self.index_40.as_ref().map(Borrow::borrow),
             is_epic: self.is_epic,
             index_43: self.index_43.borrow(),
             object_amount: self.object_amount,

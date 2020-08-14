@@ -151,7 +151,6 @@ const TIME_PRESSURE: Level<Option<u64>, u64> = Level {
     coin_amount: 0,
     coins_verified: false,
     stars_requested: None,
-    index_40: None,
     is_epic: false,
     index_43: Cow::Borrowed("3"),
     object_amount: None,
