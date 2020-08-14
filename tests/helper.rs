@@ -24,6 +24,8 @@ macro_rules! load_save_roundtrip {
         pub fn load_save_roundtrip() {
             use helper::*;
 
+            let _ = env_logger::builder().is_test(true).try_init();
+
             let mut loaded: $t = load($load_from);
             loaded.process_all_thunks();
             assert_eq!(loaded, $expected);
@@ -38,6 +40,8 @@ macro_rules! save_load_roundtrip {
         #[test]
         pub fn save_load_roundtrip() {
             use helper::*;
+
+            let _ = env_logger::builder().is_test(true).try_init();
 
             let saved = save(&$to_save);
             let mut loaded: $t = load(&saved);
