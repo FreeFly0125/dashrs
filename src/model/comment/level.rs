@@ -116,7 +116,7 @@ pub struct CommentUser<'a> {
     /// Values indicating whether this [`CommentUser`] has glow activated or not.
     ///
     /// ## GD Internals
-    /// This value is provided at index `15`
+    /// This value is provided at index `15`, however the value `true` is encoded as `"2"` instead
     pub has_glow: bool,
 
     /// The [`CommentUser`]'s unique account ID
@@ -137,13 +137,14 @@ mod internal {
         Base64Decoded, DeError, HasRobtopFormat, SerError, Thunk,
     };
     use std::io::Write;
+    use crate::model::comment::level::CommentUser;
 
     struct RGBColor(u8, u8, u8);
 
     impl Serialize for RGBColor {
         fn serialize<S>(&self, serializer: S) -> Result<<S as Serializer>::Ok, <S as Serializer>::Error>
-        where
-            S: Serializer,
+            where
+                S: Serializer,
         {
             serializer.serialize_str(&format!("{},{},{}", self.0, self.1, self.2))
         }
@@ -151,8 +152,8 @@ mod internal {
 
     impl<'de> Deserialize<'de> for RGBColor {
         fn deserialize<D>(deserializer: D) -> Result<Self, <D as Deserializer<'de>>::Error>
-        where
-            D: Deserializer<'de>,
+            where
+                D: Deserializer<'de>,
         {
             let color_string = <&str>::deserialize(deserializer)?;
             let mut split = color_string.split(',');
@@ -243,4 +244,59 @@ mod internal {
             internal.serialize(&mut IndexedSerializer::new("~", writer, true))
         }
     }
+
+    #[derive(Deserialize, Serialize)]
+    pub struct InternalCommentUser<'a> {
+        #[serde(rename = "1")]
+        pub name: &'a str,
+
+        #[serde(rename = "9")]
+        pub icon_index: u16,
+
+        #[serde(rename = "10")]
+        pub primary_color: u8,
+
+        #[serde(rename = "11")]
+        pub secondary_color: u8,
+
+        #[serde(rename = "14")]
+        pub icon_type: u8,
+
+        #[serde(rename = "15", with = "crate::util::two_bool")]
+        pub has_glow: bool,
+
+        #[serde(rename = "16")]
+        pub account_id: Option<u64>,
+    }
+
+    impl<'a> HasRobtopFormat<'a> for CommentUser<'a> {
+        fn from_robtop_str(input: &'a str) -> Result<Self, DeError<'a>> {
+            let internal = InternalCommentUser::deserialize(&mut IndexedDeserializer::new(input, "~", true))?;
+
+            Ok(CommentUser {
+                name: Cow::Borrowed(internal.name),
+                icon_index: internal.icon_index,
+                primary_color: internal.primary_color.into(),
+                secondary_color: internal.secondary_color.into(),
+                icon_type: internal.icon_type.into(),
+                has_glow: internal.has_glow,
+                account_id: internal.account_id
+            })
+        }
+
+        fn write_robtop_data<W: Write>(&self, writer: W) -> Result<(), SerError> {
+            let internal = InternalCommentUser {
+                name: self.name.as_ref(),
+                icon_index: self.icon_index,
+                primary_color: self.primary_color.into(),
+                secondary_color: self.secondary_color.into(),
+                icon_type: self.icon_type.into(),
+                has_glow: self.has_glow,
+                account_id: self.account_id
+            };
+
+            internal.serialize(&mut IndexedSerializer::new("~", writer, true))
+        }
+    }
+
 }
