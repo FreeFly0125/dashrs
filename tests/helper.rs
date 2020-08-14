@@ -18,6 +18,36 @@ pub fn save<'a, T: HasRobtopFormat<'a> + Debug>(t: &T) -> String {
     saved.unwrap()
 }
 
+macro_rules! load_save_roundtrip {
+    ($t: ty, $load_from: ident, $expected: ident, $sep: expr, $map_like: expr) => {
+        #[test]
+        pub fn load_save_roundtrip() {
+            use helper::*;
+
+            let mut loaded: $t = load($load_from);
+            loaded.process_all_thunks();
+            assert_eq!(loaded, $expected);
+            let saved = save(&loaded);
+            assert_eq_robtop(&saved, $load_from, $sep, $map_like);
+        }
+    };
+}
+
+macro_rules! save_load_roundtrip {
+    ($t: ty, $to_save: ident) => {
+        #[test]
+        pub fn save_load_roundtrip() {
+            use helper::*;
+
+            let saved = save(&$to_save);
+            let mut loaded: $t = load(&saved);
+            loaded.process_all_thunks();
+            assert_eq!(loaded, $to_save);
+        }
+    };
+}
+
+
 pub fn assert_eq_robtop(left: &str, right: &str, sep: &str, map_like: bool) {
     let data_left = collect_fields(left.split(sep), map_like);
     let data_right = collect_fields(right.split(sep), map_like);
@@ -28,6 +58,10 @@ pub fn assert_eq_robtop(left: &str, right: &str, sep: &str, map_like: bool) {
     for key in data_left.keys() {
         assert_eq!(data_left[key], data_right[key], "Value mismatch at index '{}':", key)
     }
+}
+
+pub trait ThunkProcessor {
+    fn process_all_thunks(&mut self);
 }
 
 const INDICES: [&str; 50] = [

@@ -2,6 +2,7 @@ use dash_rs::model::song::NewgroundsSong;
 use std::borrow::Cow;
 use dash_rs::{Thunk, PercentDecoded};
 
+#[macro_use]
 mod helper;
 
 const CREO_DUNE_DATA: &str = "1~|~771277~|~2~|~Creo - \
@@ -23,22 +24,11 @@ const CREO_DUNE: NewgroundsSong<'static> = NewgroundsSong {
     ))),
 };
 
-#[test]
-fn load_save_roundtrip() {
-    let mut song: NewgroundsSong = helper::load(CREO_DUNE_DATA);
-
-    assert!(song.link.process().is_ok());
-    assert_eq!(song, CREO_DUNE);
-
-    helper::assert_eq_robtop(&helper::save(&song), CREO_DUNE_DATA, "~|~", true);
+impl<'a> helper::ThunkProcessor for NewgroundsSong<'a> {
+    fn process_all_thunks(&mut self) {
+        assert!(self.link.process().is_ok());
+    }
 }
 
-#[test]
-fn save_load_roundtrip() {
-    let saved = helper::save(&CREO_DUNE);
-    let mut loaded: NewgroundsSong = helper::load(&saved);
-
-    assert!(loaded.link.process().is_ok());
-    assert_eq!(loaded, CREO_DUNE);
-
-}
+save_load_roundtrip!(NewgroundsSong, CREO_DUNE);
+load_save_roundtrip!(NewgroundsSong, CREO_DUNE_DATA, CREO_DUNE, "~|~", true);

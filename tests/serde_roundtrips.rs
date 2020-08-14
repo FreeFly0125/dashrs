@@ -20,19 +20,6 @@ const DARK_REALM_DATA: &str =
      TXkgYmVzdCBsZXZlbCB5ZXQuIFZpZGVvIG9uIG15IFlvdVR1YmUuIEhhdmUgZnVuIGluIHRoaXMgZmFzdC1wYWNlZCBERU1PTiA-OikgdjIgRml4ZWQgc29tZSB0aGluZ3M=:\
      15:3:30:0:31:0:37:3:38:1:39:10:46:1:47:2:35:444085";
 
-const CREO_DUNE_DATA: &str = "1~|~771277~|~2~|~Creo - \
-                              Dune~|~3~|~50531~|~4~|~CreoMusic~|~5~|~8.03~|~6~|~~|~10~|~https%3A%2F%2Faudio.ngfiles.com%2F771000%\
-                              2F771277_Creo---Dune.mp3%3Ff1508708604~|~7~|~UCsCWA3Y3JppL6feQiMRgm6Q~|~8~|~1";
-
-/// Testing data for newgrounds song (de)serialization
-///
-/// This is the data provided by the Geometry Dash servers for the song "Dune" by Creo, except that
-/// its fields have been reordered
-const CREO_DUNE_DATA_ORDERED: &str = "1~|~771277~|~2~|~Creo - \
-                                      Dune~|~3~|~50531~|~4~|~CreoMusic~|~5~|~8.\
-                                      03~|~6~|~~|~7~|~UCsCWA3Y3JppL6feQiMRgm6Q~|~8~|~1~|~10~|~https%3A%2F%2Faudio.ngfiles.com%2F771000%\
-                                      2F771277_Creo---Dune.mp3%3Ff1508708604";
-
 const CREO_DUNE_DATA_TOO_MANY_FIELDS: &str = "1~|~771277~|~54~|~should be ignored~|~2~|~Creo - \
                                               Dune~|~3~|~50531~|~4~|~CreoMusic~|~5~|~8.\
                                               03~|~6~|~~|~7~|~UCsCWA3Y3JppL6feQiMRgm6Q~|~8~|~1~|~10~|~https%3A%2F%2Faudio.ngfiles.com%\
@@ -43,20 +30,6 @@ const PROFILE_STARDUST1971_DATA: &str = "1:stardust1971:2:2073761:13:149:17:498:
                                          stadust1971:45::49:0:38:0:39:579:40:0:29:1";
 
 const SEARCHED_MICHIGUN_DATA: &str = "1:Michigun:2:703929:13:149:17:12312:6::9:22:10:15:11:12:14:0:15:2:16:34499:3:61161:8:16:4:997";
-
-const CREO_DUNE: NewgroundsSong<'static> = NewgroundsSong {
-    song_id: 771277,
-    name: Cow::Borrowed("Creo - Dune"),
-    index_3: 50531,
-    artist: Cow::Borrowed("CreoMusic"),
-    filesize: 8.03,
-    index_6: None,
-    index_7: Some(Cow::Borrowed("UCsCWA3Y3JppL6feQiMRgm6Q")),
-    index_8: Cow::Borrowed("1"),
-    link: Thunk::Processed(PercentDecoded(Cow::Borrowed(
-        "https://audio.ngfiles.com/771000/771277_Creo---Dune.mp3?f1508708604",
-    ))),
-};
 
 const CREATOR_REGISTERED_DATA: &str = "4170784:Serponge:119741";
 const _CREATOR_REGISTERED_DATA_TOO_MANY_FIELDS: &str = "4170784:Serponge:119741:34:fda:32:asd:3";
