@@ -63,11 +63,11 @@ impl LevelRating {
         match self {
             LevelRating::Unknown(value) => value,
             LevelRating::NotAvailable => 0,
-            LevelRating::Easy => 20,
-            LevelRating::Normal => 30,
-            LevelRating::Hard => 40,
-            LevelRating::Harder => 50,
-            LevelRating::Insane => 60,
+            LevelRating::Easy => 10,
+            LevelRating::Normal => 20,
+            LevelRating::Hard => 30,
+            LevelRating::Harder => 40,
+            LevelRating::Insane => 50,
             LevelRating::Demon(demon_rating) => demon_rating.into_response_value(),
             _ => panic!("got {:?}, please handle before calling this function", self),
         }
