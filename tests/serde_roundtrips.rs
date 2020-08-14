@@ -9,11 +9,6 @@ use dash_rs::{
 };
 use std::borrow::Cow;
 
-const DARK_REALM_DATA: &str =
-    "1:11774780:2:Dark \
-     Realm:5:2:6:2073761:8:10:9:30:10:90786:12:0:13:20:14:10974:17:1:43:0:25::18:10:19:11994:42:0:45:0:3:\
-     TXkgYmVzdCBsZXZlbCB5ZXQuIFZpZGVvIG9uIG15IFlvdVR1YmUuIEhhdmUgZnVuIGluIHRoaXMgZmFzdC1wYWNlZCBERU1PTiA-OikgdjIgRml4ZWQgc29tZSB0aGluZ3M=:\
-     15:3:30:0:31:0:37:3:38:1:39:10:46:1:47:2:35:444085";
 
 const CREO_DUNE_DATA_TOO_MANY_FIELDS: &str = "1~|~771277~|~54~|~should be ignored~|~2~|~Creo - \
                                               Dune~|~3~|~50531~|~4~|~CreoMusic~|~5~|~8.\
@@ -22,7 +17,8 @@ const CREO_DUNE_DATA_TOO_MANY_FIELDS: &str = "1~|~771277~|~54~|~should be ignore
 
 const _CREATOR_REGISTERED_DATA_TOO_MANY_FIELDS: &str = "4170784:Serponge:119741:34:fda:32:asd:3";
 
-const TIME_PRESSURE: Level<Option<u64>, u64> = Level {
+
+const TIME_PRESSURE: Level<'static, Option<u64>, u64> = Level {
     level_id: 897837,
     name: Cow::Borrowed("time pressure"),
     description: Some(Thunk::Processed(Base64Decoded(Cow::Borrowed(
@@ -70,19 +66,6 @@ fn deserialize_too_many_fields() {
     let song = NewgroundsSong::from_robtop_str(CREO_DUNE_DATA_TOO_MANY_FIELDS);
 
     assert!(song.is_ok(), "{:?}", song.unwrap_err());
-}
-
-#[test]
-fn deserialize_partial_level() {
-    init_log();
-
-    let level = Level::from_robtop_str(DARK_REALM_DATA);
-
-    assert!(level.is_ok(), "{:?}", level.unwrap_err());
-
-    let mut level = level.unwrap();
-
-    assert!(level.description.as_mut().unwrap().process().is_ok());
 }
 
 #[test]
