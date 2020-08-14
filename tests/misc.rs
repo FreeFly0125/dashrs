@@ -1,14 +1,13 @@
 use dash_rs::{
     model::{
         creator::Creator,
-        level::{DemonRating, Featured, Level, LevelLength, LevelRating},
+        level::{DemonRating, Featured, Level, LevelData, LevelLength, LevelRating, Password},
         song::{MainSong, NewgroundsSong},
         GameVersion,
     },
     Base64Decoded, Thunk,
 };
 use std::borrow::Cow;
-use dash_rs::model::level::{LevelData, Password};
 
 mod helper;
 
@@ -18,7 +17,6 @@ const CREO_DUNE_DATA_TOO_MANY_FIELDS: &str = "1~|~771277~|~54~|~should be ignore
                                               2F771000%2F771277_Creo---Dune.mp3%3Ff1508708604~|~9~|~should be ignored";
 
 const CREATOR_REGISTERED_DATA_TOO_MANY_FIELDS: &str = "4170784:Serponge:119741:34:fda:32:asd:3";
-
 
 const TIME_PRESSURE: Level<'static, Option<u64>, u64> = Level {
     level_id: 897837,

@@ -1,9 +1,12 @@
 use std::borrow::Cow;
 
-use dash_rs::{Base64Decoded, Thunk};
-use dash_rs::model::GameVersion;
-use dash_rs::model::level::{DemonRating, Level, LevelLength, LevelRating};
-use dash_rs::model::level::Featured::Featured;
+use dash_rs::{
+    model::{
+        level::{DemonRating, Featured::Featured, Level, LevelLength, LevelRating},
+        GameVersion,
+    },
+    Base64Decoded, Thunk,
+};
 
 #[macro_use]
 mod helper;
@@ -17,52 +20,31 @@ const DARK_REALM_DATA: &str =
 const DARK_REALM: Level<Option<u64>, u64> = Level {
     level_id: 11774780,
     name: Cow::Borrowed("Dark Realm"),
-    description: Some(
-        Thunk::Processed(
-            Base64Decoded(
-                Cow::Borrowed("My best level yet. Video on my YouTube. Have fun in this fast-paced DEMON >:) v2 Fixed some things"),
-            ),
-        ),
-    ),
+    description: Some(Thunk::Processed(Base64Decoded(Cow::Borrowed(
+        "My best level yet. Video on my YouTube. Have fun in this fast-paced DEMON >:) v2 Fixed some things",
+    )))),
     version: 2,
     creator: 2073761,
-    difficulty: LevelRating::Demon(
-        DemonRating::Hard,
-    ),
+    difficulty: LevelRating::Demon(DemonRating::Hard),
     downloads: 90786,
     main_song: None,
-    gd_version: GameVersion::Version {
-        minor: 0,
-        major: 2,
-    },
+    gd_version: GameVersion::Version { minor: 0, major: 2 },
     likes: 10974,
     length: LevelLength::Long,
     stars: 10,
-    featured: Featured(
-        11994,
-    ),
+    featured: Featured(11994),
     copy_of: None,
-    index_31: Some(
-        Cow::Borrowed("0"),
-    ),
-    custom_song: Some(
-        444085,
-    ),
+    index_31: Some(Cow::Borrowed("0")),
+    custom_song: Some(444085),
     coin_amount: 3,
     coins_verified: true,
-    stars_requested: Some(
-        10,
-    ),
+    stars_requested: Some(10),
     index_40: None,
     is_epic: false,
     index_43: Cow::Borrowed("0"),
     object_amount: None,
-    index_46: Some(
-        Cow::Borrowed("1"),
-    ),
-    index_47: Some(
-        Cow::Borrowed("2"),
-    ),
+    index_46: Some(Cow::Borrowed("1")),
+    index_47: Some(Cow::Borrowed("2")),
     level_data: None,
 };
 

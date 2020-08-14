@@ -19,12 +19,25 @@ const CREATOR_UNREGISTERED: Creator = Creator {
 };
 
 impl helper::ThunkProcessor for Creator<'_> {
-    fn process_all_thunks(&mut self) {
-    }
+    fn process_all_thunks(&mut self) {}
 }
 
 save_load_roundtrip!(save_load_roundtrip_registered, Creator, CREATOR_REGISTERED);
-load_save_roundtrip!(load_save_roundtrip_registered, Creator, CREATOR_REGISTERED_DATA, CREATOR_REGISTERED, ":", false);
+load_save_roundtrip!(
+    load_save_roundtrip_registered,
+    Creator,
+    CREATOR_REGISTERED_DATA,
+    CREATOR_REGISTERED,
+    ":",
+    false
+);
 
 save_load_roundtrip!(save_load_roundtrip_unregistered, Creator, CREATOR_UNREGISTERED);
-load_save_roundtrip!(load_save_roundtrip_unregistered, Creator, CREATOR_UNREGISTERED_DATA, CREATOR_UNREGISTERED, ":", false);
+load_save_roundtrip!(
+    load_save_roundtrip_unregistered,
+    Creator,
+    CREATOR_UNREGISTERED_DATA,
+    CREATOR_UNREGISTERED,
+    ":",
+    false
+);

@@ -1,6 +1,8 @@
-use dash_rs::model::user::profile::{Profile, Youtube, Twitter};
+use dash_rs::model::user::{
+    profile::{Profile, Twitter, Youtube},
+    Color, ModLevel,
+};
 use std::borrow::Cow;
-use dash_rs::model::user::{ModLevel, Color};
 
 #[macro_use]
 mod helper;
@@ -42,11 +44,8 @@ const PROFILE_STARDUST1971: Profile = Profile {
     index_50: Cow::Borrowed("0"),
 };
 
-
 impl helper::ThunkProcessor for Profile<'_> {
-    fn process_all_thunks(&mut self) {
-
-    }
+    fn process_all_thunks(&mut self) {}
 }
 
 save_load_roundtrip!(Profile, PROFILE_STARDUST1971);

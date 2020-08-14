@@ -1,6 +1,5 @@
-use dash_rs::model::user::searched::SearchedUser;
+use dash_rs::model::user::{searched::SearchedUser, Color, IconType};
 use std::borrow::Cow;
-use dash_rs::model::user::{Color, IconType};
 
 #[macro_use]
 mod helper;
@@ -24,8 +23,7 @@ const SEARCHED_MICHIGUN: SearchedUser = SearchedUser {
 };
 
 impl helper::ThunkProcessor for SearchedUser<'_> {
-    fn process_all_thunks(&mut self) {
-    }
+    fn process_all_thunks(&mut self) {}
 }
 
 save_load_roundtrip!(SearchedUser, SEARCHED_MICHIGUN);
