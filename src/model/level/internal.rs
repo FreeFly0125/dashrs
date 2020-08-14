@@ -124,7 +124,7 @@ struct InternalLevel<'a, 'b> {
     #[serde(rename = "9")]
     pub rating: i32,
 
-    #[serde(rename = "17")]
+    #[serde(rename = "17", serialize_with = "crate::util::false_to_empty_string")]
     pub is_demon: bool,
 
     #[serde(rename = "10")]
