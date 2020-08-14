@@ -20,22 +20,7 @@ const CREO_DUNE_DATA_TOO_MANY_FIELDS: &str = "1~|~771277~|~54~|~should be ignore
                                               03~|~6~|~~|~7~|~UCsCWA3Y3JppL6feQiMRgm6Q~|~8~|~1~|~10~|~https%3A%2F%2Faudio.ngfiles.com%\
                                               2F771000%2F771277_Creo---Dune.mp3%3Ff1508708604~|~9~|~should be ignored";
 
-const CREATOR_REGISTERED_DATA: &str = "4170784:Serponge:119741";
 const _CREATOR_REGISTERED_DATA_TOO_MANY_FIELDS: &str = "4170784:Serponge:119741:34:fda:32:asd:3";
-
-const CREATOR_REGISTERED: Creator = Creator {
-    user_id: 4170784,
-    name: Cow::Borrowed("Serponge"),
-    account_id: Some(119741),
-};
-
-const CREATOR_UNREGISTERED_DATA: &str = "4170784:Serponge:0";
-
-const CREATOR_UNREGISTERED: Creator = Creator {
-    user_id: 4170784,
-    name: Cow::Borrowed("Serponge"),
-    account_id: None,
-};
 
 const TIME_PRESSURE: Level<Option<u64>, u64> = Level {
     level_id: 897837,
@@ -77,48 +62,6 @@ const TIME_PRESSURE: Level<Option<u64>, u64> = Level {
         index_36: None,
     }),
 };
-
-#[test]
-fn serialize_registered_creator() {
-    init_log();
-
-    let mut buf: Vec<u8> = Vec::new();
-    let result = CREATOR_REGISTERED.write_robtop_data(&mut buf);
-
-    assert!(result.is_ok());
-    assert_eq!(buf, CREATOR_REGISTERED_DATA.as_bytes());
-}
-
-#[test]
-fn serialize_unregistered_creator() {
-    init_log();
-
-    let mut buf: Vec<u8> = Vec::new();
-    let result = CREATOR_UNREGISTERED.write_robtop_data(&mut buf);
-
-    assert!(result.is_ok());
-    assert_eq!(buf, CREATOR_UNREGISTERED_DATA.as_bytes());
-}
-
-#[test]
-fn deserialize_registered_creator() {
-    init_log();
-
-    let creator = Creator::from_robtop_str(CREATOR_REGISTERED_DATA);
-
-    assert!(creator.is_ok(), "{:?}", creator.unwrap_err());
-    assert_eq!(creator.unwrap(), CREATOR_REGISTERED);
-}
-
-#[test]
-fn deserialize_unregistered_creator() {
-    init_log();
-
-    let creator = Creator::from_robtop_str(CREATOR_UNREGISTERED_DATA);
-
-    assert!(creator.is_ok(), "{:?}", creator.unwrap_err());
-    assert_eq!(creator.unwrap(), CREATOR_UNREGISTERED);
-}
 
 #[test]
 fn deserialize_too_many_fields() {
