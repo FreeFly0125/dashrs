@@ -1,13 +1,15 @@
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
+use crate::{Thunk, Base64Decoded};
 
 #[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone)]
 pub struct ProfileComment<'a> {
     /// The actual content of the [`ProfileComment`] made.
     ///
     /// ## GD Internals
-    /// This value is provided at index `2`
-    pub content: Option<Cow<'a, str>>,
+    /// This value is provided at index `2` and base64 encoded
+    #[serde(borrow)]
+    pub content: Option<Thunk<'a, Base64Decoded<'a>>>,
 
     /// The amount of likes this [`ProfileComment`] has received
     ///
@@ -31,21 +33,18 @@ pub struct ProfileComment<'a> {
 }
 
 mod internal {
-    use crate::{
-        model::comment::profile::ProfileComment,
-        serde::{IndexedDeserializer, IndexedSerializer},
-        DeError, HasRobtopFormat, SerError,
-    };
+    use crate::{model::comment::profile::ProfileComment, serde::{IndexedDeserializer, IndexedSerializer}, DeError, HasRobtopFormat, SerError, Thunk, Base64Decoded};
     use serde::{Deserialize, Serialize};
     use std::{
         borrow::{Borrow, Cow},
         io::Write,
     };
+    use crate::serde::Internal;
 
     #[derive(Serialize, Deserialize)]
     struct InternalProfileComment<'a> {
         #[serde(rename = "2")]
-        pub content: Option<&'a str>,
+        pub content: Option<Internal<Thunk<'a, Base64Decoded<'a>>>>,
 
         #[serde(rename = "4")]
         pub likes: i32,
@@ -62,7 +61,7 @@ mod internal {
             let internal = InternalProfileComment::deserialize(&mut IndexedDeserializer::new(input, "~", true))?;
 
             Ok(ProfileComment {
-                content: internal.content.map(Cow::Borrowed),
+                content: internal.content.map(|i|i.0),
                 likes: internal.likes,
                 comment_id: internal.comment_id,
                 time_since_post: Cow::Borrowed(internal.time_since_post),
@@ -71,7 +70,12 @@ mod internal {
 
         fn write_robtop_data<W: Write>(&self, writer: W) -> Result<(), SerError> {
             let internal = InternalProfileComment {
-                content: self.content.as_ref().map(Borrow::borrow),
+                content: self.content.as_ref().map(|thunk| {
+                    Internal(match thunk {
+                        Thunk::Unprocessed(unproc) => Thunk::Unprocessed(unproc),
+                        Thunk::Processed(Base64Decoded(moo)) => Thunk::Processed(Base64Decoded(Cow::Borrowed(moo.borrow()))),
+                    })
+                }),
                 likes: self.likes,
                 comment_id: self.comment_id,
                 time_since_post: self.time_since_post.borrow(),
