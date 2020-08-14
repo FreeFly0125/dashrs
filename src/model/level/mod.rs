@@ -189,30 +189,6 @@ pub enum DemonRating {
     Extreme,
 }
 
-impl DemonRating {
-    fn from_response_value(value: i32) -> DemonRating {
-        match value {
-            10 => DemonRating::Easy,
-            20 => DemonRating::Medium,
-            30 => DemonRating::Hard,
-            40 => DemonRating::Insane,
-            50 => DemonRating::Extreme,
-            _ => DemonRating::Unknown(value),
-        }
-    }
-
-    fn into_response_value(self) -> i32 {
-        match self {
-            DemonRating::Unknown(value) => value,
-            DemonRating::Easy => 10,
-            DemonRating::Medium => 20,
-            DemonRating::Hard => 30,
-            DemonRating::Insane => 40,
-            DemonRating::Extreme => 50,
-        }
-    }
-}
-
 /// Enum representing a levels featured state
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, Serialize, Deserialize)]
 #[serde(from = "i32", into = "i32")]

@@ -150,17 +150,18 @@ impl<'a, 'de> Deserializer<'de> for &'a mut IndexedDeserializer<'de> {
 
         trace!("RobtopDeserializer::deserialize_bool called on {:?}", token);
 
-        // Alright so robtop's encoding of boolean is the most inconsistent shit ever. The most common case
-        // is that '0' and the empty string mean false, while '1' means true. However, there is also the
-        // rare variant where '1' means false as well and only '2' means true. If that is ever used, please
-        // use a custom deserialization routine via 'deserialize_with'.
+        // Alright so robtop's encoding of boolean is the most inconsistent shit ever. The possible values
+        // for `false` are "0" or the empty string. The possible values for `true` are 1, 2 or 10. While
+        // this is no problem for serialization, the deserializer has no way of knowing what kinda of
+        // boolean is being used and defaults to "0" for `false` and "1" for `true`. If some field deviates
+        // from that, use a custom `deserialize_with`. Thanks.
 
         match token {
             Some("0") | Some("") | None => visitor.visit_bool(false),
-            Some("1") => visitor.visit_bool(true),
+            Some("1") | Some("2") | Some("10") => visitor.visit_bool(true),
             Some(value) =>
                 Err(Error::Custom {
-                    message: "Expected 0, 1 or the empty string".to_owned(),
+                    message: "Expected 0, 1, 2, 10 or the empty string".to_owned(),
                     index: None,
                     value: Some(value),
                 }),
