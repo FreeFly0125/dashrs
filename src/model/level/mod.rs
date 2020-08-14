@@ -230,8 +230,8 @@ impl From<i32> for Featured {
 impl From<Featured> for i32 {
     fn from(featured: Featured) -> Self {
         match featured {
-            Featured::NotFeatured => -1,
-            Featured::Unfeatured => 0,
+            Featured::NotFeatured => 0,
+            Featured::Unfeatured => -1,
             Featured::Featured(weight) => weight as i32,
         }
     }
