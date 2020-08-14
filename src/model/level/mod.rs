@@ -731,7 +731,7 @@ impl<'a> ThunkContent<'a> for Objects {
             _ => return Err(LevelProcessError::UnknownCompression),
         }
 
-        let mut iter = decompressed[..decompressed.len() - 1].split(';');
+        let mut iter = decompressed.split_terminator(';');
 
         let metadata_string = match iter.next() {
             Some(meta) => meta,
