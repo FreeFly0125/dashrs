@@ -230,8 +230,8 @@ impl From<i32> for Featured {
 impl From<Featured> for i32 {
     fn from(featured: Featured) -> Self {
         match featured {
-            Featured::NotFeatured => -1,
-            Featured::Unfeatured => 0,
+            Featured::NotFeatured => 0,
+            Featured::Unfeatured => -1,
             Featured::Featured(weight) => weight as i32,
         }
     }
@@ -402,7 +402,7 @@ impl Display for Password {
 /// ### Value only provided via `downloadGJLevels`
 /// These values are not provided for by the `getGJLevels` endpoint and are
 /// thus modelled in the [`LevelData`] struct: `4`, `27`,
-/// `28`, `29`, `36`
+/// `28`, `29`, `36`, `40`
 ///
 /// ### Unused indices:
 /// The following indices aren't used by the Geometry Dash servers: `11`, `16`,
@@ -542,11 +542,6 @@ pub struct Level<'a, Song, User> {
     /// This value is provided at index `39`, and a value of `0` means no stars
     /// were requested
     pub stars_requested: Option<u8>,
-
-    // TODO: figure this value out
-    /// ## GD Internals:
-    /// This value is provided at index `40`
-    pub index_40: Option<Cow<'a, str>>,
 
     /// Value indicating whether this [`Level`] is epic
     ///
