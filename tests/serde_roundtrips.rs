@@ -167,31 +167,6 @@ const TIME_PRESSURE: Level<Option<u64>, u64> = Level {
 };
 
 #[test]
-fn serialize_song() {
-    init_log();
-
-    let mut buf: Vec<u8> = Vec::new();
-    let result = CREO_DUNE.write_robtop_data(&mut buf);
-
-    assert!(result.is_ok());
-    assert_eq!(buf, CREO_DUNE_DATA_ORDERED.as_bytes());
-}
-
-#[test]
-fn deserialize_song() {
-    init_log();
-
-    let song = NewgroundsSong::from_robtop_str(CREO_DUNE_DATA);
-
-    assert!(song.is_ok(), "{:?}", song.unwrap_err());
-
-    let mut song = song.unwrap();
-
-    assert!(song.link.process().is_ok());
-    assert_eq!(song, CREO_DUNE);
-}
-
-#[test]
 fn serialize_registered_creator() {
     init_log();
 
