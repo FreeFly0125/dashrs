@@ -186,6 +186,21 @@ pub struct Profile<'a> {
     /// This value is provided at index `31`
     pub index_31: Cow<'a, str>,
 
+    // TODO: figure this value out
+    /// ## GD Internals:
+    /// This value is provided at index `38`
+    pub index_38: Cow<'a, str>,
+
+    // TODO: figure this value out
+    /// ## GD Internals:
+    /// This value is provided at index `39`
+    pub index_39: Cow<'a, str>,
+
+    // TODO: figure this value out
+    /// ## GD Internals:
+    /// This value is provided at index `40`
+    pub index_40: Cow<'a, str>,
+
     /// The 1-based index of the spider this [`Profile`] currently uses. Indexing of icons starts at
     /// the top left corner and then goes left-to-right and top-to-bottom
     ///
@@ -316,6 +331,15 @@ mod internal {
         #[serde(rename = "31")]
         pub index_31: &'a str,
 
+        #[serde(rename = "38")]
+        pub index_38: &'a str,
+
+        #[serde(rename = "39")]
+        pub index_39: &'a str,
+
+        #[serde(rename = "40")]
+        pub index_40: &'a str,
+
         #[serde(rename = "43")]
         pub spider_index: u8,
 
@@ -366,6 +390,9 @@ mod internal {
                 index_29: Cow::Borrowed(internal.index_29),
                 global_rank: internal.global_rank,
                 index_31: Cow::Borrowed(internal.index_31),
+                index_38: Cow::Borrowed(internal.index_38),
+                index_39: Cow::Borrowed(internal.index_39),
+                index_40: Cow::Borrowed(internal.index_40),
                 spider_index: internal.spider_index,
                 twitter_url: internal.twitter_url.map(Cow::Borrowed).map(Twitter),
                 twitch_url: internal.twitch_url.map(Cow::Borrowed).map(Twitch),
@@ -401,6 +428,9 @@ mod internal {
                 index_29: self.index_29.borrow(),
                 global_rank: self.global_rank,
                 index_31: self.index_31.borrow(),
+                index_38: self.index_38.borrow(),
+                index_39: self.index_39.borrow(),
+                index_40: self.index_40.borrow(),
                 spider_index: self.spider_index,
                 twitter_url: self.twitter_url.as_ref().map(|t| t.0.borrow()),
                 twitch_url: self.twitch_url.as_ref().map(|t| t.0.borrow()),
