@@ -19,9 +19,13 @@ pub fn save<'a, T: HasRobtopFormat<'a> + Debug>(t: &T) -> String {
 }
 
 macro_rules! load_save_roundtrip {
-    ($t: ty, $load_from: ident, $expected: ident, $sep: expr, $map_like: expr) => {
+    ($t: ty, $load_from: ident, $expected: ident, $sep: expr, $map_like: expr)  => {
+        load_save_roundtrip!(load_save_roundtrip, $t, $load_from, $expected, $sep, $map_like);
+    };
+
+    ($name: ident, $t: ty, $load_from: ident, $expected: ident, $sep: expr, $map_like: expr) => {
         #[test]
-        pub fn load_save_roundtrip() {
+        pub fn $name() {
             use helper::*;
 
             let _ = env_logger::builder().is_test(true).try_init();
@@ -37,8 +41,11 @@ macro_rules! load_save_roundtrip {
 
 macro_rules! save_load_roundtrip {
     ($t: ty, $to_save: ident) => {
+        save_load_roundtrip!(save_load_roundtrip, $t, $to_save);
+    };
+    ($name: ident, $t: ty, $to_save: ident) => {
         #[test]
-        pub fn save_load_roundtrip() {
+        pub fn $name() {
             use helper::*;
 
             let _ = env_logger::builder().is_test(true).try_init();
