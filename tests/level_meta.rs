@@ -130,10 +130,31 @@ impl<S, U> helper::ThunkProcessor for Level<'_, S, U> {
 }
 
 save_load_roundtrip!(save_load_roundtrip_dark_realm, Level<Option<u64>, u64>, DARK_REALM);
-load_save_roundtrip!(load_save_roundtrip_dark_realm, Level<Option<u64>, u64>, DARK_REALM_DATA, DARK_REALM, ":", true);
+load_save_roundtrip!(
+    load_save_roundtrip_dark_realm,
+    Level<Option<u64>, u64>,
+    DARK_REALM_DATA,
+    DARK_REALM,
+    ":",
+    true
+);
 
 save_load_roundtrip!(save_load_roundtrip_demon_world, Level<Option<u64>, u64>, DEMON_WORLD);
-load_save_roundtrip!(load_save_roundtrip_demon_world, Level<Option<u64>, u64>, DEMON_WORLD_DATA, DEMON_WORLD, ":", true);
+load_save_roundtrip!(
+    load_save_roundtrip_demon_world,
+    Level<Option<u64>, u64>,
+    DEMON_WORLD_DATA,
+    DEMON_WORLD,
+    ":",
+    true
+);
 
 save_load_roundtrip!(save_load_roundtrip_fantasy, Level<Option<u64>, u64>, FANTASY);
-load_save_roundtrip!(load_save_roundtrip_fantasy, Level<Option<u64>, u64>, FANTASY_DATA, FANTASY, ":", true);
+load_save_roundtrip!(
+    load_save_roundtrip_fantasy,
+    Level<Option<u64>, u64>,
+    FANTASY_DATA,
+    FANTASY,
+    ":",
+    true
+);
