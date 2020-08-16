@@ -46,31 +46,6 @@ mod level_length {
     }
 }
 
-mod ten_bool {
-    use serde::{de::Error, Deserialize, Deserializer, Serializer};
-
-    pub fn serialize<S>(to_serialize: &bool, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        match to_serialize {
-            true => serializer.serialize_str("10"),
-            false => serializer.serialize_str("0"),
-        }
-    }
-
-    pub fn deserialize<'de, D>(deserializer: D) -> Result<bool, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        match <&str>::deserialize(deserializer)? {
-            "10" => Ok(true),
-            "0" | "" => Ok(false),
-            _ => Err(D::Error::custom("expected '10', '0' or the empty string")),
-        }
-    }
-}
-
 impl LevelRating {
     fn from_response_value(value: i32) -> LevelRating {
         match value {
@@ -88,16 +63,41 @@ impl LevelRating {
         match self {
             LevelRating::Unknown(value) => value,
             LevelRating::NotAvailable => 0,
-            LevelRating::Easy => 20,
-            LevelRating::Normal => 30,
-            LevelRating::Hard => 40,
-            LevelRating::Harder => 50,
-            LevelRating::Insane => 60,
+            LevelRating::Easy => 10,
+            LevelRating::Normal => 20,
+            LevelRating::Hard => 30,
+            LevelRating::Harder => 40,
+            LevelRating::Insane => 50,
             LevelRating::Demon(demon_rating) => demon_rating.into_response_value(),
             _ => panic!("got {:?}, please handle before calling this function", self),
         }
     }
 }
+
+impl DemonRating {
+    fn from_response_value(value: i32) -> DemonRating {
+        match value {
+            10 => DemonRating::Easy,
+            20 => DemonRating::Medium,
+            30 => DemonRating::Hard,
+            40 => DemonRating::Insane,
+            50 => DemonRating::Extreme,
+            _ => DemonRating::Unknown(value),
+        }
+    }
+
+    fn into_response_value(self) -> i32 {
+        match self {
+            DemonRating::Unknown(value) => value,
+            DemonRating::Easy => 10,
+            DemonRating::Medium => 20,
+            DemonRating::Hard => 30,
+            DemonRating::Insane => 40,
+            DemonRating::Extreme => 50,
+        }
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize)]
 struct InternalLevel<'a, 'b> {
     #[serde(rename = "1")]
@@ -115,16 +115,16 @@ struct InternalLevel<'a, 'b> {
     #[serde(rename = "6")]
     pub creator: u64,
 
-    #[serde(rename = "25")]
+    #[serde(rename = "25", serialize_with = "crate::util::false_to_empty_string")]
     pub is_auto: bool,
 
-    #[serde(rename = "8", with = "ten_bool")]
+    #[serde(rename = "8", serialize_with = "crate::util::true_to_ten")]
     pub has_difficulty_rating: bool,
 
     #[serde(rename = "9")]
     pub rating: i32,
 
-    #[serde(rename = "17")]
+    #[serde(rename = "17", serialize_with = "crate::util::false_to_empty_string")]
     pub is_demon: bool,
 
     #[serde(rename = "10")]
@@ -165,9 +165,6 @@ struct InternalLevel<'a, 'b> {
 
     #[serde(rename = "39", with = "crate::util::default_to_none")]
     pub stars_requested: Option<u8>,
-
-    #[serde(rename = "40")]
-    pub index_40: Option<&'a str>,
 
     #[serde(rename = "42")]
     pub is_epic: bool,
@@ -249,7 +246,6 @@ impl<'a> HasRobtopFormat<'a> for Level<'a, Option<u64>, u64> {
             coin_amount: internal.coin_amount,
             coins_verified: internal.coins_verified,
             stars_requested: internal.stars_requested,
-            index_40: internal.index_40.map(Cow::Borrowed),
             is_epic: internal.is_epic,
             index_43: Cow::Borrowed(internal.index_43),
             object_amount: internal.object_amount,
@@ -283,26 +279,21 @@ impl<'a> HasRobtopFormat<'a> for Level<'a, Option<u64>, u64> {
             stars: self.stars,
             featured: self.featured,
             copy_of: self.copy_of,
-            index_31: self.index_31.as_ref().map(|moo| moo.borrow()),
+            index_31: self.index_31.as_ref().map(Borrow::borrow),
             custom_song: self.custom_song,
             coin_amount: self.coin_amount,
             coins_verified: self.coins_verified,
             stars_requested: self.stars_requested,
-            index_40: self.index_40.as_ref().map(|moo| moo.borrow()),
             is_epic: self.is_epic,
             index_43: self.index_43.borrow(),
             object_amount: self.object_amount,
-            index_46: self.index_46.as_ref().map(|moo| moo.borrow()),
-            index_47: self.index_47.as_ref().map(|moo| moo.borrow()),
+            index_46: self.index_46.as_ref().map(Borrow::borrow),
+            index_47: self.index_47.as_ref().map(Borrow::borrow),
             level_data: self.level_data.as_ref().map(|data| data.level_data.as_ref_thunk()),
             password: self.level_data.as_ref().map(|data| Internal(data.password)),
             time_since_upload: self.level_data.as_ref().map(|data| data.time_since_upload.borrow()),
             time_since_update: self.level_data.as_ref().map(|data| data.time_since_update.borrow()),
-            index_36: self
-                .level_data
-                .as_ref()
-                .and_then(|data| data.index_36.as_ref())
-                .map(|moo| moo.borrow()),
+            index_36: self.level_data.as_ref().and_then(|data| data.index_36.as_ref()).map(Borrow::borrow),
         };
 
         internal.serialize(&mut IndexedSerializer::new(":", writer, true))

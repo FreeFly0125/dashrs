@@ -189,30 +189,6 @@ pub enum DemonRating {
     Extreme,
 }
 
-impl DemonRating {
-    fn from_response_value(value: i32) -> DemonRating {
-        match value {
-            10 => DemonRating::Easy,
-            20 => DemonRating::Medium,
-            30 => DemonRating::Hard,
-            40 => DemonRating::Insane,
-            50 => DemonRating::Extreme,
-            _ => DemonRating::Unknown(value),
-        }
-    }
-
-    fn into_response_value(self) -> i32 {
-        match self {
-            DemonRating::Unknown(value) => value,
-            DemonRating::Easy => 10,
-            DemonRating::Medium => 20,
-            DemonRating::Hard => 30,
-            DemonRating::Insane => 40,
-            DemonRating::Extreme => 50,
-        }
-    }
-}
-
 /// Enum representing a levels featured state
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, Serialize, Deserialize)]
 #[serde(from = "i32", into = "i32")]
@@ -254,8 +230,8 @@ impl From<i32> for Featured {
 impl From<Featured> for i32 {
     fn from(featured: Featured) -> Self {
         match featured {
-            Featured::NotFeatured => -1,
-            Featured::Unfeatured => 0,
+            Featured::NotFeatured => 0,
+            Featured::Unfeatured => -1,
             Featured::Featured(weight) => weight as i32,
         }
     }
@@ -426,7 +402,7 @@ impl Display for Password {
 /// ### Value only provided via `downloadGJLevels`
 /// These values are not provided for by the `getGJLevels` endpoint and are
 /// thus modelled in the [`LevelData`] struct: `4`, `27`,
-/// `28`, `29`, `36`
+/// `28`, `29`, `36`, `40`
 ///
 /// ### Unused indices:
 /// The following indices aren't used by the Geometry Dash servers: `11`, `16`,
@@ -566,11 +542,6 @@ pub struct Level<'a, Song, User> {
     /// This value is provided at index `39`, and a value of `0` means no stars
     /// were requested
     pub stars_requested: Option<u8>,
-
-    // TODO: figure this value out
-    /// ## GD Internals:
-    /// This value is provided at index `40`
-    pub index_40: Option<Cow<'a, str>>,
 
     /// Value indicating whether this [`Level`] is epic
     ///
@@ -731,7 +702,7 @@ impl<'a> ThunkContent<'a> for Objects {
             _ => return Err(LevelProcessError::UnknownCompression),
         }
 
-        let mut iter = decompressed[..decompressed.len() - 1].split(';');
+        let mut iter = decompressed.split_terminator(';');
 
         let metadata_string = match iter.next() {
             Some(meta) => meta,

@@ -144,7 +144,7 @@ mod internal {
         #[serde(rename = "14")]
         pub icon_type: u8,
 
-        #[serde(rename = "15", with = "crate::util::two_bool")]
+        #[serde(rename = "15", serialize_with = "crate::util::true_to_two")]
         pub has_glow: bool,
 
         #[serde(rename = "16")]
