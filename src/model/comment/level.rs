@@ -132,19 +132,21 @@ mod internal {
     use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
     use crate::{
-        model::{comment::level::LevelComment, user::Color},
+        model::{
+            comment::level::{CommentUser, LevelComment},
+            user::Color,
+        },
         serde::{IndexedDeserializer, IndexedSerializer, Internal},
         Base64Decoded, DeError, HasRobtopFormat, SerError, Thunk,
     };
     use std::io::Write;
-    use crate::model::comment::level::CommentUser;
 
     struct RGBColor(u8, u8, u8);
 
     impl Serialize for RGBColor {
         fn serialize<S>(&self, serializer: S) -> Result<<S as Serializer>::Ok, <S as Serializer>::Error>
-            where
-                S: Serializer,
+        where
+            S: Serializer,
         {
             serializer.serialize_str(&format!("{},{},{}", self.0, self.1, self.2))
         }
@@ -152,8 +154,8 @@ mod internal {
 
     impl<'de> Deserialize<'de> for RGBColor {
         fn deserialize<D>(deserializer: D) -> Result<Self, <D as Deserializer<'de>>::Error>
-            where
-                D: Deserializer<'de>,
+        where
+            D: Deserializer<'de>,
         {
             let color_string = <&str>::deserialize(deserializer)?;
             let mut split = color_string.split(',');
@@ -193,7 +195,7 @@ mod internal {
         #[serde(rename = "10")]
         pub progress: Option<u8>,
 
-        #[serde(rename = "11", with = "crate::util::two_bool")]
+        #[serde(rename = "11", serialize_with = "crate::util::true_to_two")]
         pub is_elder_mod: bool,
 
         #[serde(rename = "12")]
@@ -262,7 +264,7 @@ mod internal {
         #[serde(rename = "14")]
         pub icon_type: u8,
 
-        #[serde(rename = "15", with = "crate::util::two_bool")]
+        #[serde(rename = "15", serialize_with = "crate::util::true_to_two")]
         pub has_glow: bool,
 
         #[serde(rename = "16")]
@@ -280,7 +282,7 @@ mod internal {
                 secondary_color: internal.secondary_color.into(),
                 icon_type: internal.icon_type.into(),
                 has_glow: internal.has_glow,
-                account_id: internal.account_id
+                account_id: internal.account_id,
             })
         }
 
@@ -292,11 +294,10 @@ mod internal {
                 secondary_color: self.secondary_color.into(),
                 icon_type: self.icon_type.into(),
                 has_glow: self.has_glow,
-                account_id: self.account_id
+                account_id: self.account_id,
             };
 
             internal.serialize(&mut IndexedSerializer::new("~", writer, true))
         }
     }
-
 }
