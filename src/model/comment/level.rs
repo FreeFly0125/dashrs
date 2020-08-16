@@ -3,7 +3,7 @@ use std::borrow::Cow;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    model::user::{Color, IconType},
+    model::user::{Color, IconType, ModLevel},
     Base64Decoded, Thunk,
 };
 
@@ -59,12 +59,11 @@ pub struct LevelComment<'a> {
     /// This value is provided at index `10`
     pub progress: Option<u8>,
 
-    /// Whether the player that made this [`LevelComment`] is an elder mod
+    /// The level of moderator the player that made this [`LevelComment`] is
     ///
     /// ## GD Internals
-    /// This value is provided at index `11`, however the value `true` is encoded as `"2"` instead
-    /// of `"1"`
-    pub is_elder_mod: bool,
+    /// This value is provided at index `11`
+    pub mod_level: ModLevel,
 
     /// If this [`LevelComment`]'s text is displayed in a special color (blue for robtop, green for
     /// elder mods), the RGB code of that color will be stored here
@@ -195,8 +194,8 @@ mod internal {
         #[serde(rename = "10")]
         pub progress: Option<u8>,
 
-        #[serde(rename = "11", serialize_with = "crate::util::true_to_two")]
-        pub is_elder_mod: bool,
+        #[serde(rename = "11")]
+        pub mod_level: u8,
 
         #[serde(rename = "12")]
         pub special_color: Option<RGBColor>,
@@ -215,7 +214,7 @@ mod internal {
                 is_flagged_spam: internal.is_flagged_spam,
                 time_since_post: Cow::Borrowed(internal.time_since_post),
                 progress: internal.progress,
-                is_elder_mod: internal.is_elder_mod,
+                mod_level: internal.mod_level.into(),
                 special_color: internal.special_color.map(|RGBColor(r, g, b)| Color::Known(r, g, b)),
             })
         }
@@ -234,7 +233,7 @@ mod internal {
                 is_flagged_spam: self.is_flagged_spam,
                 time_since_post: self.time_since_post.borrow(),
                 progress: self.progress,
-                is_elder_mod: self.is_elder_mod,
+                mod_level: self.mod_level.into(),
                 special_color: self.special_color.map(|color| {
                     match color {
                         Color::Known(r, g, b) => RGBColor(r, g, b),

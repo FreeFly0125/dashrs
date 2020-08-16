@@ -1,7 +1,7 @@
 use dash_rs::{
     model::{
         comment::level::{CommentUser, LevelComment},
-        user::{Color, IconType},
+        user::{Color, IconType, ModLevel},
     },
     Base64Decoded, Thunk,
 };
@@ -29,7 +29,7 @@ const LEVEL_COMMENT1: LevelComment = LevelComment {
     is_flagged_spam: false,
     time_since_post: Cow::Borrowed("5 days"),
     progress: Some(0),
-    is_elder_mod: true,
+    mod_level: ModLevel::Elder,
     special_color: Some(Color::Known(75, 255, 75)),
 };
 
@@ -42,7 +42,7 @@ const LEVEL_COMMENT2: LevelComment = LevelComment {
     is_flagged_spam: false,
     time_since_post: Cow::Borrowed("5 days"),
     progress: Some(0),
-    is_elder_mod: true,
+    mod_level: ModLevel::Elder,
     special_color: Some(Color::Known(75, 255, 75)),
 };
 
@@ -57,7 +57,7 @@ const LEVEL_COMMENT3: LevelComment = LevelComment {
     is_flagged_spam: false,
     time_since_post: Cow::Borrowed("5 days"),
     progress: Some(0),
-    is_elder_mod: true,
+    mod_level: ModLevel::Normal,
     special_color: Some(Color::Known(255, 255, 255)),
 };
 
@@ -74,15 +74,13 @@ const COMMENT_USER: CommentUser = CommentUser {
 impl helper::ThunkProcessor for LevelComment<'_> {
     fn process_all_thunks(&mut self) {
         if let Some(ref mut cnt) = self.content {
-            cnt.process();
+            assert!(cnt.process().is_ok());
         }
     }
 }
 
 impl helper::ThunkProcessor for CommentUser<'_> {
-    fn process_all_thunks(&mut self) {
-
-    }
+    fn process_all_thunks(&mut self) {}
 }
 
 load_save_roundtrip!(load_save_roundtrip1, LevelComment, LEVEL_COMMENT1_DATA, LEVEL_COMMENT1, "~", true);
