@@ -2,7 +2,16 @@
 //! responses.
 
 use crate::{
-    model::{creator::Creator, level::Level, song::NewgroundsSong},
+    model::{
+        comment::{
+            level::{CommentUser, LevelComment},
+            profile::ProfileComment,
+        },
+        creator::Creator,
+        level::Level,
+        song::NewgroundsSong,
+        user::{profile::Profile, searched::SearchedUser},
+    },
     DeError, HasRobtopFormat,
 };
 use serde::export::Formatter;
@@ -71,7 +80,8 @@ pub fn parse_get_gj_levels_response(response: &str) -> Result<Vec<Level<Option<N
         .split('|')
         .map(|fragment| {
             let level = Level::from_robtop_str(fragment)?;
-            // Note: Cloning is cheap because none of the Thunks is evaluated, so we only have references lying around.
+            // Note: Cloning is cheap because none of the Thunks is evaluated, so we only have references lying
+            // around.
             let creator = creators.iter().find(|creator| creator.user_id == level.creator).map(Clone::clone);
             let song = level
                 .custom_song
@@ -117,4 +127,70 @@ pub fn parse_download_gj_level_response(response: &str) -> Result<Level, Respons
     let mut sections = response.split('#');
 
     Ok(Level::from_robtop_str(section!(sections))?)
+}
+
+pub fn parse_get_gj_user_info_response(response: &str) -> Result<Profile, ResponseError> {
+    if response == "-1" {
+        return Err(ResponseError::NotFound)
+    }
+
+    Ok(Profile::from_robtop_str(response)?)
+}
+
+pub fn parse_get_gj_users_response(response: &str) -> Result<SearchedUser, ResponseError> {
+    if response == "-1" {
+        return Err(ResponseError::NotFound)
+    }
+
+    let mut sections = response.split('#');
+
+    // In the past this used to be a paginating endpoint which performed an infix search on the user
+    // name. Now, it performs a full match, and since account names are unique, this endpoint returns at
+    // most one object anymore.
+    Ok(SearchedUser::from_robtop_str(section!(sections))?)
+}
+
+pub fn parse_get_gj_comments_response(response: &str) -> Result<Vec<LevelComment>, ResponseError> {
+    if response == "-1" {
+        return Err(ResponseError::NotFound)
+    }
+
+    let mut sections = response.split('#');
+
+    // The format here is very weird. We have a '|' separated list of (comment, user) pairs, and said
+    // pair is separated by a ':'
+
+    section!(sections)
+        .split('|')
+        .map(|fragment| {
+            let mut parts = fragment.split(':');
+
+            if let (Some(raw_comment), Some(raw_user)) = (parts.next(), parts.next()) {
+                let mut comment = LevelComment::from_robtop_str(raw_comment)?;
+
+                comment.user = if raw_user == "1~~9~~10~~11~~14~~15~~16~" {
+                    None
+                } else {
+                    Some(CommentUser::from_robtop_str(raw_user)?)
+                };
+
+                Ok(comment)
+            } else {
+                Err(ResponseError::UnexpectedFormat)
+            }
+        })
+        .collect()
+}
+
+pub fn parse_get_gj_acccount_comments_response(response: &str) -> Result<Vec<ProfileComment>, ResponseError> {
+    if response == "-1" {
+        return Err(ResponseError::NotFound)
+    }
+
+    let mut sections = response.split('#');
+
+    section!(sections)
+        .split('|')
+        .map(|fragment| Ok(ProfileComment::from_robtop_str(fragment)?))
+        .collect()
 }
