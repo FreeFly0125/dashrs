@@ -225,7 +225,7 @@ impl<'a> ThunkContent<'a> for PercentDecoded<'a> {
     }
 }
 
-#[derive(Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Eq, PartialEq, Serialize, Deserialize, Clone)]
 #[serde(transparent)]
 pub struct Base64Decoded<'a>(pub Cow<'a, str>);
 
