@@ -17,6 +17,7 @@
 use serde::{Deserialize, Serialize};
 use std::fmt::{Display, Formatter};
 
+pub mod comment;
 pub mod creator;
 pub mod level;
 pub mod song;
