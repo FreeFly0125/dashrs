@@ -98,7 +98,6 @@ pub fn parse_get_gj_levels_response(response: &str) -> Result<Vec<Level<Option<N
                 coin_amount: level.coin_amount,
                 coins_verified: level.coins_verified,
                 stars_requested: level.stars_requested,
-                index_40: level.index_40,
                 is_epic: level.is_epic,
                 index_43: level.index_43,
                 object_amount: level.object_amount,
