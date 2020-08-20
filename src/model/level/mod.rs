@@ -13,8 +13,9 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 use crate::{
     model::{
+        creator::Creator,
         level::{metadata::LevelMetadata, object::LevelObject},
-        song::MainSong,
+        song::{MainSong, NewgroundsSong},
         GameVersion,
     },
     serde::{Base64Decoded, HasRobtopFormat, Internal, ProcessError, ThunkContent},
@@ -22,8 +23,6 @@ use crate::{
 };
 use flate2::Compression;
 use serde::de::Error;
-use crate::model::song::NewgroundsSong;
-use crate::model::creator::Creator;
 
 // use flate2::read::GzDecoder;
 // use std::io::Read;
