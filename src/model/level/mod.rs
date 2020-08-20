@@ -22,6 +22,8 @@ use crate::{
 };
 use flate2::Compression;
 use serde::de::Error;
+use crate::model::song::NewgroundsSong;
+use crate::model::creator::Creator;
 
 // use flate2::read::GzDecoder;
 // use std::io::Read;
@@ -374,6 +376,8 @@ impl Display for Password {
         }
     }
 }
+
+pub type ListedLevel<'a> = Level<'a, Option<NewgroundsSong<'a>>, Option<Creator<'a>>>;
 
 /// Struct representing levels as returned by the boomlings API.
 ///

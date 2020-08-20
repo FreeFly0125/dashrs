@@ -16,6 +16,7 @@ use crate::{
 };
 use serde::export::Formatter;
 use std::fmt::Display;
+use crate::model::level::ListedLevel;
 
 // Since NoneError is not stabilized, we cannot do `impl From<NoneError> for ResponseError<'_>`, so
 // this is the next best thing
@@ -59,7 +60,7 @@ impl<'a> From<DeError<'a>> for ResponseError<'a> {
 }
 
 // TODO: Type aliases, maybe? This is pretty ridiculous lul
-pub fn parse_get_gj_levels_response(response: &str) -> Result<Vec<Level<Option<NewgroundsSong>, Option<Creator>>>, ResponseError> {
+pub fn parse_get_gj_levels_response(response: &str) -> Result<Vec<ListedLevel>, ResponseError> {
     if response == "-1" {
         return Err(ResponseError::NotFound)
     }
