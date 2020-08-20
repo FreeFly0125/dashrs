@@ -52,7 +52,7 @@ mod internal {
 ///
 /// Creators do not use the map-like representation, meaning the order of fields in the raw data
 /// must correspond to the order of fields in this struct.
-#[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
+#[derive(Debug, Deserialize, Serialize, PartialEq, Eq, Clone)]
 pub struct Creator<'a> {
     /// The [`Creator`]'s unique user ID
     pub user_id: u64,

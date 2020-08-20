@@ -22,6 +22,8 @@ use crate::{
 };
 use flate2::Compression;
 use serde::de::Error;
+use crate::model::song::NewgroundsSong;
+use crate::model::creator::Creator;
 
 // use flate2::read::GzDecoder;
 // use std::io::Read;
@@ -375,6 +377,8 @@ impl Display for Password {
     }
 }
 
+pub type ListedLevel<'a> = Level<'a, Option<NewgroundsSong<'a>>, Option<Creator<'a>>>;
+
 /// Struct representing levels as returned by the boomlings API.
 ///
 /// These can be retrieved using [`LevelRequest`](crate::request::level::LevelRequest)s or
@@ -409,7 +413,7 @@ impl Display for Password {
 /// `17`, `20`, `21`, `22`, `23`, `24`, `26`, `31`, `32`, `33`, `34`, `40`,
 /// `41`, `44`
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
-pub struct Level<'a, Song, User> {
+pub struct Level<'a, Song = Option<u64>, User = u64> {
     /// The level's unique level id
     ///
     /// ## GD Internals:

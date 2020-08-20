@@ -89,7 +89,7 @@ mod internal {
 ///
 /// ### Unused indices:
 /// The following indices aren't used by the Geometry Dash servers: `9`
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct NewgroundsSong<'a> {
     /// The newgrounds id of this [`NewgroundsSong`]
     ///
