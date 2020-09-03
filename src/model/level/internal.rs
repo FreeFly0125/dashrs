@@ -222,18 +222,13 @@ impl<'a> HasRobtopFormat<'a> for Level<'a> {
                 index: Some("29"),
                 value: None
             }),
-            (_, _, _, _, None) => return Err(DeError::Custom {
-                message: "Missing index_36".to_string(),
-                index: Some("36"),
-                value: None
-            }),
-            (Some(RefThunk::Unprocessed(level_string)), Some(Internal(password)), Some(upload), Some(update), Some(index_36)) =>
+            (Some(RefThunk::Unprocessed(level_string)), Some(Internal(password)), Some(upload), Some(update), index_36) =>
                 LevelData {
                     level_data: Thunk::Unprocessed(level_string),
                     password,
                     time_since_upload: Cow::Borrowed(upload),
                     time_since_update: Cow::Borrowed(update),
-                    index_36: Some(Cow::Borrowed(index_36),)
+                    index_36: index_36.map(Cow::Borrowed)
                 },
             _ => unreachable!(),
         };
