@@ -18,7 +18,7 @@ const CREO_DUNE_DATA_TOO_MANY_FIELDS: &str = "1~|~771277~|~54~|~should be ignore
 
 const CREATOR_REGISTERED_DATA_TOO_MANY_FIELDS: &str = "4170784:Serponge:119741:34:fda:32:asd:3";
 
-const TIME_PRESSURE: Level<'static, Option<u64>, u64> = Level {
+const TIME_PRESSURE: Level<'static> = Level {
     level_id: 897837,
     name: Cow::Borrowed("time pressure"),
     description: Some(Thunk::Processed(Base64Decoded(Cow::Borrowed(
@@ -49,24 +49,30 @@ const TIME_PRESSURE: Level<'static, Option<u64>, u64> = Level {
     object_amount: None,
     index_46: None,
     index_47: None,
-    level_data: Some(LevelData {
+    level_data: LevelData {
         level_data: Thunk::Unprocessed("REMOVED"),
         password: Password::PasswordCopy(3101),
         time_since_upload: Cow::Borrowed("5 years"),
         time_since_update: Cow::Borrowed("5 years"),
         index_36: None,
-    }),
+    },
 };
 
-impl<S, U> helper::ThunkProcessor for Level<'_, S, U> {
+impl<S, U> helper::ThunkProcessor for Level<'_, LevelData<'_>, S, U> {
     fn process_all_thunks(&mut self) {
         if let Some(ref mut hunk) = self.description {
             assert!(hunk.process().is_ok())
         }
-        assert!(self.level_data.is_some());
-        let data = self.level_data.as_mut().unwrap();
-        let objects = data.level_data.process();
+        let objects = self.level_data.level_data.process();
         assert!(objects.is_ok(), "{:?}", objects.unwrap_err());
+    }
+}
+
+impl<S, U> helper::ThunkProcessor for Level<'_, (), S, U> {
+    fn process_all_thunks(&mut self) {
+        if let Some(ref mut hunk) = self.description {
+            assert!(hunk.process().is_ok())
+        }
     }
 }
 
@@ -82,16 +88,16 @@ fn deserialize_too_many_fields() {
 fn deserialize_level() {
     init_log();
 
-    let mut level = helper::load_processed::<Level<Option<u64>, u64>>(include_str!("data/11774780_dark_realm_gjdownload_response"));
+    let mut level = helper::load_processed::<Level>(include_str!("data/11774780_dark_realm_gjdownload_response"));
 }
 
 #[test]
 fn deserialize_level2() {
     init_log();
 
-    let mut level = helper::load_processed::<Level<Option<u64>, u64>>(include_str!("data/897837_time_pressure_gjdownload_response"));
+    let mut level = helper::load_processed::<Level>(include_str!("data/897837_time_pressure_gjdownload_response"));
 
-    level.level_data.as_mut().unwrap().level_data = Thunk::Unprocessed("REMOVED");
+    level.level_data.level_data = Thunk::Unprocessed("REMOVED");
 
     assert_eq!(level, TIME_PRESSURE);
 }

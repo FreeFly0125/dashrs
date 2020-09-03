@@ -377,7 +377,7 @@ impl Display for Password {
     }
 }
 
-pub type ListedLevel<'a> = Level<'a, Option<NewgroundsSong<'a>>, Option<Creator<'a>>>;
+pub type ListedLevel<'a> = Level<'a, (), Option<NewgroundsSong<'a>>, Option<Creator<'a>>>;
 
 /// Struct representing levels as returned by the boomlings API.
 ///
@@ -413,7 +413,7 @@ pub type ListedLevel<'a> = Level<'a, Option<NewgroundsSong<'a>>, Option<Creator<
 /// `17`, `20`, `21`, `22`, `23`, `24`, `26`, `31`, `32`, `33`, `34`, `40`,
 /// `41`, `44`
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
-pub struct Level<'a, Song = Option<u64>, User = u64> {
+pub struct Level<'a, Data = LevelData<'a>, Song = Option<u64>, User = u64> {
     /// The level's unique level id
     ///
     /// ## GD Internals:
@@ -587,8 +587,7 @@ pub struct Level<'a, Song = Option<u64>, User = u64> {
     /// Additional data about this level that can be retrieved by downloading the level.
     ///
     /// This is [`None`] for levels retrieved via the "overview" endpoint `getGJLevels`.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub level_data: Option<LevelData<'a>>,
+    pub level_data: Data,
 }
 
 /// Struct encapsulating the additional level data returned when actually downloading a level

@@ -197,20 +197,44 @@ struct InternalLevel<'a, 'b> {
     pub index_36: Option<&'a str>,
 }
 
-impl<'a> HasRobtopFormat<'a> for Level<'a, Option<u64>, u64> {
+impl<'a> HasRobtopFormat<'a> for Level<'a> {
     fn from_robtop_str(input: &'a str) -> Result<Self, DeError> {
         let internal = InternalLevel::deserialize(&mut IndexedDeserializer::new(input, ":", true))?;
 
-        let level_data = match internal.level_data {
-            None => None,
-            Some(RefThunk::Unprocessed(level_string)) =>
-                Some(LevelData {
+        let level_data = match (internal.level_data, internal.password, internal.time_since_update, internal.time_since_update, internal.index_36) {
+            (None, _, _, _, _) => return Err(DeError::Custom {
+                message: "Missing level data".to_string(),
+                index: Some("4"),
+                value: None
+            }),
+            (_, None, _, _, _) => return Err(DeError::Custom {
+                message: "Missing level password".to_string(),
+                index: Some("27"),
+                value: None
+            }),
+            (_, _,None, _, _) => return Err(DeError::Custom {
+                message: "Missing level upload timestamp".to_string(),
+                index: Some("28"),
+                value: None
+            }),
+            (_, _, _, None, _) => return Err(DeError::Custom {
+                message: "Missing level update timestamp".to_string(),
+                index: Some("29"),
+                value: None
+            }),
+            (_, _, _, _, None) => return Err(DeError::Custom {
+                message: "Missing index_36".to_string(),
+                index: Some("36"),
+                value: None
+            }),
+            (Some(RefThunk::Unprocessed(level_string)), Some(Internal(password)), Some(upload), Some(update), Some(index_36)) =>
+                LevelData {
                     level_data: Thunk::Unprocessed(level_string),
-                    password: internal.password.map(|pw| pw.0).unwrap_or(Password::NoCopy),
-                    time_since_upload: Cow::Borrowed(internal.time_since_upload.unwrap_or("Unknown")),
-                    time_since_update: Cow::Borrowed(internal.time_since_update.unwrap_or("Unknown")),
-                    index_36: internal.index_36.map(Cow::Borrowed),
-                }),
+                    password,
+                    time_since_upload: Cow::Borrowed(upload),
+                    time_since_update: Cow::Borrowed(update),
+                    index_36: Some(Cow::Borrowed(index_36),)
+                },
             _ => unreachable!(),
         };
 
@@ -289,11 +313,102 @@ impl<'a> HasRobtopFormat<'a> for Level<'a, Option<u64>, u64> {
             object_amount: self.object_amount,
             index_46: self.index_46.as_ref().map(Borrow::borrow),
             index_47: self.index_47.as_ref().map(Borrow::borrow),
-            level_data: self.level_data.as_ref().map(|data| data.level_data.as_ref_thunk()),
-            password: self.level_data.as_ref().map(|data| Internal(data.password)),
-            time_since_upload: self.level_data.as_ref().map(|data| data.time_since_upload.borrow()),
-            time_since_update: self.level_data.as_ref().map(|data| data.time_since_update.borrow()),
-            index_36: self.level_data.as_ref().and_then(|data| data.index_36.as_ref()).map(Borrow::borrow),
+            level_data: Some(self.level_data.level_data.as_ref_thunk()),
+            password: Some(Internal(self.level_data.password)),
+            time_since_upload: Some(self.level_data.time_since_upload.borrow()),
+            time_since_update:  Some(self.level_data.time_since_update.borrow()),
+            index_36: self.level_data.index_36.as_ref().map(Borrow::borrow),
+        };
+
+        internal.serialize(&mut IndexedSerializer::new(":", writer, true))
+    }
+}
+
+
+impl<'a> HasRobtopFormat<'a> for Level<'a, ()> {
+    fn from_robtop_str(input: &'a str) -> Result<Self, DeError> {
+        let internal = InternalLevel::deserialize(&mut IndexedDeserializer::new(input, ":", true))?;
+
+        Ok(Level {
+            level_id: internal.level_id,
+            name: Cow::Borrowed(internal.name),
+            description: internal.description.map(|internal| internal.0),
+            version: internal.version,
+            creator: internal.creator,
+            difficulty: if !internal.has_difficulty_rating {
+                LevelRating::NotAvailable
+            } else if internal.is_auto {
+                LevelRating::Auto
+            } else if internal.is_demon {
+                LevelRating::Demon(DemonRating::from_response_value(internal.rating))
+            } else {
+                LevelRating::from_response_value(internal.rating)
+            },
+            downloads: internal.downloads,
+            main_song: if internal.custom_song.is_some() {
+                None
+            } else {
+                Some(MainSong::from(internal.main_song))
+            },
+            gd_version: GameVersion::from(internal.gd_version),
+            likes: internal.likes,
+            length: internal.length,
+            stars: internal.stars,
+            featured: internal.featured,
+            copy_of: internal.copy_of,
+            index_31: internal.index_31.map(Cow::Borrowed),
+            custom_song: internal.custom_song,
+            coin_amount: internal.coin_amount,
+            coins_verified: internal.coins_verified,
+            stars_requested: internal.stars_requested,
+            is_epic: internal.is_epic,
+            index_43: Cow::Borrowed(internal.index_43),
+            object_amount: internal.object_amount,
+            index_46: internal.index_46.map(Cow::Borrowed),
+            index_47: internal.index_47.map(Cow::Borrowed),
+            level_data: (),
+        })
+    }
+
+    fn write_robtop_data<W: Write>(&self, writer: W) -> Result<(), SerError> {
+        let internal = InternalLevel {
+            level_id: self.level_id,
+            name: self.name.borrow(),
+            description: self.description.as_ref().map(|thunk| {
+                Internal(match thunk {
+                    Thunk::Unprocessed(unproc) => Thunk::Unprocessed(unproc),
+                    Thunk::Processed(Base64Decoded(moo)) => Thunk::Processed(Base64Decoded(Cow::Borrowed(moo.as_ref()))),
+                })
+            }),
+            version: self.version,
+            creator: self.creator,
+            is_auto: self.difficulty == LevelRating::Auto,
+            has_difficulty_rating: self.difficulty != LevelRating::NotAvailable,
+            rating: self.difficulty.into_response_value(),
+            is_demon: self.difficulty.is_demon(),
+            downloads: self.downloads,
+            main_song: self.main_song.map(|song| song.main_song_id).unwrap_or(0),
+            gd_version: self.gd_version.into(),
+            likes: self.likes,
+            length: self.length,
+            stars: self.stars,
+            featured: self.featured,
+            copy_of: self.copy_of,
+            index_31: self.index_31.as_ref().map(Borrow::borrow),
+            custom_song: self.custom_song,
+            coin_amount: self.coin_amount,
+            coins_verified: self.coins_verified,
+            stars_requested: self.stars_requested,
+            is_epic: self.is_epic,
+            index_43: self.index_43.borrow(),
+            object_amount: self.object_amount,
+            index_46: self.index_46.as_ref().map(Borrow::borrow),
+            index_47: self.index_47.as_ref().map(Borrow::borrow),
+            level_data: None,
+            password: None,
+            time_since_upload: None,
+            time_since_update:  None,
+            index_36: None,
         };
 
         internal.serialize(&mut IndexedSerializer::new(":", writer, true))
