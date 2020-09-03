@@ -18,7 +18,7 @@ const CREO_DUNE_DATA_TOO_MANY_FIELDS: &str = "1~|~771277~|~54~|~should be ignore
 
 const CREATOR_REGISTERED_DATA_TOO_MANY_FIELDS: &str = "4170784:Serponge:119741:34:fda:32:asd:3";
 
-const TIME_PRESSURE: Level<'static> = Level {
+const TIME_PRESSURE: Level = Level {
     level_id: 897837,
     name: Cow::Borrowed("time pressure"),
     description: Some(Thunk::Processed(Base64Decoded(Cow::Borrowed(
