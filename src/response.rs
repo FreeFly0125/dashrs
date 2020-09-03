@@ -8,7 +8,7 @@ use crate::{
             profile::ProfileComment,
         },
         creator::Creator,
-        level::Level,
+        level::{Level, ListedLevel},
         song::NewgroundsSong,
         user::{profile::Profile, searched::SearchedUser},
     },
@@ -16,7 +16,6 @@ use crate::{
 };
 use serde::export::Formatter;
 use std::fmt::Display;
-use crate::model::level::ListedLevel;
 
 // Since NoneError is not stabilized, we cannot do `impl From<NoneError> for ResponseError<'_>`, so
 // this is the next best thing

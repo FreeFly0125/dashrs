@@ -201,34 +201,44 @@ impl<'a> HasRobtopFormat<'a> for Level<'a> {
     fn from_robtop_str(input: &'a str) -> Result<Self, DeError> {
         let internal = InternalLevel::deserialize(&mut IndexedDeserializer::new(input, ":", true))?;
 
-        let level_data = match (internal.level_data, internal.password, internal.time_since_update, internal.time_since_update, internal.index_36) {
-            (None, _, _, _, _) => return Err(DeError::Custom {
-                message: "Missing level data".to_string(),
-                index: Some("4"),
-                value: None
-            }),
-            (_, None, _, _, _) => return Err(DeError::Custom {
-                message: "Missing level password".to_string(),
-                index: Some("27"),
-                value: None
-            }),
-            (_, _,None, _, _) => return Err(DeError::Custom {
-                message: "Missing level upload timestamp".to_string(),
-                index: Some("28"),
-                value: None
-            }),
-            (_, _, _, None, _) => return Err(DeError::Custom {
-                message: "Missing level update timestamp".to_string(),
-                index: Some("29"),
-                value: None
-            }),
+        let level_data = match (
+            internal.level_data,
+            internal.password,
+            internal.time_since_update,
+            internal.time_since_update,
+            internal.index_36,
+        ) {
+            (None, ..) =>
+                return Err(DeError::Custom {
+                    message: "Missing level data".to_string(),
+                    index: Some("4"),
+                    value: None,
+                }),
+            (_, None, ..) =>
+                return Err(DeError::Custom {
+                    message: "Missing level password".to_string(),
+                    index: Some("27"),
+                    value: None,
+                }),
+            (_, _, None, ..) =>
+                return Err(DeError::Custom {
+                    message: "Missing level upload timestamp".to_string(),
+                    index: Some("28"),
+                    value: None,
+                }),
+            (_, _, _, None, _) =>
+                return Err(DeError::Custom {
+                    message: "Missing level update timestamp".to_string(),
+                    index: Some("29"),
+                    value: None,
+                }),
             (Some(RefThunk::Unprocessed(level_string)), Some(Internal(password)), Some(upload), Some(update), index_36) =>
                 LevelData {
                     level_data: Thunk::Unprocessed(level_string),
                     password,
                     time_since_upload: Cow::Borrowed(upload),
                     time_since_update: Cow::Borrowed(update),
-                    index_36: index_36.map(Cow::Borrowed)
+                    index_36: index_36.map(Cow::Borrowed),
                 },
             _ => unreachable!(),
         };
@@ -311,14 +321,13 @@ impl<'a> HasRobtopFormat<'a> for Level<'a> {
             level_data: Some(self.level_data.level_data.as_ref_thunk()),
             password: Some(Internal(self.level_data.password)),
             time_since_upload: Some(self.level_data.time_since_upload.borrow()),
-            time_since_update:  Some(self.level_data.time_since_update.borrow()),
+            time_since_update: Some(self.level_data.time_since_update.borrow()),
             index_36: self.level_data.index_36.as_ref().map(Borrow::borrow),
         };
 
         internal.serialize(&mut IndexedSerializer::new(":", writer, true))
     }
 }
-
 
 impl<'a> HasRobtopFormat<'a> for Level<'a, ()> {
     fn from_robtop_str(input: &'a str) -> Result<Self, DeError> {
@@ -402,7 +411,7 @@ impl<'a> HasRobtopFormat<'a> for Level<'a, ()> {
             level_data: None,
             password: None,
             time_since_upload: None,
-            time_since_update:  None,
+            time_since_update: None,
             index_36: None,
         };
 
