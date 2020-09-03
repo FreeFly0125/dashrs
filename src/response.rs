@@ -58,7 +58,6 @@ impl<'a> From<DeError<'a>> for ResponseError<'a> {
     }
 }
 
-// TODO: Type aliases, maybe? This is pretty ridiculous lul
 pub fn parse_get_gj_levels_response(response: &str) -> Result<Vec<ListedLevel>, ResponseError> {
     if response == "-1" {
         return Err(ResponseError::NotFound)
@@ -79,7 +78,7 @@ pub fn parse_get_gj_levels_response(response: &str) -> Result<Vec<ListedLevel>, 
     levels
         .split('|')
         .map(|fragment| {
-            let level = Level::from_robtop_str(fragment)?;
+            let level: Level<()> = Level::from_robtop_str(fragment)?;
             // Note: Cloning is cheap because none of the Thunks is evaluated, so we only have references lying
             // around.
             let creator = creators.iter().find(|creator| creator.user_id == level.creator).map(Clone::clone);

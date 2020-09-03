@@ -29,7 +29,7 @@ const FANTASY_DATA: &str = "1:63355989:2:Fantasy:5:2:6:15557115:8:10:9:40:10:935
                             37866:3:Q29sbGFiIHdpdGggQnJpbmRpa3osIHRoYW5rIHlvdSBmb3IgdGhpcyBsZXZlbCB1d3UsIEVOSk9ZISEg:15:3:30:63309629:31:\
                             0:37:2:38:1:39:7:46:1:47:2:35:771517";
 
-const DARK_REALM: Level<Option<u64>, u64> = Level {
+const DARK_REALM: Level<()> = Level {
     level_id: 11774780,
     name: Cow::Borrowed("Dark Realm"),
     description: Some(Thunk::Processed(Base64Decoded(Cow::Borrowed(
@@ -56,10 +56,10 @@ const DARK_REALM: Level<Option<u64>, u64> = Level {
     object_amount: None,
     index_46: Some(Cow::Borrowed("1")),
     index_47: Some(Cow::Borrowed("2")),
-    level_data: None,
+    level_data: (),
 };
 
-const DEMON_WORLD: Level<Option<u64>, u64> = Level {
+const DEMON_WORLD: Level<()> = Level {
     level_id: 72540,
     name: Cow::Borrowed("demon world"),
     description: Some(Thunk::Processed(Base64Decoded(Cow::Borrowed("happy new year!!")))),
@@ -88,10 +88,10 @@ const DEMON_WORLD: Level<Option<u64>, u64> = Level {
     object_amount: None,
     index_46: Some(Cow::Borrowed("1")),
     index_47: Some(Cow::Borrowed("2")),
-    level_data: None,
+    level_data: (),
 };
 
-const FANTASY: Level<Option<u64>, u64> = Level {
+const FANTASY: Level<()> = Level {
     level_id: 63355989,
     name: Cow::Borrowed("Fantasy"),
     description: Some(Thunk::Processed(Base64Decoded(Cow::Borrowed(
@@ -118,10 +118,10 @@ const FANTASY: Level<Option<u64>, u64> = Level {
     object_amount: Some(37866),
     index_46: Some(Cow::Borrowed("1")),
     index_47: Some(Cow::Borrowed("2")),
-    level_data: None,
+    level_data: (),
 };
 
-impl<S, U> helper::ThunkProcessor for Level<'_, S, U> {
+impl<S, U> helper::ThunkProcessor for Level<'_, (), S, U> {
     fn process_all_thunks(&mut self) {
         if let Some(ref mut hunk) = self.description {
             assert!(hunk.process().is_ok())
@@ -129,32 +129,11 @@ impl<S, U> helper::ThunkProcessor for Level<'_, S, U> {
     }
 }
 
-save_load_roundtrip!(save_load_roundtrip_dark_realm, Level<Option<u64>, u64>, DARK_REALM);
-load_save_roundtrip!(
-    load_save_roundtrip_dark_realm,
-    Level<Option<u64>, u64>,
-    DARK_REALM_DATA,
-    DARK_REALM,
-    ":",
-    true
-);
+save_load_roundtrip!(save_load_roundtrip_dark_realm, Level<()>, DARK_REALM);
+load_save_roundtrip!(load_save_roundtrip_dark_realm, Level<()>, DARK_REALM_DATA, DARK_REALM, ":", true);
 
-save_load_roundtrip!(save_load_roundtrip_demon_world, Level<Option<u64>, u64>, DEMON_WORLD);
-load_save_roundtrip!(
-    load_save_roundtrip_demon_world,
-    Level<Option<u64>, u64>,
-    DEMON_WORLD_DATA,
-    DEMON_WORLD,
-    ":",
-    true
-);
+save_load_roundtrip!(save_load_roundtrip_demon_world, Level<()>, DEMON_WORLD);
+load_save_roundtrip!(load_save_roundtrip_demon_world, Level<()>, DEMON_WORLD_DATA, DEMON_WORLD, ":", true);
 
-save_load_roundtrip!(save_load_roundtrip_fantasy, Level<Option<u64>, u64>, FANTASY);
-load_save_roundtrip!(
-    load_save_roundtrip_fantasy,
-    Level<Option<u64>, u64>,
-    FANTASY_DATA,
-    FANTASY,
-    ":",
-    true
-);
+save_load_roundtrip!(save_load_roundtrip_fantasy, Level<()>, FANTASY);
+load_save_roundtrip!(load_save_roundtrip_fantasy, Level<()>, FANTASY_DATA, FANTASY, ":", true);
