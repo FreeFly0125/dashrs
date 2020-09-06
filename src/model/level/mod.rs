@@ -345,8 +345,6 @@ impl Password {
     /// ## Arguments
     /// + `raw_password_data`: The raw data returned from the servers. Assumed to be follow the
     /// encoding described in [`Password`]'s documentation
-    ///
-
     fn from_robtop(raw_password_data: &str) -> Result<Self, ProcessError> {
         Ok(match raw_password_data {
             "0" => Password::NoCopy,
@@ -373,7 +371,6 @@ impl Password {
                 for byte in &decoded_buffer[1..password_len] {
                     password = password * 10 + (byte - b'0') as u32
                 }
-
                 Password::PasswordCopy(password)
             }
         })
