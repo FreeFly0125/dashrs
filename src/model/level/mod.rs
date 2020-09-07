@@ -334,7 +334,6 @@ impl<'de> Deserialize<'de> for Password
     }
 }
 
-
 /// The XOR key the game uses to encode level passwords
 pub const LEVEL_PASSWORD_XOR_KEY: &str = "26364";
 
