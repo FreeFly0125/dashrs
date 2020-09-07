@@ -263,7 +263,7 @@ impl From<Featured> for i32 {
 
 /// Enum representing a level's copyability status
 // FIXME: Find a sane implementation for (de)serialize here
-#[derive(Debug, Clone, Eq, PartialEq, Copy, Deserialize)]
+#[derive(Debug, Clone, Eq, PartialEq, Copy)]
 pub enum Password {
     /// The level isn't copyable through the official Geometry Dash client
     ///
@@ -314,6 +314,26 @@ impl Serialize for Password
         }
     }
 }
+
+impl<'de> Deserialize<'de> for Password
+{
+    fn deserialize<D>(deserializer: D) -> Result<Self, <D as Deserializer<'de>>::Error>
+        where
+            D: Deserializer<'de>,
+    {
+        let level_password = <Option<i32>>::deserialize(deserializer)?;
+
+        match level_password
+        {
+            Some(-1) => Ok(Password::FreeCopy),
+            Some(copy) => Ok(Password::PasswordCopy(copy as u32)),
+            None => Ok(Password::NoCopy)
+        }
+
+
+    }
+}
+
 
 /// The XOR key the game uses to encode level passwords
 pub const LEVEL_PASSWORD_XOR_KEY: &str = "26364";
@@ -599,6 +619,12 @@ pub struct Level<'a, Song, User> {
     /// According to the GDPS source its a value called `starDemonDiff`. It
     /// seems to correlate to the level's difficulty.
     ///
+    /// the value is just weird
+    /// 3 = easy demon
+    /// 4 = medium demon
+    /// 5 = insane demon
+    /// 6 = extreme demon
+    /// In other cases it's hard demon
     /// ## GD Internals:
     /// This value is provided at index `43` and seems to be an integer
     pub index_43: Cow<'a, str>,
