@@ -276,38 +276,31 @@ pub enum Password {
     PasswordCopy(u32),
 }
 
-impl Serialize for Password
-{
+impl Serialize for Password {
     fn serialize<S>(&self, serializer: S) -> Result<<S as Serializer>::Ok, <S as Serializer>::Error>
-        where
-            S: Serializer,
-
+    where
+        S: Serializer,
     {
-        match self
-        {
+        match self {
             Password::NoCopy => serializer.serialize_none(),
             Password::FreeCopy => serializer.serialize_i32(-1),
-            Password::PasswordCopy(password) => serializer.serialize_u32(*password)
+            Password::PasswordCopy(password) => serializer.serialize_u32(*password),
         }
     }
 }
 
-impl<'de> Deserialize<'de> for Password
-{
+impl<'de> Deserialize<'de> for Password {
     fn deserialize<D>(deserializer: D) -> Result<Self, <D as Deserializer<'de>>::Error>
-        where
-            D: Deserializer<'de>,
+    where
+        D: Deserializer<'de>,
     {
         let level_password = <Option<i32>>::deserialize(deserializer)?;
 
-        match level_password
-        {
+        match level_password {
             Some(-1) => Ok(Password::FreeCopy),
             Some(copy) => Ok(Password::PasswordCopy(copy as u32)),
-            None => Ok(Password::NoCopy)
+            None => Ok(Password::NoCopy),
         }
-
-
     }
 }
 
