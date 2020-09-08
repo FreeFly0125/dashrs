@@ -240,7 +240,7 @@ impl From<Featured> for i32 {
 
 /// Enum representing a level's copyability status
 // FIXME: Find a sane implementation for (de)serialize here
-#[derive(Debug, Clone, Eq, PartialEq, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Eq, PartialEq, Copy)]
 pub enum Password {
     /// The level isn't copyable through the official Geometry Dash client
     ///
@@ -274,6 +274,41 @@ pub enum Password {
     /// for the game to be able to correctly process passwords, and merely an implementation detail
     /// that changed at some point after 1.7
     PasswordCopy(u32),
+}
+
+impl Serialize for Password
+{
+    fn serialize<S>(&self, serializer: S) -> Result<<S as Serializer>::Ok, <S as Serializer>::Error>
+        where
+            S: Serializer,
+
+    {
+        match self
+        {
+            Password::NoCopy => serializer.serialize_none(),
+            Password::FreeCopy => serializer.serialize_i32(-1),
+            Password::PasswordCopy(password) => serializer.serialize_u32(*password)
+        }
+    }
+}
+
+impl<'de> Deserialize<'de> for Password
+{
+    fn deserialize<D>(deserializer: D) -> Result<Self, <D as Deserializer<'de>>::Error>
+        where
+            D: Deserializer<'de>,
+    {
+        let level_password = <Option<i32>>::deserialize(deserializer)?;
+
+        match level_password
+        {
+            Some(-1) => Ok(Password::FreeCopy),
+            Some(copy) => Ok(Password::PasswordCopy(copy as u32)),
+            None => Ok(Password::NoCopy)
+        }
+
+
+    }
 }
 
 /// The XOR key the game uses to encode level passwords
@@ -556,6 +591,12 @@ pub struct Level<'a, Data = LevelData<'a>, Song = Option<u64>, User = u64> {
     /// According to the GDPS source its a value called `starDemonDiff`. It
     /// seems to correlate to the level's difficulty.
     ///
+    /// the value is just weird
+    /// 3 = easy demon
+    /// 4 = medium demon
+    /// 5 = insane demon
+    /// 6 = extreme demon
+    /// In other cases it's hard demon
     /// ## GD Internals:
     /// This value is provided at index `43` and seems to be an integer
     pub index_43: Cow<'a, str>,
