@@ -152,7 +152,7 @@ struct InternalLevel<'a, 'b> {
     pub copy_of: Option<u64>,
 
     #[serde(rename = "31")]
-    pub index_31: Option<&'a str>,
+    pub two_player: bool,
 
     #[serde(rename = "35", with = "crate::util::default_to_none")]
     pub custom_song: Option<u64>,
@@ -170,7 +170,7 @@ struct InternalLevel<'a, 'b> {
     pub is_epic: bool,
 
     #[serde(rename = "43")]
-    pub index_43: &'a str,
+    pub demon_difficulty: u8,
 
     #[serde(rename = "45", with = "crate::util::default_to_none")]
     pub object_amount: Option<u32>,
@@ -270,13 +270,12 @@ impl<'a> HasRobtopFormat<'a> for Level<'a> {
             stars: internal.stars,
             featured: internal.featured,
             copy_of: internal.copy_of,
-            index_31: internal.index_31.map(Cow::Borrowed),
+            two_player: internal.two_player,
             custom_song: internal.custom_song,
             coin_amount: internal.coin_amount,
             coins_verified: internal.coins_verified,
             stars_requested: internal.stars_requested,
             is_epic: internal.is_epic,
-            index_43: Cow::Borrowed(internal.index_43),
             object_amount: internal.object_amount,
             index_46: internal.index_46.map(Cow::Borrowed),
             index_47: internal.index_47.map(Cow::Borrowed),
@@ -308,13 +307,20 @@ impl<'a> HasRobtopFormat<'a> for Level<'a> {
             stars: self.stars,
             featured: self.featured,
             copy_of: self.copy_of,
-            index_31: self.index_31.as_ref().map(Borrow::borrow),
+            two_player: self.two_player,
             custom_song: self.custom_song,
             coin_amount: self.coin_amount,
             coins_verified: self.coins_verified,
             stars_requested: self.stars_requested,
             is_epic: self.is_epic,
-            index_43: self.index_43.borrow(),
+            demon_difficulty: match self.difficulty {
+                LevelRating::Demon(DemonRating::Easy) => 3,
+                LevelRating::Demon(DemonRating::Medium) => 4,
+                LevelRating::Demon(DemonRating::Hard) => 5,
+                LevelRating::Demon(DemonRating::Insane) => 6,
+                LevelRating::Demon(DemonRating::Extreme) => 7,
+                _ => 5 // this seems to be the default for non-demons
+            },
             object_amount: self.object_amount,
             index_46: self.index_46.as_ref().map(Borrow::borrow),
             index_47: self.index_47.as_ref().map(Borrow::borrow),
@@ -360,13 +366,12 @@ impl<'a> HasRobtopFormat<'a> for Level<'a, ()> {
             stars: internal.stars,
             featured: internal.featured,
             copy_of: internal.copy_of,
-            index_31: internal.index_31.map(Cow::Borrowed),
+            two_player: internal.two_player,
             custom_song: internal.custom_song,
             coin_amount: internal.coin_amount,
             coins_verified: internal.coins_verified,
             stars_requested: internal.stars_requested,
             is_epic: internal.is_epic,
-            index_43: Cow::Borrowed(internal.index_43),
             object_amount: internal.object_amount,
             index_46: internal.index_46.map(Cow::Borrowed),
             index_47: internal.index_47.map(Cow::Borrowed),
@@ -398,13 +403,20 @@ impl<'a> HasRobtopFormat<'a> for Level<'a, ()> {
             stars: self.stars,
             featured: self.featured,
             copy_of: self.copy_of,
-            index_31: self.index_31.as_ref().map(Borrow::borrow),
+            two_player: self.two_player,
             custom_song: self.custom_song,
             coin_amount: self.coin_amount,
             coins_verified: self.coins_verified,
             stars_requested: self.stars_requested,
             is_epic: self.is_epic,
-            index_43: self.index_43.borrow(),
+            demon_difficulty: match self.difficulty {
+                LevelRating::Demon(DemonRating::Easy) => 3,
+                LevelRating::Demon(DemonRating::Medium) => 4,
+                LevelRating::Demon(DemonRating::Hard) => 0,
+                LevelRating::Demon(DemonRating::Insane) => 5,
+                LevelRating::Demon(DemonRating::Extreme) => 6,
+                _ => 5 // this seems to be the default for non-demons
+            },
             object_amount: self.object_amount,
             index_46: self.index_46.as_ref().map(Borrow::borrow),
             index_47: self.index_47.as_ref().map(Borrow::borrow),

@@ -350,12 +350,6 @@ impl Password {
 
                 // Geometry Dash adds an initial '1' character at the beginning that we don't care about, we just
                 // skip it
-                // The cost of UTF8 checking here is pretty much nothing since the password is so
-                // small, no need to go unsafe
-                // FIXME: no need to go through std::str APIs ---I AM FIXED---
-                // let decoded_str = std::str::from_utf8(&decoded_buffer[1..password_len]).expect("Password wasn't
-                // UTF-8 after a xor cycle."); let password =
-                // decoded_str.parse().map_err(ProcessError::IntParse)?;
 
                 let mut password = 0;
                 for byte in &decoded_buffer[1..password_len] {
@@ -429,6 +423,13 @@ pub type ListedLevel<'a> = Level<'a, (), Option<NewgroundsSong<'a>>, Option<Crea
 /// whether the level is an auto level. This is equivalent to checking if
 /// [`Level::difficulty`] is equal to
 /// [`LevelRating::Auto`]
+/// + Index `43`: This index is an indicator of demon difficulty as follows:
+///  3 = easy demon,
+///  4 = medium demon,
+///  5 = insane demon,
+///  6 = extreme demon.
+/// In other cases it's hard demon (thanks Ryder!). However, since we extract this information from
+/// index 9, dash-rs ignores this value.
 ///
 /// ### Value only provided via `downloadGJLevels`
 /// These values are not provided for by the `getGJLevels` endpoint and are
@@ -540,10 +541,11 @@ pub struct Level<'a, Data = LevelData<'a>, Song = Option<u64>, User = u64> {
     /// This value is provided at index `30`
     pub copy_of: Option<u64>,
 
-    // TODO: figure this value out
+    /// Value indicating whether this level is played in two-player mode
+    ///
     /// ## GD Internals:
-    /// This value is provided at index `31`
-    pub index_31: Option<Cow<'a, str>>,
+    /// This value is provided at index `31` and actually sanely encoded
+    pub two_player: bool,
 
     /// The id of the newgrounds song this [`Level`] uses, or [`None`]
     /// if it useds a main song.
@@ -579,20 +581,6 @@ pub struct Level<'a, Data = LevelData<'a>, Song = Option<u64>, User = u64> {
     /// ## GD Internals:
     /// This value is provided at index `42`, as an integer
     pub is_epic: bool,
-
-    // TODO: figure this value out
-    /// According to the GDPS source its a value called `starDemonDiff`. It
-    /// seems to correlate to the level's difficulty.
-    ///
-    /// the value is just weird
-    /// 3 = easy demon
-    /// 4 = medium demon
-    /// 5 = insane demon
-    /// 6 = extreme demon
-    /// In other cases it's hard demon
-    /// ## GD Internals:
-    /// This value is provided at index `43` and seems to be an integer
-    pub index_43: Cow<'a, str>,
 
     /// The amount of objects in this [`Level`]. Note that a value of `None` _does not_ mean
     /// that there are no objects in the level, but rather that the server's didn't provide an
