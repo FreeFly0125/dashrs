@@ -29,6 +29,9 @@ const FANTASY_DATA: &str = "1:63355989:2:Fantasy:5:2:6:15557115:8:10:9:40:10:935
                             37866:3:Q29sbGFiIHdpdGggQnJpbmRpa3osIHRoYW5rIHlvdSBmb3IgdGhpcyBsZXZlbCB1d3UsIEVOSk9ZISEg:15:3:30:63309629:31:\
                             0:37:2:38:1:39:7:46:1:47:2:35:771517";
 
+// A 2.0 level in two-player mode (also an extreme demon)
+const DUELO_MAETSTRO_DATA: &str = "1:23298409:2:Duelo Maestro:5:8:6:1295392:8:10:9:40:10:3302831:12:0:13:21:14:268067:17:1:43:5:25::18:10:19:0:42:0:45:45133:3:RWwgZHVlbG8gZGUgdHVzIGRvcyBtYW5vcyBvIGRlIGRvcyB2ZXJkYWRlcm9zIG1hZXN0cm9zLiBBIHZlY2VzIHB1ZWRlcyBtb3JpciBpbmV4cGxpY2FibGVtZW50ZSBlbiBsYSBwcmltZXJhIGJvbGEsIHBvcmZhIHJlaW5pY2llbiBlbCBuaXZlbC4=:15:4:30:0:31:1:37:2:38:1:39:10:46:1:47:2:35:645631";
+
 const DARK_REALM: Level<()> = Level {
     level_id: 11774780,
     name: Cow::Borrowed("Dark Realm"),
@@ -118,6 +121,36 @@ const FANTASY: Level<()> = Level {
     level_data: (),
 };
 
+const DUELO_MAESTRO: Level<()> = Level {
+    level_id: 23298409,
+    name: Cow::Borrowed("Duelo Maestro"),
+    description: Some(Thunk::Processed(Base64Decoded(Cow::Borrowed(
+        "El duelo de tus dos manos o de dos verdaderos maestros. A veces puedes morir inexplicablemente en la primera bola, porfa \
+         reinicien el nivel.",
+    )))),
+    version: 8,
+    creator: 1295392,
+    difficulty: LevelRating::Demon(DemonRating::Insane),
+    downloads: 3302831,
+    main_song: None,
+    gd_version: GameVersion::Version { minor: 1, major: 2 },
+    likes: 268067,
+    length: LevelLength::ExtraLong,
+    stars: 10,
+    featured: Featured::NotFeatured,
+    copy_of: None,
+    two_player: true,
+    custom_song: Some(645631),
+    coin_amount: 2,
+    coins_verified: true,
+    stars_requested: Some(10),
+    is_epic: false,
+    object_amount: Some(45133),
+    index_46: Some(Cow::Borrowed("1")),
+    index_47: Some(Cow::Borrowed("2")),
+    level_data: (),
+};
+
 impl<S, U> helper::ThunkProcessor for Level<'_, (), S, U> {
     fn process_all_thunks(&mut self) {
         if let Some(ref mut hunk) = self.description {
@@ -134,3 +167,6 @@ load_save_roundtrip!(load_save_roundtrip_demon_world, Level<()>, DEMON_WORLD_DAT
 
 save_load_roundtrip!(save_load_roundtrip_fantasy, Level<()>, FANTASY);
 load_save_roundtrip!(load_save_roundtrip_fantasy, Level<()>, FANTASY_DATA, FANTASY, ":", true);
+
+save_load_roundtrip!(save_load_roundtrip_duelo_maestro, Level<()>, DUELO_MAESTRO);
+load_save_roundtrip!(load_save_roundtrip_duelo_maestro, Level<()>, DUELO_MAETSTRO_DATA, DUELO_MAESTRO, ":", true);

@@ -319,7 +319,7 @@ impl<'a> HasRobtopFormat<'a> for Level<'a> {
                 LevelRating::Demon(DemonRating::Hard) => 5,
                 LevelRating::Demon(DemonRating::Insane) => 6,
                 LevelRating::Demon(DemonRating::Extreme) => 7,
-                _ => 5 // this seems to be the default for non-demons
+                _ => 5, // this seems to be the default for non-demons
             },
             object_amount: self.object_amount,
             index_46: self.index_46.as_ref().map(Borrow::borrow),
@@ -415,7 +415,7 @@ impl<'a> HasRobtopFormat<'a> for Level<'a, ()> {
                 LevelRating::Demon(DemonRating::Hard) => 0,
                 LevelRating::Demon(DemonRating::Insane) => 5,
                 LevelRating::Demon(DemonRating::Extreme) => 6,
-                _ => 5 // this seems to be the default for non-demons
+                _ => 5, // this seems to be the default for non-demons
             },
             object_amount: self.object_amount,
             index_46: self.index_46.as_ref().map(Borrow::borrow),
