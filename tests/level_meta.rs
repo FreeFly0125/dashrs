@@ -169,4 +169,11 @@ save_load_roundtrip!(save_load_roundtrip_fantasy, Level<()>, FANTASY);
 load_save_roundtrip!(load_save_roundtrip_fantasy, Level<()>, FANTASY_DATA, FANTASY, ":", true);
 
 save_load_roundtrip!(save_load_roundtrip_duelo_maestro, Level<()>, DUELO_MAESTRO);
-load_save_roundtrip!(load_save_roundtrip_duelo_maestro, Level<()>, DUELO_MAETSTRO_DATA, DUELO_MAESTRO, ":", true);
+load_save_roundtrip!(
+    load_save_roundtrip_duelo_maestro,
+    Level<()>,
+    DUELO_MAETSTRO_DATA,
+    DUELO_MAESTRO,
+    ":",
+    true
+);
