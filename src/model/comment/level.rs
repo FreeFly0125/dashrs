@@ -125,18 +125,15 @@ pub struct CommentUser<'a> {
     pub account_id: Option<u64>,
 }
 
+#[allow(unused_imports)]
 mod internal {
     use std::borrow::{Borrow, Cow};
 
     use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
-    use crate::{
-        model::{
-            comment::level::{CommentUser, LevelComment},
-            user::Color,
-        },
-        serde::{IndexedDeserializer, IndexedSerializer, Internal},
-        Base64Decoded, DeError, HasRobtopFormat, SerError, Thunk,
+    use crate::model::{
+        comment::level::{CommentUser, LevelComment},
+        user::Color,
     };
     use std::io::Write;
 
@@ -171,132 +168,6 @@ mod internal {
         }
     }
 
-    #[derive(Deserialize, Serialize)]
-    struct InternalLevelComment<'a> {
-        #[serde(rename = "2")]
-        pub content: Option<Internal<Thunk<'a, Base64Decoded<'a>>>>,
-
-        #[serde(rename = "3")]
-        pub user_id: u64,
-
-        #[serde(rename = "4")]
-        pub likes: i32,
-
-        #[serde(rename = "6")]
-        pub comment_id: u64,
-
-        #[serde(rename = "7")]
-        pub is_flagged_spam: bool,
-
-        #[serde(rename = "9")]
-        pub time_since_post: &'a str,
-
-        #[serde(rename = "10")]
-        pub progress: Option<u8>,
-
-        #[serde(rename = "11")]
-        pub mod_level: u8,
-
-        #[serde(rename = "12")]
-        pub special_color: Option<RGBColor>,
-    }
-
-    impl<'a> HasRobtopFormat<'a> for LevelComment<'a> {
-        fn from_robtop_str(input: &'a str) -> Result<Self, DeError<'a>> {
-            let internal = InternalLevelComment::deserialize(&mut IndexedDeserializer::new(input, "~", true))?;
-
-            Ok(LevelComment {
-                user: None,
-                content: internal.content.map(|i| i.0),
-                user_id: internal.user_id,
-                likes: internal.likes,
-                comment_id: internal.comment_id,
-                is_flagged_spam: internal.is_flagged_spam,
-                time_since_post: Cow::Borrowed(internal.time_since_post),
-                progress: internal.progress,
-                mod_level: internal.mod_level.into(),
-                special_color: internal.special_color.map(|RGBColor(r, g, b)| Color::Known(r, g, b)),
-            })
-        }
-
-        fn write_robtop_data<W: Write>(&self, writer: W) -> Result<(), SerError> {
-            let internal = InternalLevelComment {
-                content: self.content.as_ref().map(|thunk| {
-                    Internal(match thunk {
-                        Thunk::Unprocessed(unproc) => Thunk::Unprocessed(unproc),
-                        Thunk::Processed(Base64Decoded(moo)) => Thunk::Processed(Base64Decoded(Cow::Borrowed(moo.borrow()))),
-                    })
-                }),
-                user_id: self.user_id,
-                likes: self.likes,
-                comment_id: self.comment_id,
-                is_flagged_spam: self.is_flagged_spam,
-                time_since_post: self.time_since_post.borrow(),
-                progress: self.progress,
-                mod_level: self.mod_level.into(),
-                special_color: self.special_color.map(|color| {
-                    match color {
-                        Color::Known(r, g, b) => RGBColor(r, g, b),
-                        _ => panic!("Color::Unknown passed as color of level comment"),
-                    }
-                }),
-            };
-
-            internal.serialize(&mut IndexedSerializer::new("~", writer, true))
-        }
-    }
-
-    #[derive(Deserialize, Serialize)]
-    pub struct InternalCommentUser<'a> {
-        #[serde(rename = "1")]
-        pub name: &'a str,
-
-        #[serde(rename = "9")]
-        pub icon_index: u16,
-
-        #[serde(rename = "10")]
-        pub primary_color: u8,
-
-        #[serde(rename = "11")]
-        pub secondary_color: u8,
-
-        #[serde(rename = "14")]
-        pub icon_type: u8,
-
-        #[serde(rename = "15", serialize_with = "crate::util::true_to_two")]
-        pub has_glow: bool,
-
-        #[serde(rename = "16")]
-        pub account_id: Option<u64>,
-    }
-
-    impl<'a> HasRobtopFormat<'a> for CommentUser<'a> {
-        fn from_robtop_str(input: &'a str) -> Result<Self, DeError<'a>> {
-            let internal = InternalCommentUser::deserialize(&mut IndexedDeserializer::new(input, "~", true))?;
-
-            Ok(CommentUser {
-                name: Cow::Borrowed(internal.name),
-                icon_index: internal.icon_index,
-                primary_color: internal.primary_color.into(),
-                secondary_color: internal.secondary_color.into(),
-                icon_type: internal.icon_type.into(),
-                has_glow: internal.has_glow,
-                account_id: internal.account_id,
-            })
-        }
-
-        fn write_robtop_data<W: Write>(&self, writer: W) -> Result<(), SerError> {
-            let internal = InternalCommentUser {
-                name: self.name.as_ref(),
-                icon_index: self.icon_index,
-                primary_color: self.primary_color.into(),
-                secondary_color: self.secondary_color.into(),
-                icon_type: self.icon_type.into(),
-                has_glow: self.has_glow,
-                account_id: self.account_id,
-            };
-
-            internal.serialize(&mut IndexedSerializer::new("~", writer, true))
-        }
-    }
+    include!(concat!(env!("OUT_DIR"), "/level_comment.boilerplate"));
+    include!(concat!(env!("OUT_DIR"), "/comment_user.boilerplate"));
 }

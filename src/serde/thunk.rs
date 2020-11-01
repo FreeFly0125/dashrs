@@ -139,31 +139,6 @@ pub trait ThunkContent<'a>: Sized {
 #[derive(Debug)]
 pub struct Internal<I>(pub(crate) I);
 
-impl<'a, C: ThunkContent<'a>> Serialize for Internal<Thunk<'a, C>> {
-    fn serialize<S>(&self, serializer: S) -> Result<<S as Serializer>::Ok, <S as Serializer>::Error>
-    where
-        S: Serializer,
-    {
-        match self.0 {
-            Thunk::Unprocessed(unprocessed) => serializer.serialize_str(unprocessed),
-            Thunk::Processed(ref processed) =>
-                match processed.as_unprocessed().map_err(serde::ser::Error::custom)? {
-                    Cow::Borrowed(s) => serializer.serialize_str(s),
-                    Cow::Owned(s) => s.serialize(serializer),
-                },
-        }
-    }
-}
-
-impl<'de: 'a, 'a, C: ThunkContent<'a>> Deserialize<'de> for Internal<Thunk<'a, C>> {
-    fn deserialize<D>(deserializer: D) -> Result<Self, <D as Deserializer<'de>>::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        <&str>::deserialize(deserializer).map(Thunk::Unprocessed).map(Internal)
-    }
-}
-
 impl<'a, C: ThunkContent<'a>> Thunk<'a, C> {
     /// If this is a [`Thunk::Unprocessed`] variant, calls [`ThunkContent::from_unprocessed`] and
     /// returns [`Thunk::Processed`]. Simply returns `self` if this is a [`Thunk::Processed`]

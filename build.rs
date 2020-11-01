@@ -15,7 +15,8 @@ fn generate_boilerplate() -> std::io::Result<()> {
             println!("cargo:rerun-if-changed=descriptions/{}", file);
         }
 
-        let filename = format!("{}.boilerplate", entry.path().file_stem().unwrap().to_str().unwrap());
+        let file_stem = entry.path().file_stem().unwrap().to_str().unwrap().to_string();
+        let filename = format!("{}.boilerplate", file_stem);
 
         let dest_path = Path::new(&out_dir).join(filename);
 
@@ -24,9 +25,12 @@ fn generate_boilerplate() -> std::io::Result<()> {
         let ng_yml = fs::read_to_string(entry.path())?;
         let description: ModelDescription = serde_yaml::from_str(&ng_yml).unwrap();
 
+        writeln!(&mut f, "#[allow(non_upper_case_globals, unused_imports)]")?;
+        writeln!(&mut f, "const _{}: () = {{", file_stem)?;
         write_preamble(&mut f)?;
         description.write_internal_model(&mut f)?;
         description.write_has_robtop_format_impl(&mut f)?;
+        writeln!(&mut f, "}};")?;
     }
 
     Ok(())
@@ -36,7 +40,8 @@ fn write_preamble<W: Write>(f: &mut W) -> std::io::Result<()> {
     writeln!(f, "use crate::{{")?;
     writeln!(
         f,
-        "serde::{{DeError, HasRobtopFormat, IndexedDeserializer, IndexedSerializer, PercentDecoded, SerError, Thunk, RefThunk}},"
+        "serde::{{DeError, HasRobtopFormat, IndexedDeserializer, IndexedSerializer, PercentDecoded, SerError, Thunk, RefThunk, \
+         Base64Decoded}},"
     )?;
     writeln!(f, "}};")?;
     writeln!(f, "use serde::{{Deserialize, Serialize}};")?;
@@ -195,7 +200,8 @@ impl Index {
             if self.optional {
                 write!(
                     f,
-                    "match internal.index_{} {{None => None, Some(RefThunk::Unprocessed(unproc)) => Some(Thunk::Unprocessed(unproc)), _ => unreachable!()}}",
+                    "match internal.index_{} {{None => None, Some(RefThunk::Unprocessed(unproc)) => Some(Thunk::Unprocessed(unproc)), _ \
+                     => unreachable!()}}",
                     self.value
                 )?;
             } else {

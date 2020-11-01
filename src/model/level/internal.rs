@@ -99,17 +99,5 @@ impl DemonRating {
     }
 }
 
-#[allow(unused_imports)]
-mod partial_level {
-    use super::*;
-
-    include!(concat!(env!("OUT_DIR"), "/partial_level.boilerplate"));
-}
-
-
-#[allow(unused_imports)]
-mod full_level {
-    use super::*;
-
-    include!(concat!(env!("OUT_DIR"), "/level.boilerplate"));
-}
+include!(concat!(env!("OUT_DIR"), "/partial_level.boilerplate"));
+include!(concat!(env!("OUT_DIR"), "/level.boilerplate"));
