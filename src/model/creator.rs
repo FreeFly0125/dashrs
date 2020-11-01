@@ -1,7 +1,6 @@
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 
-#[allow(unused_imports)]
 mod internal {
     use crate::model::creator::Creator;
 

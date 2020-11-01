@@ -97,7 +97,6 @@ pub struct SearchedUser<'a> {
     pub user_coins: u16,
 }
 
-#[allow(unused_imports)]
 mod internal {
     use crate::model::user::searched::SearchedUser;
 

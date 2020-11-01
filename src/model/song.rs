@@ -5,7 +5,6 @@ use std::{
     fmt::{Display, Formatter},
 };
 
-#[allow(unused_imports)]
 mod internal {
     use crate::model::song::NewgroundsSong;
 

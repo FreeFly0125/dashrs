@@ -245,11 +245,9 @@ pub struct Profile<'a> {
     pub index_50: Cow<'a, str>,
 }
 
-#[allow(unused_imports)]
 mod internal {
     use crate::model::user::{
-        profile::{Profile, Twitch, Twitter, Youtube},
-        Color, ModLevel,
+        profile::{Profile, Twitch, Twitter, Youtube}
     };
 
     include!(concat!(env!("OUT_DIR"), "/profile.boilerplate"));
