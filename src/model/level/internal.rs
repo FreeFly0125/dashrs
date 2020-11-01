@@ -322,13 +322,13 @@ impl<'a> HasRobtopFormat<'a> for Level<'a> {
                 _ => 5, // this seems to be the default for non-demons
             },
             object_amount: self.object_amount,
-            index_46: self.index_46.as_ref().map(Borrow::borrow),
-            index_47: self.index_47.as_ref().map(Borrow::borrow),
+            index_46: self.index_46.as_deref(),
+            index_47: self.index_47.as_deref(),
             level_data: Some(self.level_data.level_data.as_ref_thunk()),
             password: Some(Internal(self.level_data.password)),
             time_since_upload: Some(self.level_data.time_since_upload.borrow()),
             time_since_update: Some(self.level_data.time_since_update.borrow()),
-            index_36: self.level_data.index_36.as_ref().map(Borrow::borrow),
+            index_36: self.level_data.index_36.as_deref(),
         };
 
         internal.serialize(&mut IndexedSerializer::new(":", writer, true))
@@ -418,8 +418,8 @@ impl<'a> HasRobtopFormat<'a> for Level<'a, ()> {
                 _ => 5, // this seems to be the default for non-demons
             },
             object_amount: self.object_amount,
-            index_46: self.index_46.as_ref().map(Borrow::borrow),
-            index_47: self.index_47.as_ref().map(Borrow::borrow),
+            index_46: self.index_46.as_deref(),
+            index_47: self.index_47.as_deref(),
             level_data: None,
             password: None,
             time_since_upload: None,

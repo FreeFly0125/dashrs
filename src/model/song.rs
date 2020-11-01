@@ -67,8 +67,8 @@ mod internal {
                 index_3: self.index_3,
                 artist: self.artist.as_ref(),
                 filesize: self.filesize,
-                index_6: self.index_6.as_ref().map(|moo| moo.as_ref()),
-                index_7: self.index_7.as_ref().map(|moo| moo.as_ref()),
+                index_6: self.index_6.as_deref(),
+                index_7: self.index_7.as_deref(),
                 index_8: self.index_8.as_ref(),
                 link: match self.link {
                     Thunk::Unprocessed(s) => Internal(Thunk::Unprocessed(s)),
