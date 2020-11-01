@@ -1,47 +1,11 @@
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 
+#[allow(unused_imports)]
 mod internal {
-    use crate::{
-        model::creator::Creator,
-        serde::{HasRobtopFormat, IndexedDeserializer, IndexedSerializer},
-        DeError, SerError,
-    };
-    use serde::{Deserialize, Serialize};
-    use std::{borrow::Cow, io::Write};
+    use crate::model::creator::Creator;
 
-    #[derive(Debug, Deserialize, Serialize)]
-    pub struct InternalCreator<'a> {
-        pub user_id: u64,
-
-        #[serde(borrow)]
-        pub name: &'a str,
-
-        #[serde(with = "crate::util::default_to_none")]
-        pub account_id: Option<u64>,
-    }
-
-    impl<'a> HasRobtopFormat<'a> for Creator<'a> {
-        fn from_robtop_str(input: &'a str) -> Result<Self, DeError> {
-            let internal = InternalCreator::deserialize(&mut IndexedDeserializer::new(input, ":", false))?;
-
-            Ok(Creator {
-                user_id: internal.user_id,
-                name: Cow::Borrowed(internal.name),
-                account_id: internal.account_id,
-            })
-        }
-
-        fn write_robtop_data<W: Write>(&self, writer: W) -> Result<(), SerError> {
-            let internal = InternalCreator {
-                user_id: self.user_id,
-                name: self.name.as_ref(),
-                account_id: self.account_id,
-            };
-
-            internal.serialize(&mut IndexedSerializer::new(":", writer, false))
-        }
-    }
+    include!(concat!(env!("OUT_DIR"), "/creator.boilerplate"));
 }
 
 /// Struct modelling a [`Creator`] of a level.

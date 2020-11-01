@@ -5,80 +5,11 @@ use std::{
     fmt::{Display, Formatter},
 };
 
+#[allow(unused_imports)]
 mod internal {
-    use crate::{
-        model::song::NewgroundsSong,
-        serde::{DeError, HasRobtopFormat, IndexedDeserializer, IndexedSerializer, Internal, PercentDecoded, SerError, Thunk},
-    };
-    use serde::{Deserialize, Serialize};
-    use std::{borrow::Cow, io::Write};
+    use crate::model::song::NewgroundsSong;
 
-    #[derive(Debug, Serialize, Deserialize)]
-    pub struct InternalNewgroundsSong<'a> {
-        #[serde(rename = "1")]
-        pub song_id: u64,
-
-        #[serde(rename = "2", borrow)]
-        pub name: &'a str,
-
-        #[serde(rename = "3")]
-        pub index_3: u64,
-
-        #[serde(rename = "4")]
-        pub artist: &'a str,
-
-        #[serde(rename = "5")]
-        pub filesize: f64,
-
-        #[serde(rename = "6")]
-        pub index_6: Option<&'a str>,
-
-        #[serde(rename = "7")]
-        pub index_7: Option<&'a str>,
-
-        #[serde(rename = "8")]
-        pub index_8: &'a str,
-
-        #[serde(rename = "10")]
-        pub link: Internal<Thunk<'a, PercentDecoded<'a>>>,
-    }
-
-    impl<'a> HasRobtopFormat<'a> for NewgroundsSong<'a> {
-        fn from_robtop_str(input: &'a str) -> Result<Self, DeError> {
-            let internal = InternalNewgroundsSong::deserialize(&mut IndexedDeserializer::new(input, "~|~", true))?;
-
-            Ok(NewgroundsSong {
-                song_id: internal.song_id,
-                name: Cow::Borrowed(internal.name),
-                index_3: internal.index_3,
-                artist: Cow::Borrowed(internal.artist),
-                filesize: internal.filesize,
-                index_6: internal.index_6.map(Cow::Borrowed),
-                index_7: internal.index_7.map(Cow::Borrowed),
-                index_8: Cow::Borrowed(internal.index_8),
-                link: internal.link.0,
-            })
-        }
-
-        fn write_robtop_data<W: Write>(&self, writer: W) -> Result<(), SerError> {
-            let internal = InternalNewgroundsSong {
-                song_id: self.song_id,
-                name: self.name.as_ref(),
-                index_3: self.index_3,
-                artist: self.artist.as_ref(),
-                filesize: self.filesize,
-                index_6: self.index_6.as_deref(),
-                index_7: self.index_7.as_deref(),
-                index_8: self.index_8.as_ref(),
-                link: match self.link {
-                    Thunk::Unprocessed(s) => Internal(Thunk::Unprocessed(s)),
-                    Thunk::Processed(ref decoded) => Internal(Thunk::Processed(PercentDecoded(Cow::Borrowed(decoded.0.as_ref())))),
-                },
-            };
-
-            internal.serialize(&mut IndexedSerializer::new("~|~", writer, true))
-        }
-    }
+    include!(concat!(env!("OUT_DIR"), "/newgrounds_song.boilerplate"));
 }
 
 /// Struct modelling a [`NewgroundsSong`]
