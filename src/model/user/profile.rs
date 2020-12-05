@@ -246,9 +246,7 @@ pub struct Profile<'a> {
 }
 
 mod internal {
-    use crate::model::user::{
-        profile::{Profile, Twitch, Twitter, Youtube}
-    };
+    use crate::model::user::profile::{Profile, Twitch, Twitter, Youtube};
 
     include!(concat!(env!("OUT_DIR"), "/profile.boilerplate"));
 }
