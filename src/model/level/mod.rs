@@ -616,8 +616,6 @@ pub struct Level<'a, Data = LevelData<'a>, Song = Option<u64>, User = u64> {
 pub struct LevelData<'a> {
     /// The level's actual data.
     ///
-    /// TODO: Wrap in fitting Thunk
-    ///
     /// ## GD Internals:
     /// This value is provided at index `4`, and is urlsafe base64 encoded and `DEFLATE` compressed
     #[serde(borrow)]

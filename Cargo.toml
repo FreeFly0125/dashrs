@@ -16,8 +16,13 @@ dtoa = "0.4.4"
 flate2 = {version = "1.0.14", features = ["zlib"], default-features=false}
 
 [dev-dependencies]
+# benchmark
 env_logger = "0.7.1"
 criterion = "0.3"
+
+[build-dependencies]
+serde = {version = "1.0.104", features = ["derive"]}
+serde_yaml = "0.8.14"
 
 [[bench]]
 name = "level_processing_benchmark"
