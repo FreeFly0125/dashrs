@@ -36,7 +36,7 @@ impl UserRequest<'_> {
     }
 
     pub fn to_url(&self) -> String {
-        format!("{}{}{}", REQUEST_BASE_URL, super::to_string(self), GET_USER_ENDPOINT)
+        format!("{}{}?{}", REQUEST_BASE_URL, GET_USER_ENDPOINT, super::to_string(self))
     }
 }
 
@@ -99,7 +99,7 @@ impl<'a> UserSearchRequest<'a> {
     }
 
     pub fn to_url(&self) -> String {
-        format!("{}{}{}", REQUEST_BASE_URL, super::to_string(self), SEARCH_USER_ENDPOINT)
+        format!("{}{}?{}", REQUEST_BASE_URL, SEARCH_USER_ENDPOINT, super::to_string(self))
     }
 }
 
