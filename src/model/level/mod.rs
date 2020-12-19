@@ -14,7 +14,10 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use crate::{
     model::{
         creator::Creator,
-        level::{metadata::LevelMetadata, object::LevelObject},
+        level::{
+            metadata::LevelMetadata,
+            object::{speed::Speed, LevelObject, ObjectData},
+        },
         song::{MainSong, NewgroundsSong},
         GameVersion,
     },
@@ -23,8 +26,6 @@ use crate::{
 };
 use flate2::Compression;
 use serde::de::Error;
-use crate::model::level::object::ObjectData;
-use crate::model::level::object::speed::Speed;
 
 // use flate2::read::GzDecoder;
 // use std::io::Read;
@@ -767,12 +768,12 @@ impl<'a> ThunkContent<'a> for Objects {
 }
 
 impl Objects {
-    pub fn length_in_seconds(&self) -> f32{
+    pub fn length_in_seconds(&self) -> f32 {
         let mut portals = Vec::new();
         let mut furthest_x = 0.0;
 
         for object in &self.objects {
-            if let ObjectData::SpeedPortal {checked: true, speed} = object.metadata {
+            if let ObjectData::SpeedPortal { checked: true, speed } = object.metadata {
                 portals.push((object.x, speed))
             }
 
