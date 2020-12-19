@@ -14,7 +14,7 @@ pub const SEARCH_USER_ENDPOINT: &str = "getGJUsers20";
 ///
 /// In the geometry Dash API, this endpoint is used to download player profiles from the servers by
 /// their account IDs
-#[derive(Debug, Default, Clone, Copy, Serialize)]
+#[derive(Debug, Default, Clone, Copy, Serialize, Hash)]
 pub struct UserRequest<'a> {
     /// The base request data
     pub base: BaseRequest<'a>,

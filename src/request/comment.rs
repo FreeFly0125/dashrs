@@ -36,7 +36,7 @@ impl From<SortMode> for u8 {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Hash)]
 pub struct LevelCommentsRequest<'a> {
     /// The base request data
     pub base: BaseRequest<'a>,
@@ -132,7 +132,7 @@ impl<S, U> From<Level<'_, S, U>> for LevelCommentsRequest<'_> {
     }
 }
 
-#[derive(Debug, Clone, Copy, Serialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Serialize, PartialEq, Eq, Hash)]
 pub struct ProfileCommentsRequest<'a> {
     /// The base request data
     pub base: BaseRequest<'a>,
