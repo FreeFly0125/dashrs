@@ -4,8 +4,8 @@ mod thunk;
 
 pub use de::{error::Error as DeError, indexed::IndexedDeserializer};
 pub use ser::{error::Error as SerError, indexed::IndexedSerializer, request::RequestSerializer};
-pub use thunk::{Base64Decoded, PercentDecoded, ProcessError, Thunk};
-pub(crate) use thunk::{Internal, RefThunk, ThunkContent};
+pub use thunk::{Base64Decoded, PercentDecoded, ProcessError, Thunk, ThunkContent};
+pub(crate) use thunk::{Internal, RefThunk};
 
 use std::io::Write;
 
