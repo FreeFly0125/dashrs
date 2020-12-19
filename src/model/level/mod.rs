@@ -23,6 +23,8 @@ use crate::{
 };
 use flate2::Compression;
 use serde::de::Error;
+use crate::model::level::object::ObjectData;
+use crate::model::level::object::speed::Speed;
 
 // use flate2::read::GzDecoder;
 // use std::io::Read;
@@ -762,6 +764,56 @@ impl<'a> ThunkContent<'a> for Objects {
 
         Ok(Cow::Owned(base64::encode_config(&compressed, base64::URL_SAFE)))
     }
+}
+
+impl Objects {
+    pub fn length_in_seconds(&self) -> f32{
+        let mut portals = Vec::new();
+        let mut furthest_x = 0.0;
+
+        for object in &self.objects {
+            if let ObjectData::SpeedPortal {checked: true, speed} = object.metadata {
+                portals.push((object.x, speed))
+            }
+
+            furthest_x = f32::max(furthest_x, object.x);
+        }
+
+        portals.sort_by(|(x1, _), (x2, _)| x1.partial_cmp(x2).unwrap());
+
+        get_seconds_from_x_pos(furthest_x, self.meta.starting_speed, &portals)
+    }
+}
+
+fn get_seconds_from_x_pos(pos: f32, start_speed: Speed, portals: &[(f32, Speed)]) -> f32 {
+    let mut speed: f32 = start_speed.into();
+
+    if portals.is_empty() {
+        return pos / speed
+    }
+
+    let mut last_obj_pos = 0.0;
+    let mut total_time = 0.0;
+
+    for (x, portal_speed) in portals {
+        // distance between last portal and this one
+        let current_segment = x - last_obj_pos;
+
+        // break if we're past the position we want to calculate the position to
+        if pos <= current_segment {
+            break
+        }
+
+        // Calculate time spent in this segment and add to total time
+        total_time += current_segment / speed;
+
+        speed = (*portal_speed).into();
+
+        last_obj_pos = *x;
+    }
+
+    // add the time spent between end and last portal to total time and return
+    (pos - last_obj_pos) / speed + total_time
 }
 
 #[cfg(test)]
