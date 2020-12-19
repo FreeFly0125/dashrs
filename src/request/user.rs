@@ -5,7 +5,6 @@ use crate::{
     request::{BaseRequest, GD_21, REQUEST_BASE_URL},
 };
 use serde::Serialize;
-use std::fmt::{Display, Error, Formatter};
 
 pub const GET_USER_ENDPOINT: &str = "getGJUserInfo20";
 pub const SEARCH_USER_ENDPOINT: &str = "getGJUsers20";
@@ -36,7 +35,7 @@ impl UserRequest<'_> {
     }
 
     pub fn to_url(&self) -> String {
-        format!("{}{}?{}", REQUEST_BASE_URL, GET_USER_ENDPOINT, super::to_string(self))
+        format!("{}{}", REQUEST_BASE_URL, GET_USER_ENDPOINT)
     }
 }
 
@@ -52,9 +51,9 @@ impl From<Creator<'_>> for UserRequest<'_> {
     }
 }
 
-impl Display for UserRequest<'_> {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), Error> {
-        write!(f, "UserRequest({})", self.user)
+impl ToString for UserRequest<'_> {
+    fn to_string(&self) -> String {
+        super::to_string(self)
     }
 }
 
@@ -99,7 +98,7 @@ impl<'a> UserSearchRequest<'a> {
     }
 
     pub fn to_url(&self) -> String {
-        format!("{}{}?{}", REQUEST_BASE_URL, SEARCH_USER_ENDPOINT, super::to_string(self))
+        format!("{}{}", REQUEST_BASE_URL, SEARCH_USER_ENDPOINT)
     }
 }
 
@@ -115,8 +114,8 @@ impl<'a: 'b, 'b> From<&'b Creator<'a>> for UserSearchRequest<'b> {
     }
 }
 
-impl Display for UserSearchRequest<'_> {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), Error> {
-        write!(f, "UserSearchRequest({})", self.search_string)
+impl ToString for UserSearchRequest<'_> {
+    fn to_string(&self) -> String {
+        super::to_string(self)
     }
 }

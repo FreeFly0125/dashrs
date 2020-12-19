@@ -5,7 +5,6 @@ use crate::{
     request::{BaseRequest, GD_21, REQUEST_BASE_URL},
 };
 use serde::Serialize;
-use std::fmt::{Display, Formatter};
 
 pub const LEVEL_COMMENTS_ENDPOINT: &str = "getGJComments21.php";
 pub const PROFILE_COMMENT_ENDPOINT: &str = "getGJAccountComments20.php";
@@ -85,7 +84,7 @@ impl<'a> LevelCommentsRequest<'a> {
     const_setter!(page: u32);
 
     pub fn to_url(&self) -> String {
-        format!("{}{}?{}", REQUEST_BASE_URL, LEVEL_COMMENTS_ENDPOINT, super::to_string(self))
+        format!("{}{}", REQUEST_BASE_URL, LEVEL_COMMENTS_ENDPOINT)
     }
 
     pub const fn new(level: u64) -> Self {
@@ -114,9 +113,9 @@ impl<'a> LevelCommentsRequest<'a> {
     }
 }
 
-impl Display for LevelCommentsRequest<'_> {
-    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
-        write!(f, "LevelCommentsRequest({})", self.level_id)
+impl ToString for LevelCommentsRequest<'_> {
+    fn to_string(&self) -> String {
+        super::to_string(self)
     }
 }
 
@@ -165,7 +164,7 @@ impl<'a> ProfileCommentsRequest<'a> {
     const_setter!(account_id: u64);
 
     pub fn to_url(&self) -> String {
-        format!("{}{}?{}", REQUEST_BASE_URL, PROFILE_COMMENT_ENDPOINT, super::to_string(self))
+        format!("{}{}", REQUEST_BASE_URL, PROFILE_COMMENT_ENDPOINT)
     }
 
     pub const fn new(account: u64) -> Self {
@@ -182,9 +181,9 @@ impl<'a> ProfileCommentsRequest<'a> {
     }
 }
 
-impl Display for ProfileCommentsRequest<'_> {
-    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
-        write!(f, "AccountCommentsRequest({})", self.account_id)
+impl ToString for ProfileCommentsRequest<'_> {
+    fn to_string(&self) -> String {
+        super::to_string(self)
     }
 }
 

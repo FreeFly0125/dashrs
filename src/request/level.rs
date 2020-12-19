@@ -85,7 +85,13 @@ impl<'a> LevelRequest<'a> {
     }
 
     pub fn to_url(&self) -> String {
-        format!("{}{}?{}", REQUEST_BASE_URL, DOWNLOAD_LEVEL_ENDPOINT, super::to_string(self))
+        format!("{}{}", REQUEST_BASE_URL, DOWNLOAD_LEVEL_ENDPOINT)
+    }
+}
+
+impl ToString for LevelRequest<'_> {
+    fn to_string(&self) -> String {
+        super::to_string(self)
     }
 }
 
@@ -535,7 +541,7 @@ impl<'a> LevelsRequest<'a> {
     const_setter!(request_type: LevelRequestType);
 
     pub fn to_url(&self) -> String {
-        format!("{}{}?{}", REQUEST_BASE_URL, SEARCH_LEVEL_ENDPOINT, super::to_string(self))
+        format!("{}{}", REQUEST_BASE_URL, SEARCH_LEVEL_ENDPOINT)
     }
 
     pub fn with_base(base: BaseRequest<'a>) -> Self {
@@ -584,6 +590,12 @@ impl<'a> LevelsRequest<'a> {
     pub fn search_filters(mut self, filters: SearchFilters) -> Self {
         self.search_filters = filters;
         self
+    }
+}
+
+impl ToString for LevelsRequest<'_> {
+    fn to_string(&self) -> String {
+        super::to_string(self)
     }
 }
 
