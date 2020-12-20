@@ -68,7 +68,7 @@ mod internal {
 
     #[derive(Debug, Serialize, Deserialize, Clone, Copy)]
     pub struct InternalLevelMetadata {
-        #[serde(rename = "kA4")]
+        #[serde(rename = "kA4", default = "one")]
         starting_speed: u8,
 
         #[serde(rename = "kA13", default)]
@@ -88,6 +88,10 @@ mod internal {
 
         #[serde(rename = "kA11", default)]
         start_gravity_inverted: bool, //.. other fields
+    }
+
+    fn one() -> u8 {
+        1
     }
 }
 
