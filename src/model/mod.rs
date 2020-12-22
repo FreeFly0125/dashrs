@@ -63,7 +63,7 @@ impl Display for GameVersion {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         match self {
             GameVersion::Unknown => write!(f, "Pre 1.6"),
-            GameVersion::Version {minor: 7, major: 0} => write!(f, "1.6"),
+            GameVersion::Version { minor: 7, major: 0 } => write!(f, "1.6"),
             GameVersion::Version { minor, major } => write!(f, "{}.{}", major, minor),
         }
     }
