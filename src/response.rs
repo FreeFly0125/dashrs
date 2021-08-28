@@ -14,8 +14,7 @@ use crate::{
     },
     DeError, HasRobtopFormat,
 };
-use std::fmt::Formatter;
-use std::fmt::Display;
+use std::fmt::{Display, Formatter};
 
 // Since NoneError is not stabilized, we cannot do `impl From<NoneError> for ResponseError<'_>`, so
 // this is the next best thing

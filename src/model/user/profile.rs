@@ -1,7 +1,9 @@
 use crate::model::user::{Color, ModLevel};
 use serde::{Deserialize, Serialize};
-use std::{borrow::Cow, fmt::Display};
-use std::fmt::Formatter;
+use std::{
+    borrow::Cow,
+    fmt::{Display, Formatter},
+};
 
 #[derive(Debug, Eq, PartialEq, Clone, Serialize, Deserialize)]
 #[serde(transparent)]

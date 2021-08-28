@@ -1,7 +1,6 @@
 //! Module containing the error type for deserialization errors
 
-use std::fmt::Formatter;
-use std::fmt::Display;
+use std::fmt::{Display, Formatter};
 
 /// Errors that can occur during deserialization
 #[derive(Debug)]
