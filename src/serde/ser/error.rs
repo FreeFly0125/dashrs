@@ -1,4 +1,4 @@
-use serde::export::Formatter;
+use std::fmt::Formatter;
 use std::{fmt::Display, io};
 
 /// Errors that can occur during serialization
