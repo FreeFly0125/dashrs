@@ -321,7 +321,7 @@ impl<'a, 'de> Deserializer<'de> for &'a mut IndexedDeserializer<'de> {
         // the visitor. Because idk what we really wanna do here otherwise
         let token = self.consume_token();
 
-        warn!("Ignored token {:?}. Maybe some index is unmapped?", token);
+        trace!("Ignored token {:?}. Maybe some index is unmapped?", token);
 
         visitor.visit_none()
     }
