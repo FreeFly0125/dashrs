@@ -1,7 +1,7 @@
 //! Module containing the deserializer for robtop's indexed data format
 
 use super::error::Error;
-use log::{trace};
+use log::trace;
 use serde::{
     de,
     de::{DeserializeSeed, Visitor},
