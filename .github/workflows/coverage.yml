@@ -17,9 +17,6 @@ jobs:
     
     steps:
       - uses: actions/checkout@v2
-      - uses: codecov/codecov-action@v2
-        with:
-          config: grcov.yml
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: nightly-2021-07-31
@@ -32,6 +29,8 @@ jobs:
           RUSTFLAGS: '-Zprofile -Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off -Cpanic=abort -Zpanic_abort_tests'
           RUSTDOCFLAGS: '-Zprofile -Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off -Cpanic=abort -Zpanic_abort_tests'
       - uses: actions-rs/grcov@v0.1
+        with:
+          config: $GITHUB_WORKSPACE/grcov.yml
       - uses: codecov/codecov-action@v2
         with:
           files: ./pointercrate.lcov
