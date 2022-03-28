@@ -11,8 +11,8 @@ on:
       - master
 
 jobs:
-  check:
-    name: check
+  coverage:
+    name: coverage
     runs-on: ubuntu-latest
     
     steps:
@@ -30,7 +30,7 @@ jobs:
           RUSTDOCFLAGS: '-Zprofile -Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off -Cpanic=abort -Zpanic_abort_tests'
       - uses: actions-rs/grcov@v0.1
         with:
-          config: $GITHUB_WORKSPACE/grcov.yml
+          config: grcov.yml
       - uses: codecov/codecov-action@v2
         with:
-          files: ./pointercrate.lcov
+          files: report.lcov
