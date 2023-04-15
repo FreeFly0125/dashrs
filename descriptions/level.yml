@@ -117,9 +117,10 @@ indices:
     type: 'Option<&''src str>'
     maps_to: index_47
   - value: 4
-    type: RefThunk<'src, 'bor, Objects>
+    type: Objects
+    thunk: true
     compute: |
-      self.level_data.level_data.as_ref_thunk()
+      &*self.level_data.level_data.as_unprocessed().map_err(SerError::custom)?
   - value: 27
     type: Internal<Password>
     compute: |
@@ -155,10 +156,7 @@ special_fields:
     }
   level_data: |
     LevelData {
-      level_data: match internal.index_4 {
-        RefThunk::Unprocessed(unproc) => Thunk::Unprocessed(unproc),
-        _ => unreachable!(),
-      },
+      level_data: Thunk::Unprocessed(internal.index_4),
       password: internal.index_27.0,
       time_since_upload: Cow::Borrowed(internal.index_28),
       time_since_update: Cow::Borrowed(internal.index_29),

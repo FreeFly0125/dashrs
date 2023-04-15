@@ -40,11 +40,11 @@ fn write_preamble<W: Write>(f: &mut W) -> std::io::Result<()> {
     writeln!(f, "use crate::{{")?;
     writeln!(
         f,
-        "serde::{{DeError, HasRobtopFormat, IndexedDeserializer, IndexedSerializer, PercentDecoded, SerError, Thunk, RefThunk, \
+        "serde::{{DeError, HasRobtopFormat, IndexedDeserializer, IndexedSerializer, PercentDecoded, SerError, Thunk, \
          Base64Decoded}},"
     )?;
     writeln!(f, "}};")?;
-    writeln!(f, "use serde::{{Deserialize, Serialize}};")?;
+    writeln!(f, "use serde::{{Deserialize, Serialize, ser::Error as _}};")?;
     writeln!(f, "use std::{{borrow::{{Cow, Borrow}}, io::Write}};")?;
 
     Ok(())
@@ -69,17 +69,9 @@ impl ModelDescription {
         }
     }
 
-    fn has_any_thunks(&self) -> bool {
-        self.indices.iter().any(|idx| idx.thunk)
-    }
-
     pub fn write_internal_model<W: Write>(&self, f: &mut W) -> std::io::Result<()> {
         writeln!(f, "#[derive(Serialize, Deserialize)]")?;
-        if self.has_any_thunks() {
-            writeln!(f, "struct Internal{}<'src, 'bor> {{", self.struct_name())?;
-        } else {
-            writeln!(f, "struct Internal{}<'src> {{", self.struct_name())?;
-        }
+        writeln!(f, "struct Internal{}<'src> {{", self.struct_name())?;
 
         for index in &self.indices {
             index.write_as_field(f)?;
@@ -118,6 +110,13 @@ impl ModelDescription {
         writeln!(f, "}}")?; // end method
 
         writeln!(f, "fn write_robtop_data<W: Write>(&self, writer: W) -> Result<(), SerError> {{")?;
+
+        for index in &self.indices {
+            if let Some(ref maps_to) = index.maps_to {
+                index.generate_binding(f, maps_to)?;
+            }
+        }
+
         writeln!(f, "let internal = Internal{} {{", self.struct_name())?;
 
         for index in &self.indices {
@@ -182,9 +181,9 @@ impl Index {
 
         if self.thunk {
             if self.optional {
-                writeln!(f, "index_{}: Option<RefThunk<'src, 'bor, {}>>,", self.value, self.r#type)?;
+                writeln!(f, "index_{}: Option<&'src str>,", self.value)?;
             } else {
-                writeln!(f, "index_{}: RefThunk<'src, 'bor, {}>,", self.value, self.r#type)?;
+                writeln!(f, "index_{}: &'src str,", self.value)?;
             }
         } else {
             writeln!(f, "index_{}: {},", self.value, self.r#type)?;
@@ -200,14 +199,13 @@ impl Index {
             if self.optional {
                 write!(
                     f,
-                    "match internal.index_{} {{None => None, Some(RefThunk::Unprocessed(unproc)) => Some(Thunk::Unprocessed(unproc)), _ \
-                     => unreachable!()}}",
+                    "internal.index_{}.map(Thunk::Unprocessed)",
                     self.value
                 )?;
             } else {
                 write!(
                     f,
-                    "Thunk::Unprocessed(match internal.index_{} {{RefThunk::Unprocessed(unproc) => unproc, _ => unreachable!() }})",
+                    "Thunk::Unprocessed(internal.index_{})",
                     self.value
                 )?;
             }
@@ -229,14 +227,23 @@ impl Index {
         Ok(())
     }
 
+    pub fn generate_binding<W: Write>(&self, f: &mut W, field_name: &str) -> std::io::Result<()> {
+        // needed for lifetime reasons
+        if self.thunk && self.optional {
+            writeln!(f, "let index_{} = self.{}.as_ref().map(|t| t.as_unprocessed().map_err(SerError::custom)).transpose()?;", self.value, field_name)?;
+        }
+
+        Ok(())
+    }
+
     pub fn generate_to_robtop_conversion<W: Write>(&self, f: &mut W, field_name: &str) -> std::io::Result<()> {
         write!(f, "index_{}: ", self.value)?;
 
         if self.thunk {
             if self.optional {
-                write!(f, "self.{}.as_ref().map(|t| t.as_ref_thunk())", field_name)?;
+                write!(f, "index_{}.as_deref()", self.value)?;
             } else {
-                write!(f, "self.{}.as_ref_thunk()", field_name)?;
+                write!(f, "&*self.{}.as_unprocessed().map_err(SerError::custom)?", field_name)?;
             }
         } else {
             match &self.r#type[..] {
