@@ -21,11 +21,10 @@ use crate::{
         song::{MainSong, NewgroundsSong},
         GameVersion,
     },
-    serde::{Base64Decoded, HasRobtopFormat, Internal, ProcessError, ThunkContent},
+    serde::{Base64Decoded, HasRobtopFormat, ProcessError, ThunkContent},
     util, SerError, Thunk,
 };
 use flate2::Compression;
-use serde::de::Error;
 
 // use flate2::read::GzDecoder;
 // use std::io::Read;
@@ -364,30 +363,23 @@ impl Password {
     }
 }
 
-impl Serialize for Internal<Password> {
-    fn serialize<S>(&self, serializer: S) -> Result<<S as Serializer>::Ok, <S as Serializer>::Error>
-    where
-        S: Serializer,
-    {
-        match self.0 {
-            Password::FreeCopy => serializer.serialize_str("Aw=="),
-            Password::NoCopy => serializer.serialize_str("0"),
+impl<'a> ThunkContent<'a> for Password {
+    type Error = ProcessError;
+
+    fn from_unprocessed(unprocessed: &'a str) -> Result<Self, Self::Error> {
+        Password::from_robtop(unprocessed)
+    }
+
+    fn as_unprocessed(&self) -> Result<Cow<str>, Self::Error> {
+        match *self {
+            Password::FreeCopy => Ok(Cow::Borrowed("Aw==")),
+            Password::NoCopy => Ok(Cow::Borrowed("0")),
             Password::PasswordCopy(pw) => {
-                // serialize_bytes does the base64 encode by itself
-                serializer.serialize_bytes(&robtop_encode_level_password(pw))
+                // FIXME: its possible to avoid an allocation here by base64-encoding to a stack-buffer,
+                // and passing that stack buffer directly to a Serializer's serialize_bytes method.
+                Ok(Cow::Owned(base64::encode_config(&robtop_encode_level_password(pw), URL_SAFE)))
             },
         }
-    }
-}
-
-impl<'de> Deserialize<'de> for Internal<Password> {
-    fn deserialize<D>(deserializer: D) -> Result<Self, <D as Deserializer<'de>>::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        let raw_password_data = <&str>::deserialize(deserializer)?;
-
-        Password::from_robtop(raw_password_data).map(Internal).map_err(Error::custom)
     }
 }
 
@@ -629,7 +621,7 @@ pub struct LevelData<'a> {
     /// ## GD Internals:
     /// This value is provided at index `27`. For encoding details, see the documentation on the
     /// [`Password`] variants
-    pub password: Password,
+    pub password: Thunk<'a, Password>,
 
     /// The time passed since the `Level` was uploaded, as a string. Note that these strings are
     /// very imprecise, as they are only of the form "x months ago", or similar.

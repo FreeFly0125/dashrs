@@ -5,7 +5,7 @@ use crate::{
         song::MainSong,
         GameVersion,
     },
-    serde::{Base64Decoded, IndexedDeserializer, IndexedSerializer, Internal},
+    serde::{Base64Decoded, IndexedDeserializer, IndexedSerializer},
     DeError, HasRobtopFormat, SerError, Thunk,
 };
 use serde::{Deserialize, Serialize};

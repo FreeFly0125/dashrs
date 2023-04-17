@@ -122,9 +122,10 @@ indices:
     compute: |
       &*self.level_data.level_data.as_unprocessed().map_err(SerError::custom)?
   - value: 27
-    type: Internal<Password>
+    type: Password
+    thunk: true
     compute: |
-      Internal(self.level_data.password)
+      &*self.level_data.password.as_unprocessed().map_err(SerError::custom)?
   - value: 28
     type: '&''src str'
     compute: |
@@ -157,7 +158,7 @@ special_fields:
   level_data: |
     LevelData {
       level_data: Thunk::Unprocessed(internal.index_4),
-      password: internal.index_27.0,
+      password: Thunk::Unprocessed(internal.index_27),
       time_since_upload: Cow::Borrowed(internal.index_28),
       time_since_update: Cow::Borrowed(internal.index_29),
       index_36: internal.index_36.map(Cow::Borrowed)

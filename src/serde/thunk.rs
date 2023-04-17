@@ -99,14 +99,6 @@ pub trait ThunkContent<'a>: Sized {
     fn as_unprocessed(&self) -> Result<Cow<str>, Self::Error>;
 }
 
-// effectively pub(crate) since it's not reexported in lib.rs
-/// Marker type used to differentiate how [`Thunk`]s should serialize.
-///
-/// A `Internal<Thunk<C>>` should serialize its contents to RobTop's data format, while a `Thunk` in
-/// general should serialize to a sane format.
-#[derive(Debug)]
-pub struct Internal<I>(pub(crate) I);
-
 impl<'a, C: ThunkContent<'a>> Thunk<'a, C> {
     /// If this is a [`Thunk::Unprocessed`] variant, calls [`ThunkContent::from_unprocessed`] and
     /// returns [`Thunk::Processed`]. Simply returns `self` if this is a [`Thunk::Processed`]

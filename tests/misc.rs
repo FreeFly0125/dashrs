@@ -50,7 +50,7 @@ const TIME_PRESSURE: Level = Level {
     index_47: None,
     level_data: LevelData {
         level_data: Thunk::Unprocessed("REMOVED"),
-        password: Password::PasswordCopy(3101),
+        password: Thunk::Processed(Password::PasswordCopy(3101)),
         time_since_upload: Cow::Borrowed("5 years"),
         time_since_update: Cow::Borrowed("5 years"),
         index_36: None,
@@ -64,6 +64,8 @@ impl<S, U> helper::ThunkProcessor for Level<'_, LevelData<'_>, S, U> {
         }
         let objects = self.level_data.level_data.process();
         assert!(objects.is_ok(), "{:?}", objects.unwrap_err());
+        let pw = self.level_data.password.process();
+        assert!(pw.is_ok(), "{:?}", pw.unwrap_err());
     }
 }
 
