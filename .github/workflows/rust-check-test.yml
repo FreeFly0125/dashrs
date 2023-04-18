@@ -1,9 +1,11 @@
-name: Validate PRs
+name: Validate build
 
 # Checks if code inside pull requests against 'master' compiles and passes all tests
 # Taken from: https://github.com/actions-rs/meta/blob/master/recipes/quickstart.md
 
 on: 
+  push:
+    branches: master
   pull_request:
     branches: master
 
