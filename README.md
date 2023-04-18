@@ -1,6 +1,6 @@
 # `dash-rs` - Efficient processing of Geometry Dash data
 
-![build](https://github.com/stadust/dash-rs/actions/workflows/check.yml/badge.svg)
+![build](https://github.com/stadust/dash-rs/actions/workflows/rust-build.yml/badge.svg)
 [![codecov](https://codecov.io/gh/stadust/dash-rs/branch/master/graph/badge.svg?token=2EA56CDN6T)](https://codecov.io/gh/stadust/dash-rs)
 
 `dash-rs` (spoken 'dashers') is an experimental library related to modelling, and more imporant _processing_ all data formats related to RobTop's 2013 game "Geometry Dash". The long-term goal is to have this crate replace `gdcf_model`, `gdcf_parse` and some parts of `gdrs` in GDCF.
