@@ -6,7 +6,7 @@ use dash_rs::{
         song::MainSong,
         GameVersion,
     },
-    Base64Decoded, Thunk,
+    Thunk,
 };
 
 #[macro_use]
@@ -35,9 +35,9 @@ const DUELO_MAETSTRO_DATA: &str = "1:23298409:2:Duelo Maestro:5:8:6:1295392:8:10
 const DARK_REALM: Level<()> = Level {
     level_id: 11774780,
     name: Cow::Borrowed("Dark Realm"),
-    description: Some(Thunk::Processed(Base64Decoded(Cow::Borrowed(
+    description: Some(Thunk::Processed(Cow::Borrowed(
         "My best level yet. Video on my YouTube. Have fun in this fast-paced DEMON >:) v2 Fixed some things",
-    )))),
+    ))),
     version: 2,
     creator: 2073761,
     difficulty: LevelRating::Demon(DemonRating::Hard),
@@ -64,7 +64,7 @@ const DARK_REALM: Level<()> = Level {
 const DEMON_WORLD: Level<()> = Level {
     level_id: 72540,
     name: Cow::Borrowed("demon world"),
-    description: Some(Thunk::Processed(Base64Decoded(Cow::Borrowed("happy new year!!")))),
+    description: Some(Thunk::Processed(Cow::Borrowed("happy new year!!"))),
     version: 7,
     creator: 37573,
     difficulty: LevelRating::Demon(DemonRating::Hard),
@@ -95,9 +95,9 @@ const DEMON_WORLD: Level<()> = Level {
 const FANTASY: Level<()> = Level {
     level_id: 63355989,
     name: Cow::Borrowed("Fantasy"),
-    description: Some(Thunk::Processed(Base64Decoded(Cow::Borrowed(
+    description: Some(Thunk::Processed(Cow::Borrowed(
         "Collab with Brindikz, thank you for this level uwu, ENJOY!! ",
-    )))),
+    ))),
     version: 2,
     creator: 15557115,
     difficulty: LevelRating::Harder,
@@ -124,10 +124,10 @@ const FANTASY: Level<()> = Level {
 const DUELO_MAESTRO: Level<()> = Level {
     level_id: 23298409,
     name: Cow::Borrowed("Duelo Maestro"),
-    description: Some(Thunk::Processed(Base64Decoded(Cow::Borrowed(
+    description: Some(Thunk::Processed(Cow::Borrowed(
         "El duelo de tus dos manos o de dos verdaderos maestros. A veces puedes morir inexplicablemente en la primera bola, porfa \
          reinicien el nivel.",
-    )))),
+    ))),
     version: 8,
     creator: 1295392,
     difficulty: LevelRating::Demon(DemonRating::Insane),

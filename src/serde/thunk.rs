@@ -156,42 +156,21 @@ pub const ROBTOP_SET: &AsciiSet = &CONTROLS
     .add(b'?')
     .add(b'~');
 
-#[derive(Debug, Eq, Serialize, Deserialize, Clone)]
-#[serde(transparent)]
-pub struct PercentDecoded<'a>(#[serde(borrow)] pub Cow<'a, str>);
-
-impl<'a, 'b> PartialEq<PercentDecoded<'b>> for PercentDecoded<'a> {
-    fn eq(&self, other: &PercentDecoded<'b>) -> bool {
-        self.0 == other.0
-    }
-}
-
-impl<'a, 'b> PartialEq<Base64Decoded<'b>> for Base64Decoded<'a> {
-    fn eq(&self, other: &Base64Decoded<'b>) -> bool {
-        self.0 == other.0
-    }
-}
-
-#[derive(Debug, Eq, Serialize, Deserialize, Clone)]
-#[serde(transparent)]
-pub struct Base64Decoded<'a>(pub Cow<'a, str>);
-
 #[derive(Debug, Eq, PartialEq, Serialize, Deserialize, Clone, Copy)]
 pub struct PercentDecoder;
 
 impl ThunkProcessor for PercentDecoder {
     type Error = ProcessError;
-    type Output<'a> = PercentDecoded<'a>;
+    type Output<'a> = Cow<'a, str>;
 
     fn from_unprocessed<'a>(unprocessed: &'a str) -> Result<Self::Output<'a>, Self::Error> {
         percent_decode_str(unprocessed)
             .decode_utf8()
-            .map(PercentDecoded)
             .map_err(ProcessError::Utf8)
     }
 
     fn as_unprocessed<'a, 'b>(processed: &'b Self::Output<'a>) -> Result<Cow<'b, str>, Self::Error> {
-        Ok(utf8_percent_encode(processed.0.as_ref(), ROBTOP_SET).into())
+        Ok(utf8_percent_encode(processed.as_ref(), ROBTOP_SET).into())
     }
 }
 
@@ -201,16 +180,16 @@ pub struct Base64Decoder;
 
 impl ThunkProcessor for Base64Decoder {
     type Error = ProcessError;
-    type Output<'a> = Base64Decoded<'a>;
+    type Output<'a> = Cow<'a, str>;
 
     fn from_unprocessed<'a>(unprocessed: &'a str) -> Result<Self::Output<'a>, Self::Error> {
         let vec = base64::decode_config(unprocessed, URL_SAFE).map_err(ProcessError::Base64)?;
         let string = String::from_utf8(vec).map_err(ProcessError::FromUtf8)?;
 
-        Ok(Base64Decoded(Cow::Owned(string)))
+        Ok(Cow::Owned(string))
     }
 
     fn as_unprocessed<'a, 'b>(processed: &'b Self::Output<'a>) -> Result<Cow<'b, str>, Self::Error> {
-        Ok(Cow::Owned(base64::encode_config(&*processed.0, URL_SAFE)))
+        Ok(Cow::Owned(base64::encode_config(&**processed, URL_SAFE)))
     }
 }

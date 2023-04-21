@@ -4,7 +4,7 @@ use dash_rs::{model::{
         profile::ProfileComment,
     },
     user::{Color, IconType, ModLevel},
-}, Base64Decoded, Thunk};
+}, Thunk};
 use std::borrow::Cow;
 
 #[macro_use]
@@ -20,9 +20,9 @@ const COMMENT_USER_DATA: &str = "1~Pauze~9~58~10~18~11~16~14~0~15~2~16~1705254";
 
 const LEVEL_COMMENT1: LevelComment = LevelComment {
     user: None,
-    content: Some(Thunk::Processed(Base64Decoded(Cow::Borrowed(
+    content: Some(Thunk::Processed(Cow::Borrowed(
         "Special thanks to Hado, Cinci, Synactive, Cool, Prism, Subwoofer, and Hado for playtesting.",
-    )))),
+    ))),
     user_id: 7226087,
     likes: 104,
     comment_id: 258976,
@@ -35,7 +35,7 @@ const LEVEL_COMMENT1: LevelComment = LevelComment {
 
 const LEVEL_COMMENT2: LevelComment = LevelComment {
     user: None,
-    content: Some(Thunk::Processed(Base64Decoded(Cow::Borrowed("Guru.")))),
+    content: Some(Thunk::Processed(Cow::Borrowed("Guru."))),
     user_id: 2723387,
     likes: 63,
     comment_id: 260007,
@@ -48,9 +48,9 @@ const LEVEL_COMMENT2: LevelComment = LevelComment {
 
 const LEVEL_COMMENT3: LevelComment = LevelComment {
     user: None,
-    content: Some(Thunk::Processed(Base64Decoded(Cow::Borrowed(
+    content: Some(Thunk::Processed(Cow::Borrowed(
         "Lets make august 10th Pauze's international day",
-    )))),
+    ))),
     user_id: 7178197,
     likes: 58,
     comment_id: 259333,
@@ -105,9 +105,9 @@ const PROFILE_COMMENT_DATA: &str =
     "2~QSB3aW5kb3cgdG8gdGhlIHBhc3QsIGEgZ2xpbXBzZSBvZiB0aGUgZnV0dXJlLCBBbiBPZGUgdG8gVGltZS4=~4~432~9~6 days~6~1922667";
 
 const PROFILE_COMMENT: ProfileComment = ProfileComment {
-    content: Some(Thunk::Processed(Base64Decoded(Cow::Borrowed(
+    content: Some(Thunk::Processed(Cow::Borrowed(
         "A window to the past, a glimpse of the future, An Ode to Time.",
-    )))),
+    ))),
     likes: 432,
     comment_id: 1922667,
     time_since_post: Cow::Borrowed("6 days"),

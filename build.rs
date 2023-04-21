@@ -40,8 +40,7 @@ fn write_preamble<W: Write>(f: &mut W) -> std::io::Result<()> {
     writeln!(f, "use crate::{{")?;
     writeln!(
         f,
-        "serde::{{DeError, HasRobtopFormat, IndexedDeserializer, IndexedSerializer, PercentDecoded, SerError, Thunk, \
-         Base64Decoded}},"
+        "serde::{{DeError, HasRobtopFormat, IndexedDeserializer, IndexedSerializer, SerError, Thunk}},"
     )?;
     writeln!(f, "}};")?;
     writeln!(f, "use serde::{{Deserialize, Serialize, ser::Error as _}};")?;

@@ -1,4 +1,4 @@
-use dash_rs::{model::song::NewgroundsSong, PercentDecoded, Thunk};
+use dash_rs::{model::song::NewgroundsSong, Thunk};
 use std::borrow::Cow;
 
 #[macro_use]
@@ -17,9 +17,9 @@ const CREO_DUNE: NewgroundsSong<'static> = NewgroundsSong {
     index_6: None,
     index_7: Some(Cow::Borrowed("UCsCWA3Y3JppL6feQiMRgm6Q")),
     index_8: Cow::Borrowed("1"),
-    link: Thunk::Processed(PercentDecoded(Cow::Borrowed(
+    link: Thunk::Processed(Cow::Borrowed(
         "https://audio.ngfiles.com/771000/771277_Creo---Dune.mp3?f1508708604",
-    ))),
+    )),
 };
 
 impl<'a> helper::ThunkProcessor for NewgroundsSong<'a> {

@@ -5,7 +5,7 @@ use dash_rs::{
         song::{MainSong, NewgroundsSong},
         GameVersion,
     },
-    Base64Decoded, Thunk,
+    Thunk,
 };
 use std::borrow::Cow;
 
@@ -21,9 +21,9 @@ const CREATOR_REGISTERED_DATA_TOO_MANY_FIELDS: &str = "4170784:Serponge:119741:3
 const TIME_PRESSURE: Level = Level {
     level_id: 897837,
     name: Cow::Borrowed("time pressure"),
-    description: Some(Thunk::Processed(Base64Decoded(Cow::Borrowed(
+    description: Some(Thunk::Processed(Cow::Borrowed(
         "please rate and like  8-9 stars mabye?",
-    )))),
+    ))),
     version: 2,
     creator: 842519,
     difficulty: LevelRating::Demon(DemonRating::Easy),

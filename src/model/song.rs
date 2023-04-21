@@ -1,4 +1,4 @@
-use crate::serde::{PercentDecoded, PercentDecoder, ProcessError, Thunk};
+use crate::serde::{PercentDecoder, ProcessError, Thunk};
 use serde::{Deserialize, Serialize};
 use std::{
     borrow::Cow,
@@ -81,7 +81,7 @@ impl<'a> NewgroundsSong<'a> {
             index_6: self.index_6.map(|cow| Cow::Owned(cow.into_owned())),
             index_7: self.index_7.map(|cow| Cow::Owned(cow.into_owned())),
             index_8: Cow::Owned(self.index_8.into_owned()),
-            link: Thunk::Processed(PercentDecoded(Cow::Owned(self.link.into_processed()?.0.into_owned()))),
+            link: Thunk::Processed(Cow::Owned(self.link.into_processed()?.into_owned())),
         })
     }
 }
