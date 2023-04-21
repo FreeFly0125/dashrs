@@ -198,13 +198,13 @@ impl Index {
             if self.optional {
                 write!(
                     f,
-                    "internal.index_{}.map(Thunk::Unprocessed)",
+                    "internal.index_{}.map(Cow::Borrowed).map(Thunk::Unprocessed)",
                     self.value
                 )?;
             } else {
                 write!(
                     f,
-                    "Thunk::Unprocessed(internal.index_{})",
+                    "Thunk::Unprocessed(Cow::Borrowed(internal.index_{}))",
                     self.value
                 )?;
             }

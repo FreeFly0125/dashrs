@@ -1,13 +1,7 @@
 use base64::{DecodeError, URL_SAFE};
 use percent_encoding::{percent_decode_str, utf8_percent_encode, AsciiSet, CONTROLS};
 use serde::{ser::Error as _, Deserialize, Serialize, Serializer};
-use std::{
-    borrow::Cow,
-    fmt::{Display, Formatter},
-    num::ParseIntError,
-    str::Utf8Error,
-    string::FromUtf8Error,
-};
+use std::{borrow::Cow, fmt::{Display, Formatter}, mem, num::ParseIntError, str::Utf8Error, string::FromUtf8Error};
 
 /// Enum modelling the different errors that can occur during processing of a [`Thunk`]
 ///
@@ -63,7 +57,7 @@ impl std::error::Error for ProcessError {}
 #[serde(untagged)]
 pub enum Thunk<'a, C: ThunkProcessor> {
     #[serde(skip)]
-    Unprocessed(&'a str),
+    Unprocessed(Cow<'a, str>),
     Processed(C::Output<'a>)
 }
 
@@ -83,14 +77,14 @@ impl<'a, 'b, P: ThunkProcessor> PartialEq<Thunk<'b, P>> for Thunk<'a, P>
 
 impl<'a, C: ThunkProcessor> Serialize for Thunk<'a, C>
 where
-    C::Output<'a>: Serialize
+    for<'b> C::Output<'b>: Serialize
 {
     fn serialize<S>(&self, serializer: S) -> Result<<S as Serializer>::Ok, <S as Serializer>::Error>
         where
             S: Serializer,
     {
         match self {
-            Thunk::Unprocessed(unprocessed) => C::from_unprocessed(unprocessed).map_err(S::Error::custom)?.serialize(serializer),
+            Thunk::Unprocessed(unprocessed) => C::from_unprocessed(Cow::Borrowed(&*unprocessed)).map_err(S::Error::custom)?.serialize(serializer),
             Thunk::Processed(processed) => processed.serialize(serializer),
         }
     }
@@ -108,7 +102,7 @@ pub trait ThunkProcessor {
     ///
     /// This function is *not* called automatically during deserialization from a RobTop data
     /// format.
-    fn from_unprocessed<'a>(unprocessed: &'a str) -> Result<Self::Output<'a>, Self::Error>;
+    fn from_unprocessed<'a>(unprocessed: Cow<'a, str>) -> Result<Self::Output<'a>, Self::Error>;
 
     /// Takes some processed thunk value and converts it into RobTop-representation
     fn as_unprocessed<'a, 'b>(processed: &'b Self::Output<'a>) -> Result<Cow<'b, str>, Self::Error>;
@@ -120,7 +114,7 @@ impl<'a, C: ThunkProcessor> Thunk<'a, C> {
     /// variant
     pub fn process(&mut self) -> Result<&C::Output<'a>, C::Error> {
         if let Thunk::Unprocessed(raw_data) = self {
-            *self = Thunk::Processed(C::from_unprocessed(raw_data)?)
+            *self = Thunk::Processed(C::from_unprocessed(mem::take(raw_data))?)
         }
 
         match self {
@@ -131,7 +125,7 @@ impl<'a, C: ThunkProcessor> Thunk<'a, C> {
 
     pub fn as_unprocessed(&self) -> Result<Cow<str>, C::Error> {
         match self {
-            Thunk::Unprocessed(unprocessed) => Ok(Cow::Borrowed(*unprocessed)),
+            Thunk::Unprocessed(unprocessed) => Ok(Cow::Borrowed(&*unprocessed)),
             Thunk::Processed(content) => C::as_unprocessed(content)
         }
     }
@@ -163,10 +157,19 @@ impl ThunkProcessor for PercentDecoder {
     type Error = ProcessError;
     type Output<'a> = Cow<'a, str>;
 
-    fn from_unprocessed<'a>(unprocessed: &'a str) -> Result<Self::Output<'a>, Self::Error> {
-        percent_decode_str(unprocessed)
-            .decode_utf8()
-            .map_err(ProcessError::Utf8)
+    fn from_unprocessed<'a>(unprocessed: Cow<'a, str>) -> Result<Self::Output<'a>, Self::Error> {
+        match unprocessed {
+            Cow::Borrowed(unprocessed) => percent_decode_str(unprocessed)
+                .decode_utf8()
+                .map_err(ProcessError::Utf8),
+            Cow::Owned(unprocessed) => match percent_decode_str(&unprocessed)
+                .decode_utf8()
+                .map_err(ProcessError::Utf8)? {
+                Cow::Owned(decoded) => Ok(Cow::Owned(decoded)),
+                _ => Ok(Cow::Owned(unprocessed)),
+            }
+        }
+
     }
 
     fn as_unprocessed<'a, 'b>(processed: &'b Self::Output<'a>) -> Result<Cow<'b, str>, Self::Error> {
@@ -182,8 +185,8 @@ impl ThunkProcessor for Base64Decoder {
     type Error = ProcessError;
     type Output<'a> = Cow<'a, str>;
 
-    fn from_unprocessed<'a>(unprocessed: &'a str) -> Result<Self::Output<'a>, Self::Error> {
-        let vec = base64::decode_config(unprocessed, URL_SAFE).map_err(ProcessError::Base64)?;
+    fn from_unprocessed<'a>(unprocessed: Cow<'a, str>) -> Result<Self::Output<'a>, Self::Error> {
+        let vec = base64::decode_config(&*unprocessed, URL_SAFE).map_err(ProcessError::Base64)?;
         let string = String::from_utf8(vec).map_err(ProcessError::FromUtf8)?;
 
         Ok(Cow::Owned(string))

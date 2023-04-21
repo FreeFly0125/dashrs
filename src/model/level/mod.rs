@@ -369,8 +369,8 @@ impl ThunkProcessor for Password {
     type Error = ProcessError;
     type Output<'a> = Password;
 
-    fn from_unprocessed<'a>(unprocessed: &'a str) -> Result<Self, Self::Error> {
-        Password::from_robtop(unprocessed)
+    fn from_unprocessed<'a>(unprocessed: Cow<'a, str>) -> Result<Self, Self::Error> {
+        Password::from_robtop(&*unprocessed)
     }
 
     fn as_unprocessed<'a, 'b>(processed: &'b Self::Output<'a>) -> Result<Cow<'b, str>, Self::Error> {
@@ -693,10 +693,10 @@ impl ThunkProcessor for Objects {
     type Error = LevelProcessError;
     type Output<'a> = Objects;
 
-    fn from_unprocessed(unprocessed: &str) -> Result<Self, LevelProcessError> {
+    fn from_unprocessed(unprocessed: Cow<str>) -> Result<Self, LevelProcessError> {
         // Doing the entire base64 in one go is actually faster than using base64::read::DecoderReader and
         // having the two readers go back and forth.
-        let decoded = base64::decode_config(unprocessed, base64::URL_SAFE).map_err(LevelProcessError::Base64)?;
+        let decoded = base64::decode_config(&*unprocessed, base64::URL_SAFE).map_err(LevelProcessError::Base64)?;
 
         // Here's the deal: Robtop decompresses all levels by calling the zlib function 'inflateInit2_' with
         // the second argument set to 47. This basically tells zlib "this data might be compressed using

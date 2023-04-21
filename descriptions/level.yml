@@ -157,8 +157,8 @@ special_fields:
     }
   level_data: |
     LevelData {
-      level_data: Thunk::Unprocessed(internal.index_4),
-      password: Thunk::Unprocessed(internal.index_27),
+      level_data: Thunk::Unprocessed(Cow::Borrowed(internal.index_4)),
+      password: Thunk::Unprocessed(Cow::Borrowed(internal.index_27)),
       time_since_upload: Cow::Borrowed(internal.index_28),
       time_since_update: Cow::Borrowed(internal.index_29),
       index_36: internal.index_36.map(Cow::Borrowed)

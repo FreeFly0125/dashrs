@@ -49,7 +49,7 @@ const TIME_PRESSURE: Level = Level {
     index_46: None,
     index_47: None,
     level_data: LevelData {
-        level_data: Thunk::Unprocessed("REMOVED"),
+        level_data: Thunk::Unprocessed(Cow::Borrowed("REMOVED")),
         password: Thunk::Processed(Password::PasswordCopy(3101)),
         time_since_upload: Cow::Borrowed("5 years"),
         time_since_update: Cow::Borrowed("5 years"),
@@ -98,7 +98,7 @@ fn deserialize_level2() {
 
     let mut level = helper::load_processed::<Level>(include_str!("data/897837_time_pressure_gjdownload_response"));
 
-    level.level_data.level_data = Thunk::Unprocessed("REMOVED");
+    level.level_data.level_data = Thunk::Unprocessed(Cow::Borrowed("REMOVED"));
 
     assert_eq!(level, TIME_PRESSURE);
 }
