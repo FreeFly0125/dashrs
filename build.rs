@@ -229,9 +229,11 @@ impl Index {
 
     pub fn generate_binding<W: Write>(&self, f: &mut W, field_name: &str) -> std::io::Result<()> {
         // needed for lifetime reasons
-        if self.thunk && self.optional {
+        if self.thunk { if self.optional {
             writeln!(f, "let index_{} = self.{}.as_ref().map(|t| t.as_unprocessed().map_err(SerError::custom)).transpose()?;", self.value, field_name)?;
-        }
+        }else {
+            writeln!(f, "let index_{} = &*self.{}.as_unprocessed().map_err(SerError::custom)?;", self.value, field_name)?;
+        }}
 
         Ok(())
     }
@@ -243,7 +245,7 @@ impl Index {
             if self.optional {
                 write!(f, "index_{}.as_deref()", self.value)?;
             } else {
-                write!(f, "&*self.{}.as_unprocessed().map_err(SerError::custom)?", field_name)?;
+                write!(f, "index_{}", self.value)?;
             }
         } else {
             match &self.r#type[..] {

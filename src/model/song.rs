@@ -1,9 +1,10 @@
-use crate::serde::{PercentDecoded, ProcessError, Thunk};
+use crate::serde::{PercentDecoded, PercentDecoder, ProcessError, Thunk};
 use serde::{Deserialize, Serialize};
 use std::{
     borrow::Cow,
     fmt::{Display, Formatter},
 };
+use variant_partial_eq::VariantPartialEq;
 
 mod internal {
     use crate::model::song::NewgroundsSong;
@@ -19,7 +20,7 @@ mod internal {
 ///
 /// ### Unused indices:
 /// The following indices aren't used by the Geometry Dash servers: `9`
-#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, VariantPartialEq, Serialize, Deserialize, Clone)]
 pub struct NewgroundsSong<'a> {
     /// The newgrounds id of this [`NewgroundsSong`]
     ///
@@ -66,7 +67,7 @@ pub struct NewgroundsSong<'a> {
     /// ## GD Internals
     /// This value is provided at index `10`, and is percent encoded.
     #[serde(borrow)]
-    pub link: Thunk<'a, PercentDecoded<'a>>,
+    pub link: Thunk<'a, PercentDecoder>,
 }
 
 impl<'a> NewgroundsSong<'a> {

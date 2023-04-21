@@ -6,7 +6,7 @@ use crate::{
         GameVersion,
     },
     serde::{Base64Decoded, IndexedDeserializer, IndexedSerializer},
-    DeError, HasRobtopFormat, SerError, Thunk,
+    DeError, HasRobtopFormat, SerError,
 };
 use serde::{Deserialize, Serialize};
 use std::{

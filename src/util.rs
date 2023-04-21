@@ -18,6 +18,16 @@ where
     encoded.iter_mut().zip(key.as_ref().iter().cycle()).for_each(|(d, k)| *d ^= k);
 }
 
+pub fn option_variant_eq<A, B>(a: &Option<A>, b: &Option<B>) -> bool
+    where A: PartialEq<B>
+{
+    match (a, b) {
+        (Some(a), Some(b)) => a == b,
+        (None, None) => true,
+        _ => false
+    }
+}
+
 pub(crate) mod default_to_none {
     use serde::{Deserialize, Deserializer, Serialize, Serializer};
 

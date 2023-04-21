@@ -6,6 +6,7 @@ use std::{
     fmt::{Display, Formatter},
     io::Read,
 };
+use variant_partial_eq::VariantPartialEq;
 
 use base64::URL_SAFE;
 use flate2::read::{GzDecoder, GzEncoder, ZlibDecoder};
@@ -21,10 +22,11 @@ use crate::{
         song::{MainSong, NewgroundsSong},
         GameVersion,
     },
-    serde::{Base64Decoded, HasRobtopFormat, ProcessError, ThunkContent},
-    util, SerError, Thunk,
+    serde::{HasRobtopFormat, ProcessError},
+    util, SerError
 };
 use flate2::Compression;
+use crate::serde::{Base64Decoder, Thunk, ThunkProcessor};
 
 // use flate2::read::GzDecoder;
 // use std::io::Read;
@@ -363,15 +365,16 @@ impl Password {
     }
 }
 
-impl<'a> ThunkContent<'a> for Password {
+impl ThunkProcessor for Password {
     type Error = ProcessError;
+    type Output<'a> = Password;
 
-    fn from_unprocessed(unprocessed: &'a str) -> Result<Self, Self::Error> {
+    fn from_unprocessed<'a>(unprocessed: &'a str) -> Result<Self, Self::Error> {
         Password::from_robtop(unprocessed)
     }
 
-    fn as_unprocessed(&self) -> Result<Cow<str>, Self::Error> {
-        match *self {
+    fn as_unprocessed<'a, 'b>(processed: &'b Self::Output<'a>) -> Result<Cow<'b, str>, Self::Error> {
+        match *processed {
             Password::FreeCopy => Ok(Cow::Borrowed("Aw==")),
             Password::NoCopy => Ok(Cow::Borrowed("0")),
             Password::PasswordCopy(pw) => {
@@ -435,7 +438,7 @@ pub type ListedLevel<'a> = Level<'a, (), Option<NewgroundsSong<'a>>, Option<Crea
 /// The following indices aren't used by the Geometry Dash servers: `11`, `16`,
 /// `17`, `20`, `21`, `22`, `23`, `24`, `26`, `31`, `32`, `33`, `34`, `40`,
 /// `41`, `44`
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, VariantPartialEq, Serialize, Deserialize)]
 pub struct Level<'a, Data = LevelData<'a>, Song = Option<u64>, User = u64> {
     /// The level's unique level id
     ///
@@ -455,7 +458,8 @@ pub struct Level<'a, Data = LevelData<'a>, Song = Option<u64>, User = u64> {
     ///
     /// ## GD Internals:
     /// This value is provided at index `3` and encoded using urlsafe base 64.
-    pub description: Option<Thunk<'a, Base64Decoded<'a>>>,
+    #[variant_compare = "crate::util::option_variant_eq"]
+    pub description: Option<Thunk<'a, Base64Decoder>>,
 
     /// The [`Level`]'s version. The version get incremented every time
     /// the level is updated, and the initial version is always version 1.
@@ -685,10 +689,11 @@ impl Display for LevelProcessError {
 
 impl<'a> std::error::Error for LevelProcessError {}
 
-impl<'a> ThunkContent<'a> for Objects {
+impl ThunkProcessor for Objects {
     type Error = LevelProcessError;
+    type Output<'a> = Objects;
 
-    fn from_unprocessed(unprocessed: &'a str) -> Result<Self, LevelProcessError> {
+    fn from_unprocessed(unprocessed: &str) -> Result<Self, LevelProcessError> {
         // Doing the entire base64 in one go is actually faster than using base64::read::DecoderReader and
         // having the two readers go back and forth.
         let decoded = base64::decode_config(unprocessed, base64::URL_SAFE).map_err(LevelProcessError::Base64)?;
@@ -734,14 +739,14 @@ impl<'a> ThunkContent<'a> for Objects {
             .map_err(|err| LevelProcessError::Deserialize(err.to_string()))
     }
 
-    fn as_unprocessed(&self) -> Result<Cow<str>, LevelProcessError> {
+    fn as_unprocessed(processed: &Objects) -> Result<Cow<str>, LevelProcessError> {
         let mut bytes = Vec::new();
 
-        self.meta.write_robtop_data(&mut bytes).map_err(LevelProcessError::Serialize)?;
+        processed.meta.write_robtop_data(&mut bytes).map_err(LevelProcessError::Serialize)?;
 
         bytes.push(b';');
 
-        for object in &self.objects {
+        for object in &processed.objects {
             object.write_robtop_data(&mut bytes).map_err(LevelProcessError::Serialize)?;
             bytes.push(b';');
         }

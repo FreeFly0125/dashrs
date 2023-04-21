@@ -51,6 +51,7 @@ macro_rules! save_load_roundtrip {
         #[test]
         pub fn $name() {
             use helper::*;
+            use dash_rs::HasRobtopFormat;
 
             let _ = env_logger::builder().is_test(true).try_init();
 

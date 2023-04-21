@@ -59,21 +59,35 @@ impl std::error::Error for ProcessError {}
 /// The required further processing should happen in the [`ThunkContent`] implementation, which is
 /// invoked by calling [`Thunk::process`]. Think of it as [`Cow`] with extra steps and potential new
 /// allocations instead of cloning.
-#[derive(Debug, Eq, PartialEq, Clone, Deserialize)]
+#[derive(Debug, Eq, Clone, Deserialize)]
 #[serde(untagged)]
-pub enum Thunk<'a, C: ThunkContent<'a>> {
-    /// Unprocessed value
+pub enum Thunk<'a, C: ThunkProcessor> {
     #[serde(skip)]
     Unprocessed(&'a str),
-
-    /// Processed value
-    Processed(C),
+    Processed(C::Output<'a>)
 }
 
-impl<'a, C: ThunkContent<'a> + Serialize> Serialize for Thunk<'a, C> {
-    fn serialize<S>(&self, serializer: S) -> Result<<S as Serializer>::Ok, <S as Serializer>::Error>
+
+impl<'a, 'b, P: ThunkProcessor> PartialEq<Thunk<'b, P>> for Thunk<'a, P>
     where
-        S: Serializer,
+        P::Output<'a>: PartialEq<P::Output<'b>>
+{
+    fn eq(&self, other: &Thunk<'b, P>) -> bool {
+        match (self, other) {
+            (Thunk::Processed(o1), Thunk::Processed(o2)) => o1 == o2,
+            (Thunk::Unprocessed(s1), Thunk::Unprocessed(s2)) => s1 == s2,
+            _ => false
+        }
+    }
+}
+
+impl<'a, C: ThunkProcessor> Serialize for Thunk<'a, C>
+where
+    C::Output<'a>: Serialize
+{
+    fn serialize<S>(&self, serializer: S) -> Result<<S as Serializer>::Ok, <S as Serializer>::Error>
+        where
+            S: Serializer,
     {
         match self {
             Thunk::Unprocessed(unprocessed) => C::from_unprocessed(unprocessed).map_err(S::Error::custom)?.serialize(serializer),
@@ -82,28 +96,29 @@ impl<'a, C: ThunkContent<'a> + Serialize> Serialize for Thunk<'a, C> {
     }
 }
 
-/// Trait structs which are used in the [`Thunk::Processed`] variant have to implement.
+/// Trait describing how thunks should process their data
 ///
 /// This trait provides the means to translate from and into RobTop's representation for thunked
 /// data, while not being used in the (de)serialization into any other data format.
-pub trait ThunkContent<'a>: Sized {
+pub trait ThunkProcessor {
     type Error: std::error::Error;
+    type Output<'a>;
 
     /// Takes some data from the [`Thunk::Unprocessed`] variant and processes it
     ///
     /// This function is *not* called automatically during deserialization from a RobTop data
     /// format.
-    fn from_unprocessed(unprocessed: &'a str) -> Result<Self, Self::Error>;
+    fn from_unprocessed<'a>(unprocessed: &'a str) -> Result<Self::Output<'a>, Self::Error>;
 
     /// Takes some processed thunk value and converts it into RobTop-representation
-    fn as_unprocessed(&self) -> Result<Cow<str>, Self::Error>;
+    fn as_unprocessed<'a, 'b>(processed: &'b Self::Output<'a>) -> Result<Cow<'b, str>, Self::Error>;
 }
 
-impl<'a, C: ThunkContent<'a>> Thunk<'a, C> {
+impl<'a, C: ThunkProcessor> Thunk<'a, C> {
     /// If this is a [`Thunk::Unprocessed`] variant, calls [`ThunkContent::from_unprocessed`] and
     /// returns [`Thunk::Processed`]. Simply returns `self` if this is a [`Thunk::Processed`]
     /// variant
-    pub fn process(&mut self) -> Result<&C, C::Error> {
+    pub fn process(&mut self) -> Result<&C::Output<'a>, C::Error> {
         if let Thunk::Unprocessed(raw_data) = self {
             *self = Thunk::Processed(C::from_unprocessed(raw_data)?)
         }
@@ -117,18 +132,19 @@ impl<'a, C: ThunkContent<'a>> Thunk<'a, C> {
     pub fn as_unprocessed(&self) -> Result<Cow<str>, C::Error> {
         match self {
             Thunk::Unprocessed(unprocessed) => Ok(Cow::Borrowed(*unprocessed)),
-            Thunk::Processed(content) => content.as_unprocessed()
+            Thunk::Processed(content) => C::as_unprocessed(content)
         }
     }
 
     /// Returns the result of processing this [`Thunk`]
-    pub fn into_processed(self) -> Result<C, C::Error> {
+    pub fn into_processed(self) -> Result<C::Output<'a>, C::Error> {
         match self {
             Thunk::Unprocessed(unprocessed) => C::from_unprocessed(unprocessed),
             Thunk::Processed(p) => Ok(p),
         }
     }
 }
+
 /// Set of characters RobTop encodes when doing percent encoding
 ///
 /// This is a subset of [`percent_encoding::NON_ALPHANUMERIC`], since that encodes too many
@@ -140,40 +156,61 @@ pub const ROBTOP_SET: &AsciiSet = &CONTROLS
     .add(b'?')
     .add(b'~');
 
-#[derive(Debug, Eq, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, Eq, Serialize, Deserialize, Clone)]
 #[serde(transparent)]
 pub struct PercentDecoded<'a>(#[serde(borrow)] pub Cow<'a, str>);
 
-impl<'a> ThunkContent<'a> for PercentDecoded<'a> {
-    type Error = ProcessError;
+impl<'a, 'b> PartialEq<PercentDecoded<'b>> for PercentDecoded<'a> {
+    fn eq(&self, other: &PercentDecoded<'b>) -> bool {
+        self.0 == other.0
+    }
+}
 
-    fn from_unprocessed(unprocessed: &'a str) -> Result<Self, ProcessError> {
+impl<'a, 'b> PartialEq<Base64Decoded<'b>> for Base64Decoded<'a> {
+    fn eq(&self, other: &Base64Decoded<'b>) -> bool {
+        self.0 == other.0
+    }
+}
+
+#[derive(Debug, Eq, Serialize, Deserialize, Clone)]
+#[serde(transparent)]
+pub struct Base64Decoded<'a>(pub Cow<'a, str>);
+
+#[derive(Debug, Eq, PartialEq, Serialize, Deserialize, Clone, Copy)]
+pub struct PercentDecoder;
+
+impl ThunkProcessor for PercentDecoder {
+    type Error = ProcessError;
+    type Output<'a> = PercentDecoded<'a>;
+
+    fn from_unprocessed<'a>(unprocessed: &'a str) -> Result<Self::Output<'a>, Self::Error> {
         percent_decode_str(unprocessed)
             .decode_utf8()
             .map(PercentDecoded)
             .map_err(ProcessError::Utf8)
     }
 
-    fn as_unprocessed(&self) -> Result<Cow<str>, ProcessError> {
-        Ok(utf8_percent_encode(self.0.as_ref(), ROBTOP_SET).into())
+    fn as_unprocessed<'a, 'b>(processed: &'b Self::Output<'a>) -> Result<Cow<'b, str>, Self::Error> {
+        Ok(utf8_percent_encode(processed.0.as_ref(), ROBTOP_SET).into())
     }
 }
 
-#[derive(Debug, Eq, PartialEq, Serialize, Deserialize, Clone)]
-#[serde(transparent)]
-pub struct Base64Decoded<'a>(pub Cow<'a, str>);
 
-impl<'a> ThunkContent<'a> for Base64Decoded<'a> {
+#[derive(Debug, Eq, PartialEq, Serialize, Deserialize, Clone, Copy)]
+pub struct Base64Decoder;
+
+impl ThunkProcessor for Base64Decoder {
     type Error = ProcessError;
+    type Output<'a> = Base64Decoded<'a>;
 
-    fn from_unprocessed(unprocessed: &'a str) -> Result<Self, ProcessError> {
+    fn from_unprocessed<'a>(unprocessed: &'a str) -> Result<Self::Output<'a>, Self::Error> {
         let vec = base64::decode_config(unprocessed, URL_SAFE).map_err(ProcessError::Base64)?;
         let string = String::from_utf8(vec).map_err(ProcessError::FromUtf8)?;
 
         Ok(Base64Decoded(Cow::Owned(string)))
     }
 
-    fn as_unprocessed(&self) -> Result<Cow<str>, ProcessError> {
-        Ok(Cow::Owned(base64::encode_config(&*self.0, URL_SAFE)))
+    fn as_unprocessed<'a, 'b>(processed: &'b Self::Output<'a>) -> Result<Cow<'b, str>, Self::Error> {
+        Ok(Cow::Owned(base64::encode_config(&*processed.0, URL_SAFE)))
     }
 }

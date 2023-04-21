@@ -1,15 +1,17 @@
-use crate::{Base64Decoded, Thunk};
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
+use crate::serde::{Base64Decoder, Thunk};
+use variant_partial_eq::VariantPartialEq;
 
-#[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone)]
+#[derive(Debug, Serialize, Deserialize, Eq, VariantPartialEq, Clone)]
 pub struct ProfileComment<'a> {
     /// The actual content of the [`ProfileComment`] made.
     ///
     /// ## GD Internals
     /// This value is provided at index `2` and base64 encoded
     #[serde(borrow)]
-    pub content: Option<Thunk<'a, Base64Decoded<'a>>>,
+    #[variant_compare = "crate::util::option_variant_eq"]
+    pub content: Option<Thunk<'a, Base64Decoder>>,
 
     /// The amount of likes this [`ProfileComment`] has received
     ///

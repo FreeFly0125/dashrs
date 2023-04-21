@@ -1,13 +1,10 @@
-use dash_rs::{
-    model::{
-        comment::{
-            level::{CommentUser, LevelComment},
-            profile::ProfileComment,
-        },
-        user::{Color, IconType, ModLevel},
+use dash_rs::{model::{
+    comment::{
+        level::{CommentUser, LevelComment},
+        profile::ProfileComment,
     },
-    Base64Decoded, Thunk,
-};
+    user::{Color, IconType, ModLevel},
+}, Base64Decoded, Thunk};
 use std::borrow::Cow;
 
 #[macro_use]

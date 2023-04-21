@@ -2,13 +2,14 @@ use std::borrow::Cow;
 // use std::borrow::Cow;
 
 use serde::{Deserialize, Serialize};
+use variant_partial_eq::VariantPartialEq;
 
 use crate::{
     model::user::{Color, IconType, ModLevel},
-    Base64Decoded, Thunk,
 };
+use crate::serde::{Base64Decoder, Thunk};
 
-#[derive(Debug, Eq, PartialEq, Clone, Deserialize, Serialize)]
+#[derive(Debug, Eq, VariantPartialEq, Clone, Deserialize, Serialize)]
 pub struct LevelComment<'a> {
     /// Information about the user that made this [`LevelComment`]. Is generally a [`CommentUser`]
     /// object
@@ -19,7 +20,8 @@ pub struct LevelComment<'a> {
     /// ## GD Internals
     /// This value is provided at index `2` and is base64 encoded
     #[serde(borrow)]
-    pub content: Option<Thunk<'a, Base64Decoded<'a>>>,
+    #[variant_compare = "crate::util::option_variant_eq"]
+    pub content: Option<Thunk<'a, Base64Decoder>>,
 
     /// The unique user id of the player who made this [`LevelComment`]
     ///
