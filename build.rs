@@ -196,17 +196,9 @@ impl Index {
 
         if self.thunk {
             if self.optional {
-                write!(
-                    f,
-                    "internal.index_{}.map(Cow::Borrowed).map(Thunk::Unprocessed)",
-                    self.value
-                )?;
+                write!(f, "internal.index_{}.map(Cow::Borrowed).map(Thunk::Unprocessed)", self.value)?;
             } else {
-                write!(
-                    f,
-                    "Thunk::Unprocessed(Cow::Borrowed(internal.index_{}))",
-                    self.value
-                )?;
+                write!(f, "Thunk::Unprocessed(Cow::Borrowed(internal.index_{}))", self.value)?;
             }
         } else {
             match &self.r#type[..] {
@@ -228,11 +220,21 @@ impl Index {
 
     pub fn generate_binding<W: Write>(&self, f: &mut W, field_name: &str) -> std::io::Result<()> {
         // needed for lifetime reasons
-        if self.thunk { if self.optional {
-            writeln!(f, "let index_{} = self.{}.as_ref().map(|t| t.as_unprocessed().map_err(SerError::custom)).transpose()?;", self.value, field_name)?;
-        }else {
-            writeln!(f, "let index_{} = &*self.{}.as_unprocessed().map_err(SerError::custom)?;", self.value, field_name)?;
-        }}
+        if self.thunk {
+            if self.optional {
+                writeln!(
+                    f,
+                    "let index_{} = self.{}.as_ref().map(|t| t.as_unprocessed().map_err(SerError::custom)).transpose()?;",
+                    self.value, field_name
+                )?;
+            } else {
+                writeln!(
+                    f,
+                    "let index_{} = &*self.{}.as_unprocessed().map_err(SerError::custom)?;",
+                    self.value, field_name
+                )?;
+            }
+        }
 
         Ok(())
     }

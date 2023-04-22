@@ -6,8 +6,8 @@ use variant_partial_eq::VariantPartialEq;
 
 use crate::{
     model::user::{Color, IconType, ModLevel},
+    serde::{Base64Decoder, Thunk},
 };
-use crate::serde::{Base64Decoder, Thunk};
 
 #[derive(Debug, Eq, VariantPartialEq, Clone, Deserialize, Serialize)]
 pub struct LevelComment<'a> {

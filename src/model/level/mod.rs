@@ -22,11 +22,10 @@ use crate::{
         song::{MainSong, NewgroundsSong},
         GameVersion,
     },
-    serde::{HasRobtopFormat, ProcessError},
-    util, SerError
+    serde::{Base64Decoder, HasRobtopFormat, ProcessError, Thunk, ThunkProcessor},
+    util, SerError,
 };
 use flate2::Compression;
-use crate::serde::{Base64Decoder, Thunk, ThunkProcessor};
 
 // use flate2::read::GzDecoder;
 // use std::io::Read;

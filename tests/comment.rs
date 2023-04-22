@@ -1,10 +1,13 @@
-use dash_rs::{model::{
-    comment::{
-        level::{CommentUser, LevelComment},
-        profile::ProfileComment,
+use dash_rs::{
+    model::{
+        comment::{
+            level::{CommentUser, LevelComment},
+            profile::ProfileComment,
+        },
+        user::{Color, IconType, ModLevel},
     },
-    user::{Color, IconType, ModLevel},
-}, Thunk};
+    Thunk,
+};
 use std::borrow::Cow;
 
 #[macro_use]
@@ -48,9 +51,7 @@ const LEVEL_COMMENT2: LevelComment = LevelComment {
 
 const LEVEL_COMMENT3: LevelComment = LevelComment {
     user: None,
-    content: Some(Thunk::Processed(Cow::Borrowed(
-        "Lets make august 10th Pauze's international day",
-    ))),
+    content: Some(Thunk::Processed(Cow::Borrowed("Lets make august 10th Pauze's international day"))),
     user_id: 7178197,
     likes: 58,
     comment_id: 259333,

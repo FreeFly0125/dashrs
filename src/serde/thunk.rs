@@ -1,7 +1,14 @@
 use base64::{DecodeError, URL_SAFE};
 use percent_encoding::{percent_decode_str, utf8_percent_encode, AsciiSet, CONTROLS};
 use serde::{ser::Error as _, Deserialize, Serialize, Serializer};
-use std::{borrow::Cow, fmt::{Display, Formatter}, mem, num::ParseIntError, str::Utf8Error, string::FromUtf8Error};
+use std::{
+    borrow::Cow,
+    fmt::{Display, Formatter},
+    mem,
+    num::ParseIntError,
+    str::Utf8Error,
+    string::FromUtf8Error,
+};
 
 /// Enum modelling the different errors that can occur during processing of a [`Thunk`]
 ///
@@ -58,33 +65,35 @@ impl std::error::Error for ProcessError {}
 pub enum Thunk<'a, C: ThunkProcessor> {
     #[serde(skip)]
     Unprocessed(Cow<'a, str>),
-    Processed(C::Output<'a>)
+    Processed(C::Output<'a>),
 }
 
-
 impl<'a, 'b, P: ThunkProcessor> PartialEq<Thunk<'b, P>> for Thunk<'a, P>
-    where
-        P::Output<'a>: PartialEq<P::Output<'b>>
+where
+    P::Output<'a>: PartialEq<P::Output<'b>>,
 {
     fn eq(&self, other: &Thunk<'b, P>) -> bool {
         match (self, other) {
             (Thunk::Processed(o1), Thunk::Processed(o2)) => o1 == o2,
             (Thunk::Unprocessed(s1), Thunk::Unprocessed(s2)) => s1 == s2,
-            _ => false
+            _ => false,
         }
     }
 }
 
 impl<'a, C: ThunkProcessor> Serialize for Thunk<'a, C>
 where
-    for<'b> C::Output<'b>: Serialize
+    for<'b> C::Output<'b>: Serialize,
 {
     fn serialize<S>(&self, serializer: S) -> Result<<S as Serializer>::Ok, <S as Serializer>::Error>
-        where
-            S: Serializer,
+    where
+        S: Serializer,
     {
         match self {
-            Thunk::Unprocessed(unprocessed) => C::from_unprocessed(Cow::Borrowed(&*unprocessed)).map_err(S::Error::custom)?.serialize(serializer),
+            Thunk::Unprocessed(unprocessed) =>
+                C::from_unprocessed(Cow::Borrowed(&*unprocessed))
+                    .map_err(S::Error::custom)?
+                    .serialize(serializer),
             Thunk::Processed(processed) => processed.serialize(serializer),
         }
     }
@@ -126,7 +135,7 @@ impl<'a, C: ThunkProcessor> Thunk<'a, C> {
     pub fn as_unprocessed(&self) -> Result<Cow<str>, C::Error> {
         match self {
             Thunk::Unprocessed(unprocessed) => Ok(Cow::Borrowed(&*unprocessed)),
-            Thunk::Processed(content) => C::as_unprocessed(content)
+            Thunk::Processed(content) => C::as_unprocessed(content),
         }
     }
 
@@ -159,24 +168,19 @@ impl ThunkProcessor for PercentDecoder {
 
     fn from_unprocessed<'a>(unprocessed: Cow<'a, str>) -> Result<Self::Output<'a>, Self::Error> {
         match unprocessed {
-            Cow::Borrowed(unprocessed) => percent_decode_str(unprocessed)
-                .decode_utf8()
-                .map_err(ProcessError::Utf8),
-            Cow::Owned(unprocessed) => match percent_decode_str(&unprocessed)
-                .decode_utf8()
-                .map_err(ProcessError::Utf8)? {
-                Cow::Owned(decoded) => Ok(Cow::Owned(decoded)),
-                _ => Ok(Cow::Owned(unprocessed)),
-            }
+            Cow::Borrowed(unprocessed) => percent_decode_str(unprocessed).decode_utf8().map_err(ProcessError::Utf8),
+            Cow::Owned(unprocessed) =>
+                match percent_decode_str(&unprocessed).decode_utf8().map_err(ProcessError::Utf8)? {
+                    Cow::Owned(decoded) => Ok(Cow::Owned(decoded)),
+                    _ => Ok(Cow::Owned(unprocessed)),
+                },
         }
-
     }
 
     fn as_unprocessed<'a, 'b>(processed: &'b Self::Output<'a>) -> Result<Cow<'b, str>, Self::Error> {
         Ok(utf8_percent_encode(processed.as_ref(), ROBTOP_SET).into())
     }
 }
-
 
 #[derive(Debug, Eq, PartialEq, Serialize, Deserialize, Clone, Copy)]
 pub struct Base64Decoder;

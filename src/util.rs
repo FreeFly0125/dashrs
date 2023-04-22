@@ -19,12 +19,13 @@ where
 }
 
 pub fn option_variant_eq<A, B>(a: &Option<A>, b: &Option<B>) -> bool
-    where A: PartialEq<B>
+where
+    A: PartialEq<B>,
 {
     match (a, b) {
         (Some(a), Some(b)) => a == b,
         (None, None) => true,
-        _ => false
+        _ => false,
     }
 }
 

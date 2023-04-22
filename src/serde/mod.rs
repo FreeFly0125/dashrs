@@ -4,7 +4,7 @@ mod thunk;
 
 pub use de::{error::Error as DeError, indexed::IndexedDeserializer};
 pub use ser::{error::Error as SerError, indexed::IndexedSerializer, request::RequestSerializer};
-pub use thunk::{ProcessError, ThunkProcessor, Thunk, Base64Decoder, PercentDecoder};
+pub use thunk::{Base64Decoder, PercentDecoder, ProcessError, Thunk, ThunkProcessor};
 
 use std::io::Write;
 

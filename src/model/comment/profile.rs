@@ -1,6 +1,6 @@
+use crate::serde::{Base64Decoder, Thunk};
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
-use crate::serde::{Base64Decoder, Thunk};
 use variant_partial_eq::VariantPartialEq;
 
 #[derive(Debug, Serialize, Deserialize, Eq, VariantPartialEq, Clone)]
