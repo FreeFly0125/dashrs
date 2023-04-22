@@ -68,12 +68,12 @@ pub fn parse_get_gj_levels_response(response: &str) -> Result<Vec<ListedLevel>, 
     let creators = section!(sections)
         .split('|')
         .filter(|s| !s.is_empty()) // It can happen that segments are completely empty. In this case, split returns an iterator that yields `Some("")`, which would cause an error since the empty string is not parsable
-        .map(|fragment| Creator::from_robtop_str(fragment))
+        .map(Creator::from_robtop_str)
         .collect::<Result<Vec<Creator>, _>>()?;
     let songs = section!(sections)
         .split("~:~")
         .filter(|s| !s.is_empty())
-        .map(|fragment| NewgroundsSong::from_robtop_str(fragment))
+        .map(NewgroundsSong::from_robtop_str)
         .collect::<Result<Vec<NewgroundsSong>, _>>()?;
 
     levels

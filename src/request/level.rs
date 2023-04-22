@@ -289,7 +289,7 @@ impl SearchFilters {
 /// + Unused values: `8`, `9`, `14`
 /// + The values `15` and `17` are only used in Geometry Dash World and are the
 /// same as `0` ([`LevelRequestType::Search`]) and `6` ([`LevelRequestType::Featured`]) respectively
-#[derive(Debug, Copy, Clone, PartialEq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, PartialEq, Hash, Serialize, Deserialize, Default)]
 #[serde(from = "i32", into = "i32")]
 pub enum LevelRequestType {
     /// A search request.
@@ -298,6 +298,7 @@ pub enum LevelRequestType {
     ///
     /// ## GD Internals:
     /// This variant is represented by the value `0` in requests
+    #[default]
     Search,
 
     /// Request to retrieve the list of most downloaded levels
@@ -381,12 +382,6 @@ pub enum LevelRequestType {
 
     /// Unknown variant not yet mapped by dash-rs
     Unknown(i32),
-}
-
-impl Default for LevelRequestType {
-    fn default() -> Self {
-        LevelRequestType::Search
-    }
 }
 
 impl From<i32> for LevelRequestType {

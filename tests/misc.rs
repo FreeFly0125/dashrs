@@ -87,7 +87,7 @@ fn deserialize_too_many_fields() {
 fn deserialize_level() {
     init_log();
 
-    let mut level = helper::load_processed::<Level>(include_str!("data/11774780_dark_realm_gjdownload_response"));
+    let _ = helper::load_processed::<Level>(include_str!("data/11774780_dark_realm_gjdownload_response"));
 }
 
 #[test]

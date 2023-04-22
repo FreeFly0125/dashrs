@@ -368,11 +368,11 @@ impl ThunkProcessor for Password {
     type Error = ProcessError;
     type Output<'a> = Password;
 
-    fn from_unprocessed<'a>(unprocessed: Cow<'a, str>) -> Result<Self, Self::Error> {
-        Password::from_robtop(&*unprocessed)
+    fn from_unprocessed(unprocessed: Cow<str>) -> Result<Self, Self::Error> {
+        Password::from_robtop(&unprocessed)
     }
 
-    fn as_unprocessed<'a, 'b>(processed: &'b Self::Output<'a>) -> Result<Cow<'b, str>, Self::Error> {
+    fn as_unprocessed<'b>(processed: &'b Self::Output<'_>) -> Result<Cow<'b, str>, Self::Error> {
         match *processed {
             Password::FreeCopy => Ok(Cow::Borrowed("Aw==")),
             Password::NoCopy => Ok(Cow::Borrowed("0")),
@@ -686,7 +686,7 @@ impl Display for LevelProcessError {
     }
 }
 
-impl<'a> std::error::Error for LevelProcessError {}
+impl std::error::Error for LevelProcessError {}
 
 impl ThunkProcessor for Objects {
     type Error = LevelProcessError;
@@ -732,7 +732,7 @@ impl ThunkProcessor for Objects {
 
         let meta = LevelMetadata::from_robtop_str(metadata_string).map_err(|err| LevelProcessError::Deserialize(err.to_string()))?;
 
-        iter.map(|object_string| LevelObject::from_robtop_str(object_string))
+        iter.map(LevelObject::from_robtop_str)
             .collect::<Result<_, _>>()
             .map(|objects| Objects { meta, objects })
             .map_err(|err| LevelProcessError::Deserialize(err.to_string()))

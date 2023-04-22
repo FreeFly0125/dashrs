@@ -1,3 +1,5 @@
+#![allow(unused)]
+
 use dash_rs::HasRobtopFormat;
 use std::{collections::HashMap, fmt::Debug};
 
@@ -30,6 +32,7 @@ macro_rules! load_save_roundtrip {
 
     ($name:ident, $t:ty, $load_from:ident, $expected:ident, $sep:expr, $map_like:expr) => {
         #[test]
+        #[allow(non_snake_case)]
         pub fn $name() {
             use helper::*;
 
@@ -49,8 +52,8 @@ macro_rules! save_load_roundtrip {
     };
     ($name:ident, $t:ty, $to_save:ident) => {
         #[test]
+        #[allow(non_snake_case)]
         pub fn $name() {
-            use dash_rs::HasRobtopFormat;
             use helper::*;
 
             let _ = env_logger::builder().is_test(true).try_init();

@@ -120,12 +120,12 @@ indices:
     type: Objects
     thunk: true
     compute: |
-      &*self.level_data.level_data.as_unprocessed().map_err(SerError::custom)?
+      &self.level_data.level_data.as_unprocessed().map_err(SerError::custom)?
   - value: 27
     type: Password
     thunk: true
     compute: |
-      &*self.level_data.password.as_unprocessed().map_err(SerError::custom)?
+      &self.level_data.password.as_unprocessed().map_err(SerError::custom)?
   - value: 28
     type: '&''src str'
     compute: |

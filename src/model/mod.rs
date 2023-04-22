@@ -43,8 +43,8 @@ impl From<u8> for GameVersion {
             GameVersion::Unknown
         } else {
             GameVersion::Version {
-                major: (version / 10) as u8,
-                minor: (version % 10) as u8,
+                major: (version / 10),
+                minor: (version % 10),
             }
         }
     }

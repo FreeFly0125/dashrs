@@ -2,20 +2,15 @@
 use serde::{Deserialize, Serialize};
 
 /// Enum modelling the different speeds a player can have during gameplay
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub enum Speed {
     Slow,
+    #[default]
     Normal,
     Medium,
     Fast,
     VeryFast,
     Unknown(u8),
-}
-
-impl Default for Speed {
-    fn default() -> Speed {
-        Speed::Normal
-    }
 }
 
 /// Converts the speed to the game-internal "pixel  / second" value represented by some [`Speed`]

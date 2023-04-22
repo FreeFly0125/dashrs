@@ -70,7 +70,7 @@ impl<'de> IndexedDeserializer<'de> {
     }
 
     fn nth_last(&self, nth: usize) -> Option<&'de str> {
-        self.input[..self.position()].rsplit(self.delimiter).skip(nth - 1).next()
+        self.input[..self.position()].rsplit(self.delimiter).nth(nth - 1)
     }
 
     fn is_next_empty(&self) -> bool {
