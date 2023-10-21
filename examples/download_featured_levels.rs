@@ -5,10 +5,10 @@
 //! `data/<level_id>_<password>.lvl`.
 //!
 //! WARNING: Robtop has set some aggressive ratelimits on the download level endpoint. Attempting
-//! to download too many levels (20 per minute from my testing) in too short a period of time will ratelimit
-//! you for one hour (HTTP 429 with retry-after=3600). There is also a further ratelimit that last a full day,
-//! hit by downloading approximately 100 levels "too fast" (I am not sure on the details here). 
-//! Use this script at your own risk.
+//! to download too many levels (20 per minute from my testing) in too short a period of time will
+//! ratelimit you for one hour (HTTP 429 with retry-after=3600). There is also a further ratelimit
+//! that last a full day, hit by downloading approximately 100 levels "too fast" (I am not sure on
+//! the details here). Use this script at your own risk.
 
 use dash_rs::{
     model::level::Password,
@@ -19,7 +19,7 @@ use reqwest::{
     header::{HeaderMap, CONTENT_TYPE},
     Client, Response,
 };
-use std::{time::Duration, path::Path};
+use std::{path::Path, time::Duration};
 
 #[tokio::main]
 async fn main() {

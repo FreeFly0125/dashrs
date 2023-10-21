@@ -409,9 +409,9 @@ impl<'a, 'de> de::MapAccess<'de> for MapAccess<'a, 'de> {
 
 #[cfg(test)]
 mod tests {
-    use std::collections::HashMap;
     use crate::serde::IndexedDeserializer;
     use serde::de::Deserialize;
+    use std::collections::HashMap;
 
     const INPUT: &str = "1:hello:2:world";
 
