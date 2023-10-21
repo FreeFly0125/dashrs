@@ -406,3 +406,33 @@ impl<'a, 'de> de::MapAccess<'de> for MapAccess<'a, 'de> {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use std::collections::HashMap;
+    use crate::serde::IndexedDeserializer;
+    use serde::de::Deserialize;
+
+    const INPUT: &str = "1:hello:2:world";
+
+    #[test]
+    fn test_deserialize_map_like_to_hashmap() {
+        // Illustrates how to deserialize some arbitrary RobTop string into a HashMap, for easier analysis.
+        let mut deserializer = IndexedDeserializer::new(INPUT, ":", true);
+
+        let map = HashMap::<&str, &str>::deserialize(&mut deserializer).unwrap();
+
+        assert_eq!(map.len(), 2);
+        assert_eq!(map.get("1"), Some(&"hello"));
+        assert_eq!(map.get("2"), Some(&"world"));
+    }
+
+    #[test]
+    fn test_deserialize_to_vec() {
+        let mut deserializer = IndexedDeserializer::new(INPUT, ":", false);
+
+        let vec = Vec::<&str>::deserialize(&mut deserializer).unwrap();
+
+        assert_eq!(vec, INPUT.split(':').collect::<Vec<_>>())
+    }
+}
