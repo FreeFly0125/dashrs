@@ -21,6 +21,10 @@ variant_partial_eq = { git = "https://github.com/stadust/variant-partial-eq" }
 env_logger = "0.7.1"
 criterion = "0.3"
 
+# Dependencies used by examples
+reqwest = "0.11.17"
+tokio = {version = "1.28.0", features = ["macros", "rt-multi-thread"]}
+
 [build-dependencies]
 serde = {version = "1.0.104", features = ["derive"]}
 serde_yaml = "0.8.14"
