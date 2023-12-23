@@ -1,5 +1,5 @@
 use crate::serde::ser::error::Error;
-use dtoa::Floating;
+use dtoa::Float;
 use itoa::{Integer, Buffer};
 use serde::{
     ser::{Error as _, Impossible, SerializeStruct},
@@ -49,14 +49,15 @@ where
         Ok(())
     }
 
-    fn append_float<F: Floating>(&mut self, float: F) -> Result<(), Error> {
+    fn append_float<F: Float>(&mut self, float: F) -> Result<(), Error> {
         if self.is_start {
             self.is_start = false;
         } else {
             self.writer.write_all(self.delimiter)?;
         }
 
-        dtoa::write(&mut self.writer, float).map_err(Error::custom)?;
+        let mut buffer = dtoa::Buffer::new();
+        self.writer.write(buffer.format(float).as_bytes()).map_err(Error::custom)?;
 
         Ok(())
     }

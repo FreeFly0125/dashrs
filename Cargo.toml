@@ -12,7 +12,7 @@ base64 = "0.21.5"
 log = {version = "0.4.8" }
 percent-encoding = "2.1.0"
 itoa = "1.0.10"
-dtoa = "0.4.4"
+dtoa = "1.0.9"
 flate2 = {version = "1.0.14", features = ["zlib"], default-features=false}
 variant_partial_eq = { git = "https://github.com/stadust/variant-partial-eq" }
 
