@@ -1,4 +1,4 @@
-use base64::{DecodeError, URL_SAFE};
+use base64::{DecodeSliceError, engine::general_purpose::URL_SAFE, Engine, DecodeError};
 use percent_encoding::{percent_decode_str, utf8_percent_encode, AsciiSet, CONTROLS};
 use serde::{ser::Error as _, Deserialize, Serialize, Serializer};
 use std::{
@@ -33,10 +33,22 @@ pub enum ProcessError {
     FromUtf8(FromUtf8Error),
 
     /// Some base64 decoding error occurred during processing
-    Base64(DecodeError),
+    Base64(DecodeSliceError),
 
     /// Some error occurred when parsing a number
     IntParse(ParseIntError),
+}
+
+impl From<DecodeSliceError> for ProcessError {
+    fn from(value: DecodeSliceError) -> Self {
+        ProcessError::Base64(value)
+    }
+}
+
+impl From<DecodeError> for ProcessError {
+    fn from(value: DecodeError) -> Self {
+        ProcessError::Base64(DecodeSliceError::DecodeError(value))
+    }
 }
 
 impl Display for ProcessError {
@@ -190,13 +202,13 @@ impl ThunkProcessor for Base64Decoder {
     type Output<'a> = Cow<'a, str>;
 
     fn from_unprocessed(unprocessed: Cow<str>) -> Result<Self::Output<'_>, Self::Error> {
-        let vec = base64::decode_config(&*unprocessed, URL_SAFE).map_err(ProcessError::Base64)?;
+        let vec = URL_SAFE.decode(&*unprocessed)?;
         let string = String::from_utf8(vec).map_err(ProcessError::FromUtf8)?;
 
         Ok(Cow::Owned(string))
     }
 
     fn as_unprocessed<'b>(processed: &'b Self::Output<'_>) -> Result<Cow<'b, str>, Self::Error> {
-        Ok(Cow::Owned(base64::encode_config(&**processed, URL_SAFE)))
+        Ok(Cow::Owned(URL_SAFE.encode(&**processed)))
     }
 }

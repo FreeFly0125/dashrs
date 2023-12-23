@@ -8,7 +8,7 @@ use std::{
 };
 use variant_partial_eq::VariantPartialEq;
 
-use base64::URL_SAFE;
+use base64::{engine::general_purpose::URL_SAFE, Engine};
 use flate2::read::{GzDecoder, GzEncoder, ZlibDecoder};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
@@ -344,8 +344,7 @@ impl Password {
             _ => {
                 // More than enough for storing the decoded password even if in future the format grows
                 let mut decoded_buffer = [0; 32];
-                let password_len =
-                    base64::decode_config_slice(raw_password_data, URL_SAFE, &mut decoded_buffer).map_err(ProcessError::Base64)?;
+                let password_len = URL_SAFE.decode_slice(raw_password_data, &mut decoded_buffer)?;
 
                 // This xor pass is applied after we base64 decoded the input, it's how the game tries to protect
                 // data
@@ -379,7 +378,7 @@ impl ThunkProcessor for Password {
             Password::PasswordCopy(pw) => {
                 // FIXME: its possible to avoid an allocation here by base64-encoding to a stack-buffer,
                 // and passing that stack buffer directly to a Serializer's serialize_bytes method.
-                Ok(Cow::Owned(base64::encode_config(&robtop_encode_level_password(pw), URL_SAFE)))
+                Ok(Cow::Owned(URL_SAFE.encode(robtop_encode_level_password(pw))))
             },
         }
     }
@@ -695,7 +694,7 @@ impl ThunkProcessor for Objects {
     fn from_unprocessed(unprocessed: Cow<str>) -> Result<Self, LevelProcessError> {
         // Doing the entire base64 in one go is actually faster than using base64::read::DecoderReader and
         // having the two readers go back and forth.
-        let decoded = base64::decode_config(&*unprocessed, base64::URL_SAFE).map_err(LevelProcessError::Base64)?;
+        let decoded = URL_SAFE.decode(&*unprocessed).map_err(LevelProcessError::Base64)?;
 
         // Here's the deal: Robtop decompresses all levels by calling the zlib function 'inflateInit2_' with
         // the second argument set to 47. This basically tells zlib "this data might be compressed using
@@ -759,7 +758,7 @@ impl ThunkProcessor for Objects {
 
         encoder.read_to_end(&mut compressed).map_err(LevelProcessError::Compression)?;
 
-        Ok(Cow::Owned(base64::encode_config(&compressed, base64::URL_SAFE)))
+        Ok(Cow::Owned(URL_SAFE.encode(compressed)))
     }
 }
 
@@ -815,7 +814,7 @@ fn get_seconds_from_x_pos(pos: f32, start_speed: Speed, portals: &[(f32, Speed)]
 
 #[cfg(test)]
 mod tests {
-    use base64::URL_SAFE;
+    use base64::{engine::general_purpose::URL_SAFE, Engine};
 
     use crate::model::level::{robtop_encode_level_password, Password};
 
@@ -831,7 +830,7 @@ mod tests {
     #[test]
     fn serialize_password() {
         let encoded = robtop_encode_level_password(123456);
-        let result = base64::encode_config(&encoded, URL_SAFE);
+        let result = URL_SAFE.encode(&encoded);
 
         assert_eq!(result, "AwcBBQAHAA==")
     }
@@ -842,8 +841,8 @@ mod tests {
         // in-game code for padding is inconsistent, see above test cases
 
         // password of 'Time Pressure' by AeonAir
-        assert_eq!(base64::encode_config(&robtop_encode_level_password(3101), URL_SAFE), "AwYDBQUCBw==");
+        assert_eq!(URL_SAFE.encode(&robtop_encode_level_password(3101)), "AwYDBQUCBw==");
         // password of 'Breakthrough' by Hinds1324
-        assert_eq!(base64::encode_config(&robtop_encode_level_password(0), URL_SAFE), "AwYDBgQCBg==")
+        assert_eq!(URL_SAFE.encode(&robtop_encode_level_password(0)), "AwYDBgQCBg==")
     }
 }

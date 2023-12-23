@@ -1,3 +1,4 @@
+use base64::{engine::general_purpose::URL_SAFE, Engine};
 use criterion::{criterion_group, criterion_main, Criterion};
 use dash_rs::{
     model::level::{Level, LevelData},
@@ -38,7 +39,7 @@ pub fn decoding_ocular_miracle_benchmark(c: &mut Criterion) {
             let level: Level<LevelData> = Level::from_robtop_str(&response).unwrap();
             match level.level_data.level_data {
                 Thunk::Unprocessed(unprocessed) => {
-                    let decoded = base64::decode_config(&*unprocessed, base64::URL_SAFE).unwrap();
+                    let decoded = URL_SAFE.decode(&*unprocessed).unwrap();
                     let mut decompressed = String::new();
                     let mut decoder = GzDecoder::new(&decoded[..]);
 
@@ -58,7 +59,7 @@ pub fn decoding_spacial_rend_benchmark(c: &mut Criterion) {
             let level: Level<LevelData> = Level::from_robtop_str(&response).unwrap();
             match level.level_data.level_data {
                 Thunk::Unprocessed(unprocessed) => {
-                    let decoded = base64::decode_config(&*unprocessed, base64::URL_SAFE).unwrap();
+                    let decoded = URL_SAFE.decode(&*unprocessed).unwrap();
                     let mut decompressed = String::new();
                     let mut decoder = GzDecoder::new(&decoded[..]);
 
