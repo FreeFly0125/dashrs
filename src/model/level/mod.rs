@@ -6,6 +6,7 @@ use std::{
     fmt::{Display, Formatter},
     io::Read,
 };
+use itoa::Buffer;
 use variant_partial_eq::VariantPartialEq;
 
 use base64::{engine::general_purpose::URL_SAFE, Engine};
@@ -316,13 +317,16 @@ fn robtop_encode_level_password(pw: u32) -> [u8; 7] {
     let mut password = [b'0'; 7];
     password[0] = b'1';
 
-    let mut itoa_buf = [0u8; 6];
+    let mut itoa_buf = Buffer::new();
+    let formatted = itoa_buf.format(pw);
 
-    let n = itoa::write(&mut itoa_buf[..], pw).unwrap();
+    let n = formatted.len();
+    
+    assert!(n <= 6);
 
     // ensure the password is padded with zeroes as needed
-    for i in 0..n {
-        password[7 - n + i] = itoa_buf[i];
+    for (i, b) in formatted.as_bytes().iter().enumerate() {
+        password[7 - n + i] = *b;
     }
 
     // We need to do the xor **before** we get the base64 encoded data

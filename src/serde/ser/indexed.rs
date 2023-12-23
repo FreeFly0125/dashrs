@@ -1,6 +1,6 @@
 use crate::serde::ser::error::Error;
 use dtoa::Floating;
-use itoa::Integer;
+use itoa::{Integer, Buffer};
 use serde::{
     ser::{Error as _, Impossible, SerializeStruct},
     Serialize, Serializer,
@@ -43,7 +43,8 @@ where
             self.writer.write_all(self.delimiter)?;
         }
 
-        itoa::write(&mut self.writer, int).map_err(Error::custom)?;
+        let mut buffer = Buffer::new();
+        self.writer.write(buffer.format(int).as_bytes()).map_err(Error::custom)?;
 
         Ok(())
     }
