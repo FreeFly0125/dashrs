@@ -1,6 +1,6 @@
 //! Module containing the error type for deserialization errors
 
-use std::fmt::{Display};
+use std::fmt::Display;
 
 use thiserror::Error;
 

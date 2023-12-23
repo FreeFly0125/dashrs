@@ -2,12 +2,12 @@
 //! servers
 
 use itoa::Buffer;
-use thiserror::Error;
 use std::{
     borrow::Cow,
     fmt::{Display, Formatter},
     io::Read,
 };
+use thiserror::Error;
 use variant_partial_eq::VariantPartialEq;
 
 use base64::{engine::general_purpose::URL_SAFE, Engine};
@@ -682,7 +682,6 @@ pub enum LevelProcessError {
     #[error("Missing metadata section in level string")]
     MissingMetadata,
 }
-
 
 impl ThunkProcessor for Objects {
     type Error = LevelProcessError;

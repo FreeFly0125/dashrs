@@ -1,14 +1,8 @@
 use base64::{engine::general_purpose::URL_SAFE, DecodeError, DecodeSliceError, Engine};
 use percent_encoding::{percent_decode_str, utf8_percent_encode, AsciiSet, CONTROLS};
 use serde::{ser::Error as _, Deserialize, Serialize, Serializer};
+use std::{borrow::Cow, mem, num::ParseIntError, str::Utf8Error, string::FromUtf8Error};
 use thiserror::Error;
-use std::{
-    borrow::Cow,
-    mem,
-    num::ParseIntError,
-    str::Utf8Error,
-    string::FromUtf8Error,
-};
 
 /// Enum modelling the different errors that can occur during processing of a [`Thunk`]
 ///
