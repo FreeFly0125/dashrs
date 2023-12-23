@@ -1,4 +1,4 @@
-use base64::{DecodeSliceError, engine::general_purpose::URL_SAFE, Engine, DecodeError};
+use base64::{engine::general_purpose::URL_SAFE, DecodeError, DecodeSliceError, Engine};
 use percent_encoding::{percent_decode_str, utf8_percent_encode, AsciiSet, CONTROLS};
 use serde::{ser::Error as _, Deserialize, Serialize, Serializer};
 use std::{

@@ -1,6 +1,6 @@
 use crate::serde::ser::error::Error;
 use dtoa::Float;
-use itoa::{Integer, Buffer};
+use itoa::{Buffer, Integer};
 use serde::{
     ser::{Error as _, Impossible, SerializeStruct},
     Serialize, Serializer,
@@ -142,7 +142,7 @@ impl<'a, W: Write> Serializer for &'a mut IndexedSerializer<W> {
 
     // Here we serialize bytes by base64 encoding them, so it's always valid in Geometry Dash's format
     fn serialize_bytes(self, v: &[u8]) -> Result<Self::Ok, Self::Error> {
-        use base64::{write::EncoderWriter, engine::general_purpose::URL_SAFE};
+        use base64::{engine::general_purpose::URL_SAFE, write::EncoderWriter};
         let mut enc = EncoderWriter::new(&mut self.writer, &URL_SAFE);
         enc.write_all(v)?;
         enc.finish()?;

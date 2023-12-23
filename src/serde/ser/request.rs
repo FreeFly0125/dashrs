@@ -14,7 +14,7 @@
 
 use crate::serde::SerError as Error;
 use dtoa::Float;
-use itoa::{Integer, Buffer};
+use itoa::{Buffer, Integer};
 use serde::{
     ser::{Error as _, Impossible, SerializeStruct},
     Serialize, Serializer,
@@ -210,7 +210,10 @@ impl<'ser, W: Write> ValueSerializer<'ser, W> {
         self.write_key()?;
 
         let mut buffer = dtoa::Buffer::new();
-        self.serializer.writer.write(buffer.format(float).as_bytes()).map_err(Error::custom)?;
+        self.serializer
+            .writer
+            .write(buffer.format(float).as_bytes())
+            .map_err(Error::custom)?;
 
         Ok(())
     }

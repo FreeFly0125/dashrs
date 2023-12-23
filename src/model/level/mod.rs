@@ -1,12 +1,12 @@
 //! Module containing structs modelling Geometry Dash levels as they are returned from the boomlings
 //! servers
 
+use itoa::Buffer;
 use std::{
     borrow::Cow,
     fmt::{Display, Formatter},
     io::Read,
 };
-use itoa::Buffer;
 use variant_partial_eq::VariantPartialEq;
 
 use base64::{engine::general_purpose::URL_SAFE, Engine};
@@ -321,7 +321,7 @@ fn robtop_encode_level_password(pw: u32) -> [u8; 7] {
     let formatted = itoa_buf.format(pw);
 
     let n = formatted.len();
-    
+
     assert!(n <= 6);
 
     // ensure the password is padded with zeroes as needed
