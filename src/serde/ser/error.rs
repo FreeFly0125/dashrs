@@ -1,46 +1,27 @@
 use std::{
-    fmt::{Display, Formatter},
+    fmt::{Display},
     io,
 };
 
+use thiserror::Error;
+
 /// Errors that can occur during serialization
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum Error {
     /// Some custom error happened during serialization.
+    #[error("{0}")]
     Custom(String),
 
     /// A given [`Serializer`](serde::Serializer) function was not supported
+    #[error("unsupported serializer function: {0}")]
     Unsupported(&'static str),
 
-    Io(io::Error),
+    #[error("io error: {0}")]
+    Io(#[from] io::Error),
 
-    Utf8(std::string::FromUtf8Error),
+    #[error("failed utf8 conversion: {0}")]
+    Utf8(#[from] std::string::FromUtf8Error),
 }
-
-impl Display for Error {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Error::Custom(msg) => write!(f, "{}", msg),
-            Error::Unsupported(what) => write!(f, "unsupported serializer function: {}", what),
-            Error::Io(err) => write!(f, "io error: {}", err),
-            Error::Utf8(err) => write!(f, "failed utf8 conversion: {}", err),
-        }
-    }
-}
-
-impl From<io::Error> for Error {
-    fn from(error: io::Error) -> Self {
-        Error::Io(error)
-    }
-}
-
-impl From<std::string::FromUtf8Error> for Error {
-    fn from(error: std::string::FromUtf8Error) -> Self {
-        Error::Utf8(error)
-    }
-}
-
-impl std::error::Error for Error {}
 
 impl serde::ser::Error for Error {
     fn custom<T>(msg: T) -> Self

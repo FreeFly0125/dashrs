@@ -1,6 +1,8 @@
 //! Most likely temporary location of helper functions regarding the parsing of complete server
 //! responses.
 
+use thiserror::Error;
+
 use crate::{
     model::{
         comment::{
@@ -14,7 +16,6 @@ use crate::{
     },
     DeError, HasRobtopFormat,
 };
-use std::fmt::{Display, Formatter};
 
 // Since NoneError is not stabilized, we cannot do `impl From<NoneError> for ResponseError<'_>`, so
 // this is the next best thing
@@ -27,29 +28,20 @@ macro_rules! section {
     };
 }
 
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum ResponseError<'a> {
     /// A deserializer error occured while processing some object contained in the response
-    De(DeError<'a>),
+    #[error("{0}")]
+    De(DeError<'a>), // cannot use #[from] here due to non-'static lifetime
 
     /// The response was of the form `"-1"`, which is RobTop's version of `HTTP 404 NOT FOUND`
+    #[error("not found")]
     NotFound,
 
     /// The response was not worked in the expected way (too few sections, etc.)
+    #[error("unexpected format")]
     UnexpectedFormat,
 }
-
-impl Display for ResponseError<'_> {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        match self {
-            ResponseError::De(err) => err.fmt(f),
-            ResponseError::NotFound => write!(f, "not found"),
-            ResponseError::UnexpectedFormat => write!(f, "unexpected format"),
-        }
-    }
-}
-
-impl std::error::Error for ResponseError<'_> {}
 
 impl<'a> From<DeError<'a>> for ResponseError<'a> {
     fn from(err: DeError<'a>) -> Self {

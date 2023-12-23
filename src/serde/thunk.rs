@@ -1,9 +1,9 @@
 use base64::{engine::general_purpose::URL_SAFE, DecodeError, DecodeSliceError, Engine};
 use percent_encoding::{percent_decode_str, utf8_percent_encode, AsciiSet, CONTROLS};
 use serde::{ser::Error as _, Deserialize, Serialize, Serializer};
+use thiserror::Error;
 use std::{
     borrow::Cow,
-    fmt::{Display, Formatter},
     mem,
     num::ParseIntError,
     str::Utf8Error,
@@ -24,25 +24,23 @@ use std::{
 /// `Thunk` just to use that for the error type is obviously impractical, however it is possible to
 /// use `Error<'static>`, which at least doesn't add more downsides. However it still leaves us with
 /// an error enum dealing with too much stuff.
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum ProcessError {
     /// Some utf8 encoding error occurred during processing
-    Utf8(Utf8Error),
+    #[error("{0}")]
+    Utf8(#[from] Utf8Error),
 
     /// Some utf8 encoding error occurred while processing after some backing storage was allocated
-    FromUtf8(FromUtf8Error),
+    #[error("{0}")]
+    FromUtf8(#[from] FromUtf8Error),
 
     /// Some base64 decoding error occurred during processing
-    Base64(DecodeSliceError),
+    #[error("{0}")]
+    Base64(#[from] DecodeSliceError),
 
     /// Some error occurred when parsing a number
-    IntParse(ParseIntError),
-}
-
-impl From<DecodeSliceError> for ProcessError {
-    fn from(value: DecodeSliceError) -> Self {
-        ProcessError::Base64(value)
-    }
+    #[error("{0}")]
+    IntParse(#[from] ParseIntError),
 }
 
 impl From<DecodeError> for ProcessError {
@@ -50,19 +48,6 @@ impl From<DecodeError> for ProcessError {
         ProcessError::Base64(DecodeSliceError::DecodeError(value))
     }
 }
-
-impl Display for ProcessError {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        match self {
-            ProcessError::Utf8(utf8) => utf8.fmt(f),
-            ProcessError::Base64(decode) => decode.fmt(f),
-            ProcessError::IntParse(int) => int.fmt(f),
-            ProcessError::FromUtf8(from_utf8) => from_utf8.fmt(f),
-        }
-    }
-}
-
-impl std::error::Error for ProcessError {}
 
 /// Input value whose further deserialization has been delayed
 ///

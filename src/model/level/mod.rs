@@ -2,6 +2,7 @@
 //! servers
 
 use itoa::Buffer;
+use thiserror::Error;
 use std::{
     borrow::Cow,
     fmt::{Display, Formatter},
@@ -658,38 +659,30 @@ pub struct Objects {
     pub objects: Vec<LevelObject>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum LevelProcessError {
+    #[error("{0}")]
     Deserialize(String),
 
-    Serialize(SerError),
+    #[error("{0}")]
+    Serialize(#[from] SerError),
 
-    Base64(base64::DecodeError),
+    #[error("{0}")]
+    Base64(#[from] base64::DecodeError),
 
     /// Unknown compression format for level data
+    #[error("Unknown compression scheme")]
     UnknownCompression,
 
     /// Error during (de)compression
-    Compression(std::io::Error),
+    #[error("{0}")]
+    Compression(#[from] std::io::Error),
 
     /// The given level string did not contain a metadata section
+    #[error("Missing metadata section in level string")]
     MissingMetadata,
 }
 
-impl Display for LevelProcessError {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        match self {
-            LevelProcessError::Deserialize(inner) => write!(f, "{}", inner),
-            LevelProcessError::Serialize(inner) => inner.fmt(f),
-            LevelProcessError::Base64(inner) => inner.fmt(f),
-            LevelProcessError::UnknownCompression => write!(f, "Unknown compression scheme"),
-            LevelProcessError::Compression(inner) => inner.fmt(f),
-            LevelProcessError::MissingMetadata => write!(f, "Missing metadata section in level string"),
-        }
-    }
-}
-
-impl std::error::Error for LevelProcessError {}
 
 impl ThunkProcessor for Objects {
     type Error = LevelProcessError;
@@ -698,7 +691,7 @@ impl ThunkProcessor for Objects {
     fn from_unprocessed(unprocessed: Cow<str>) -> Result<Self, LevelProcessError> {
         // Doing the entire base64 in one go is actually faster than using base64::read::DecoderReader and
         // having the two readers go back and forth.
-        let decoded = URL_SAFE.decode(&*unprocessed).map_err(LevelProcessError::Base64)?;
+        let decoded = URL_SAFE.decode(&*unprocessed)?;
 
         // Here's the deal: Robtop decompresses all levels by calling the zlib function 'inflateInit2_' with
         // the second argument set to 47. This basically tells zlib "this data might be compressed using
@@ -713,7 +706,7 @@ impl ThunkProcessor for Objects {
             [0x1f, 0x8b] => {
                 let mut decoder = GzDecoder::new(&decoded[..]);
 
-                decoder.read_to_string(&mut decompressed).map_err(LevelProcessError::Compression)?;
+                decoder.read_to_string(&mut decompressed)?;
             },
             // There's no such thing as "zlib magic bytes", but the first byte stores some information about how the data is compressed.
             // '0x78' is the first byte for the compression method robtop used (note: this is only used for very old levels, as he switched
@@ -721,7 +714,7 @@ impl ThunkProcessor for Objects {
             [0x78, _] => {
                 let mut decoder = ZlibDecoder::new(&decoded[..]);
 
-                decoder.read_to_string(&mut decompressed).map_err(LevelProcessError::Compression)?;
+                decoder.read_to_string(&mut decompressed)?;
             },
             _ => return Err(LevelProcessError::UnknownCompression),
         }
@@ -744,12 +737,12 @@ impl ThunkProcessor for Objects {
     fn as_unprocessed(processed: &Objects) -> Result<Cow<str>, LevelProcessError> {
         let mut bytes = Vec::new();
 
-        processed.meta.write_robtop_data(&mut bytes).map_err(LevelProcessError::Serialize)?;
+        processed.meta.write_robtop_data(&mut bytes)?;
 
         bytes.push(b';');
 
         for object in &processed.objects {
-            object.write_robtop_data(&mut bytes).map_err(LevelProcessError::Serialize)?;
+            object.write_robtop_data(&mut bytes)?;
             bytes.push(b';');
         }
 
@@ -760,7 +753,7 @@ impl ThunkProcessor for Objects {
         let mut encoder = GzEncoder::new(&bytes[..], Compression::new(9)); // TODO: idk what these values mean
         let mut compressed = Vec::new();
 
-        encoder.read_to_end(&mut compressed).map_err(LevelProcessError::Compression)?;
+        encoder.read_to_end(&mut compressed)?;
 
         Ok(Cow::Owned(URL_SAFE.encode(compressed)))
     }
