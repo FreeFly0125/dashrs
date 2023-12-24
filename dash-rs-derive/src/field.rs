@@ -1,14 +1,15 @@
 use std::convert::TryFrom;
 
 use proc_macro2::Ident;
+use proc_macro2::TokenStream;
 use quote::format_ident;
 use quote::quote;
+use syn::parse::discouraged::Speculative;
 use syn::parse::Parse;
 use syn::spanned::Spanned;
 use syn::{parse_quote, Error, Field, Lifetime, LitInt, Meta, MetaList, Result, Token, Type};
 
 use crate::utils;
-
 
 pub enum InternalField {
     /// An internal field that is mapped 1:1 to an API field
@@ -21,6 +22,8 @@ pub enum InternalField {
 
         /// The type of the API field associated with this internal field
         api_type: Type,
+
+        passthrough: Vec<TokenStream>,
     },
 }
 
@@ -32,6 +35,12 @@ impl InternalField {
     fn numeric_index(&self) -> &str {
         match self {
             InternalField::OneToOne { index, .. } => index.base10_digits(),
+        }
+    }
+
+    fn serde_passthrough(&self) -> &[TokenStream] {
+        match self {
+            InternalField::OneToOne { passthrough, .. } => passthrough.as_ref(),
         }
     }
 
@@ -54,16 +63,23 @@ impl InternalField {
     fn field_tokens(&self, ty: Type) -> proc_macro2::TokenStream {
         let field_name = self.internal_name();
         let serde_name = self.numeric_index();
+        let passthrough = self.serde_passthrough();
 
         if utils::type_contains_lifetime(&ty) {
             quote! {
                 #[serde(rename = #serde_name)]
                 #[serde(borrow)]
+                #(
+                    #[serde(#passthrough)]
+                )*
                 pub #field_name: #ty
             }
         } else {
             quote! {
                 #[serde(rename = #serde_name)]
+                #(
+                    #[serde(#passthrough)]
+                )*
                 pub #field_name: #ty
             }
         }
@@ -109,6 +125,9 @@ impl TryFrom<Field> for InternalField {
         let span = field.ident.span();
         let api_type = field.ty;
 
+        let mut passthrough = Vec::new();
+        let mut index = None;
+
         for attr in field.attrs {
             let Meta::List(MetaList { path, tokens, .. }) = attr.meta else {
                 continue;
@@ -118,32 +137,44 @@ impl TryFrom<Field> for InternalField {
                 continue;
             }
 
-            let DashAttribute::Index(int) = syn::parse2::<DashAttribute>(tokens)?;
-
-            return Ok(InternalField::OneToOne {
-                index: int,
-                field: field.ident.unwrap(),
-                api_type,
-            });
+            match syn::parse2::<DashAttribute>(tokens)? {
+                DashAttribute::Index(idx) => index = Some(idx),
+                DashAttribute::PassthroughToSerde(tokens) => passthrough.push(tokens),
+            }
         }
 
-        Err(Error::new(span, "Field missing index mapping"))
+        match index {
+            Some(index) => Ok(InternalField::OneToOne {
+                index,
+                field: field.ident.unwrap(),
+                api_type,
+                passthrough,
+            }),
+            None => Err(Error::new(span, "Field missing index mapping")),
+        }
     }
 }
 
 enum DashAttribute {
     Index(LitInt),
+    PassthroughToSerde(TokenStream),
 }
 
 impl Parse for DashAttribute {
     fn parse(input: syn::parse::ParseStream) -> Result<Self> {
-        let key: Ident = input.parse()?;
-        let _ = input.parse::<Token![=]>()?;
+        let fork = input.fork();
 
-        if key == "index" {
-            input.parse().map(|int| DashAttribute::Index(int))
-        } else {
-            Err(Error::new(key.span(), "unexpected key to `dash` attributes"))
+        let maybe_knowable = fork.parse::<Ident>().and_then(|key| {
+            let _ = fork.parse::<Token![=]>()?;
+            Ok(key)
+        });
+        match maybe_knowable {
+            Ok(key) if key == "index" => {
+                let lit_int = fork.parse::<LitInt>()?;
+                input.advance_to(&fork);
+                Ok(DashAttribute::Index(lit_int))
+            },
+            _ => Ok(DashAttribute::PassthroughToSerde(input.parse()?)),
         }
     }
 }
