@@ -96,3 +96,28 @@ macro_rules! into_conversion {
         }
     };
 }
+
+#[macro_export]
+macro_rules! dash_rs_newtype {
+    ($name: ident) => {
+        #[derive(Debug, Eq, PartialEq, Clone, Serialize, Deserialize)]
+        #[serde(transparent)]
+        pub struct $name<'a>(pub Cow<'a, str>);
+
+        impl<'a> $crate::serde::InternalProxy for $name<'a> {
+            type DeserializeProxy = &'a str;
+            type SerializeProxy<'b> = &'b str where Self: 'b;
+
+            fn to_serialize_proxy(&self) -> &str {
+                use std::borrow::Borrow;
+
+                self.0.borrow()
+            }
+
+            fn from_deserialize_proxy(from: &'a str) -> $name<'a> {
+                $name(Cow::Borrowed(from))
+            }
+        }
+        
+    };
+}

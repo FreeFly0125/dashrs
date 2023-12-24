@@ -125,7 +125,7 @@ pub fn parse_get_gj_user_info_response(response: &str) -> Result<Profile, Respon
         return Err(ResponseError::NotFound)
     }
 
-    Ok(Profile::from_robtop_str(response)?)
+    Ok(Profile::from_gj_str(response)?)
 }
 
 pub fn parse_get_gj_users_response(response: &str) -> Result<SearchedUser, ResponseError> {
