@@ -1,9 +1,7 @@
 use crate::{
-    model::level::object::{ids, speed::Speed, LevelObject, ObjectData},
-    serde::{DeError, HasRobtopFormat, IndexedDeserializer, IndexedSerializer, SerError},
+    model::level::object::{ids, speed::Speed, LevelObject, ObjectData}, Dash, GJFormat,
 };
 use serde::{Deserialize, Serialize};
-use std::io::Write;
 
 #[derive(Debug, Deserialize, Serialize, Clone, Copy, Default)]
 pub struct InternalLevelObject {
@@ -32,9 +30,9 @@ pub struct InternalLevelObject {
     checked: bool,
 }
 
-impl<'a> HasRobtopFormat<'a> for LevelObject {
-    fn from_robtop_str(input: &'a str) -> Result<Self, DeError> {
-        let internal = InternalLevelObject::deserialize(&mut IndexedDeserializer::new(input, ",", true))?;
+impl<'de> Dash<'de> for LevelObject {
+    fn dash_deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let internal = InternalLevelObject::deserialize(deserializer)?;
 
         let metadata = match internal.id {
             ids::SLOW_PORTAL =>
@@ -71,7 +69,7 @@ impl<'a> HasRobtopFormat<'a> for LevelObject {
         })
     }
 
-    fn write_robtop_data<W: Write>(&self, writer: W) -> Result<(), SerError> {
+    fn dash_serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         let mut internal = InternalLevelObject {
             id: self.id,
             x: self.x,
@@ -89,6 +87,11 @@ impl<'a> HasRobtopFormat<'a> for LevelObject {
             },
         };
 
-        internal.serialize(&mut IndexedSerializer::new(",", writer, true))
+        internal.serialize(serializer)
     }
+}
+
+impl<'de> GJFormat<'de> for LevelObject {
+    const DELIMITER: &'static str = ",";
+    const MAP_LIKE: bool = true;
 }

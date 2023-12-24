@@ -25,7 +25,7 @@ use crate::{
         GameVersion,
     },
     serde::{Base64Decoder, HasRobtopFormat, ProcessError, Thunk, ThunkProcessor},
-    util, SerError,
+    util, SerError, GJFormat,
 };
 use flate2::Compression;
 
@@ -727,7 +727,7 @@ impl ThunkProcessor for Objects {
 
         let meta = LevelMetadata::from_robtop_str(metadata_string).map_err(|err| LevelProcessError::Deserialize(err.to_string()))?;
 
-        iter.map(LevelObject::from_robtop_str)
+        iter.map(LevelObject::from_gj_str)
             .collect::<Result<_, _>>()
             .map(|objects| Objects { meta, objects })
             .map_err(|err| LevelProcessError::Deserialize(err.to_string()))
@@ -741,7 +741,7 @@ impl ThunkProcessor for Objects {
         bytes.push(b';');
 
         for object in &processed.objects {
-            object.write_robtop_data(&mut bytes)?;
+            object.write_gj(&mut bytes)?;
             bytes.push(b';');
         }
 
