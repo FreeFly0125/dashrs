@@ -2,19 +2,19 @@ use syn::{Error, Generics, LifetimeParam, Type, Result, spanned::Spanned};
 
 
 
-/// If the given [`Generics`] contain a unique lifetime, return it.
+/// If the given [`Generics`] contain a unique lifetime, return it. If there are no lifetimes, return a `'static` lifetime.
 /// Otherwise, return a spanned error indicating either a lack of lifetimes, or too many lifetimes
-pub fn find_unique_lifetime(generics: &Generics) -> Result<LifetimeParam> {
+pub fn find_unique_lifetime(generics: &Generics) -> Result<Option<LifetimeParam>> {
     let mut lifetime_iter = generics.lifetimes();
     let first_lifetime = lifetime_iter
         .next()
-        .ok_or(Error::new(generics.span(), "Expected exactly one lifetime, found none"))?;
+        .map(Clone::clone);
 
     if let Some(lifetime_param) = lifetime_iter.next() {
         return Err(Error::new(lifetime_param.span(), "Expected exactly one lifetime, found multiple"));
     }
 
-    Ok(first_lifetime.clone())
+    Ok(first_lifetime)
 }
 
 pub fn type_contains_lifetime(ty: &Type) -> bool {

@@ -1,7 +1,9 @@
 use proc_macro2::Ident;
+use proc_macro2::Span;
 use quote::format_ident;
 use quote::quote;
 use quote::ToTokens;
+use syn::Lifetime;
 use syn::{Generics, LifetimeParam};
 
 use crate::field::FieldMapping;
@@ -11,7 +13,8 @@ pub struct InternalStruct {
     pub name: Ident,
     pub fields: Vec<FieldMapping>,
     pub generics: Generics,
-    pub lifetime: LifetimeParam,
+    /// The unique lifetime of the struct for which we are deriving `Dash`, if it exists.
+    pub lifetime: Option<LifetimeParam>,
 }
 
 impl InternalStruct {
@@ -25,7 +28,12 @@ impl InternalStruct {
 
     fn ser_struct(&self) -> proc_macro2::TokenStream {
         let name = self.serialize_struct_name();
-        let fields = self.fields.iter().map(|ifield| ifield.ser_field_tokens(&self.lifetime.lifetime));
+        let static_lifetime = Lifetime::new("'static", Span::call_site());
+        let lifetime = match self.lifetime {
+            Some(ref lifetime) => &lifetime.lifetime,
+            None => &static_lifetime
+        };
+        let fields = self.fields.iter().map(|ifield| ifield.ser_field_tokens(lifetime));
         let generics = &self.generics;
 
         quote! {
@@ -82,9 +90,16 @@ impl ToTokens for InternalStruct {
     fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
         let ser_struct = self.ser_struct();
         let de_struct = self.de_struct();
-        let lifetime = &self.lifetime.lifetime;
-        let generics = &self.generics;
         let name = &self.name;
+
+        let artificial_lifetime = Lifetime::new("'__dash", Span::call_site());
+        let existing_params = &self.generics.params;
+        let (generic_arg_list, lifetime) = match self.lifetime {
+            Some(ref lifetime) => (quote! {<#existing_params>}, &lifetime.lifetime),
+            None => (quote! {<#artificial_lifetime,#existing_params>}, &artificial_lifetime)
+        };
+        let where_clause = &self.generics.where_clause;
+        
 
         let deserialize_impl = self.deserialize_implementation();
         let serialize_impl = self.serialize_implementation();
@@ -98,8 +113,9 @@ impl ToTokens for InternalStruct {
                 #ser_struct
                 #de_struct
 
-                // FIXME: `#name#generics` is wrong and will break if a where clause/bounds exist
-                impl#generics Dash<#lifetime> for #name#generics {
+                impl#generic_arg_list Dash<#lifetime> for #name<#existing_params>
+                    #where_clause
+                {
                     fn dash_deserialize<D: Deserializer<#lifetime>>(deserializer: D) -> Result<Self, D::Error> {
                         #deserialize_impl
                     }
