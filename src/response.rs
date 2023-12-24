@@ -162,7 +162,7 @@ pub fn parse_get_gj_comments_response(response: &str) -> Result<Vec<LevelComment
                 comment.user = if raw_user == "1~~9~~10~~11~~14~~15~~16~" {
                     None
                 } else {
-                    Some(CommentUser::from_robtop_str(raw_user)?)
+                    Some(CommentUser::from_gj_str(raw_user)?)
                 };
 
                 Ok(comment)

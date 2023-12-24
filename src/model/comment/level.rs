@@ -1,12 +1,13 @@
 use std::borrow::Cow;
 // use std::borrow::Cow;
 
+use dash_rs_derive::Dash;
 use serde::{Deserialize, Serialize};
 use variant_partial_eq::VariantPartialEq;
 
 use crate::{
     model::user::{Color, IconType, ModLevel},
-    serde::{Base64Decoder, Thunk},
+    serde::{Base64Decoder, Thunk}, GJFormat,
 };
 
 #[derive(Debug, Eq, VariantPartialEq, Clone, Deserialize, Serialize)]
@@ -78,54 +79,47 @@ pub struct LevelComment<'a> {
     pub special_color: Option<Color>,
 }
 
-#[derive(Debug, Eq, PartialEq, Clone, Deserialize, Serialize)]
+#[derive(Debug, Eq, PartialEq, Clone, Deserialize, Serialize, Dash)]
 pub struct CommentUser<'a> {
     /// This [`CommentUser`]'s name
-    ///
-    /// ## GD Internals
-    /// This value is provided at index `1`
+    #[dash(index = 1)]
     pub name: Cow<'a, str>,
 
     /// The index of the icon being displayed.
-    ///
-    /// ## GD Internals
-    /// This value is provided at index `9`
+    #[dash(index = 9)]
     pub icon_index: u16,
 
     /// This [`CommentUser`]'s primary color
     ///
     /// ## GD Internals:
-    /// This value is provided at index `10`. The game internally assigned each color some really
+    /// The game internally assigned each color some really
     /// obscure ID that doesn't correspond to the index in the game's color selector at all, which
     /// makes it pretty useless. dash-rs thus translates all in-game colors into their RGB
     /// representation.
-    /// ## GD Internals
-    /// This value is provided at index `10`
+    #[dash(index = 10)]
     pub primary_color: Color,
 
     /// This [`CommentUser`]'s secondary color
-    ///
-    /// ## GD Internals
-    /// This value is provided at index `11`. Same things as above apply
+    #[dash(index = 11)]
     pub secondary_color: Color,
 
     /// The type of icon being displayed
-    ///
-    /// ## GD Internals
-    /// This value is provided at index `14`
+    #[dash(index = 14)]
     pub icon_type: IconType,
 
     /// Values indicating whether this [`CommentUser`] has glow activated or not.
-    ///
-    /// ## GD Internals
-    /// This value is provided at index `15`, however the value `true` is encoded as `"2"` instead
+    #[dash(index = 15)]
+    #[dash(serialize_with = "crate::util::true_to_two")]
     pub has_glow: bool,
 
     /// The [`CommentUser`]'s unique account ID
-    ///
-    /// ## GD Internals
-    /// This value is provided at index `16`
+    #[dash(index = 16)]
     pub account_id: Option<u64>,
+}
+
+impl<'de> GJFormat<'de> for CommentUser<'de> {
+    const DELIMITER: &'static str = "~";
+    const MAP_LIKE: bool = true;
 }
 
 #[allow(unused_imports)]
@@ -172,5 +166,4 @@ mod internal {
     }
 
     include!(concat!(env!("OUT_DIR"), "/level_comment.boilerplate"));
-    include!(concat!(env!("OUT_DIR"), "/comment_user.boilerplate"));
 }

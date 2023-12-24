@@ -78,3 +78,21 @@ pub(crate) fn true_to_ten<S: Serializer>(b: &bool, serializer: S) -> Result<S::O
         false => serializer.serialize_str("0"),
     }
 }
+
+#[macro_export]
+macro_rules! into_conversion {
+    ($for: ty, $proxy_type: ty) => {
+        impl $crate::serde::InternalProxy for $for {
+            type DeserializeProxy = $proxy_type;
+            type SerializeProxy<'a> = $proxy_type where Self: 'a;
+
+            fn to_serialize_proxy(&self) -> $proxy_type {
+                (*self).into()
+            }
+
+            fn from_deserialize_proxy(from: $proxy_type) -> $for {
+                <$for>::from(from)
+            }
+        }
+    };
+}

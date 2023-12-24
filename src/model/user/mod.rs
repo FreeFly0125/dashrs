@@ -199,3 +199,6 @@ impl From<Color> for u8 {
         }
     }
 }
+
+crate::into_conversion!(Color, u8);
+crate::into_conversion!(IconType, u8);
