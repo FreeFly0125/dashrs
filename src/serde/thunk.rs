@@ -35,6 +35,13 @@ pub enum ProcessError {
     /// Some error occurred when parsing a number
     #[error("{0}")]
     IntParse(#[from] ParseIntError),
+
+    /// Incorrect number of items when parsing a comma separated list (e.g. if an RGB list only has two entries)
+    #[error("Incorrect number of items in comma separated list. Expected {expected}")]
+    IncorrectLength { expected: usize },
+
+    #[error("Received value that cannot be represented in Geometry Dash data format")]
+    Unrepresentable,
 }
 
 impl From<DecodeError> for ProcessError {
@@ -81,10 +88,9 @@ where
         S: Serializer,
     {
         match self {
-            Thunk::Unprocessed(unprocessed) =>
-                C::from_unprocessed(Cow::Borrowed(unprocessed))
-                    .map_err(S::Error::custom)?
-                    .serialize(serializer),
+            Thunk::Unprocessed(unprocessed) => C::from_unprocessed(Cow::Borrowed(unprocessed))
+                .map_err(S::Error::custom)?
+                .serialize(serializer),
             Thunk::Processed(processed) => processed.serialize(serializer),
         }
     }
@@ -160,11 +166,10 @@ impl ThunkProcessor for PercentDecoder {
     fn from_unprocessed(unprocessed: Cow<str>) -> Result<Self::Output<'_>, Self::Error> {
         match unprocessed {
             Cow::Borrowed(unprocessed) => percent_decode_str(unprocessed).decode_utf8().map_err(ProcessError::Utf8),
-            Cow::Owned(unprocessed) =>
-                match percent_decode_str(&unprocessed).decode_utf8().map_err(ProcessError::Utf8)? {
-                    Cow::Owned(decoded) => Ok(Cow::Owned(decoded)),
-                    _ => Ok(Cow::Owned(unprocessed)),
-                },
+            Cow::Owned(unprocessed) => match percent_decode_str(&unprocessed).decode_utf8().map_err(ProcessError::Utf8)? {
+                Cow::Owned(decoded) => Ok(Cow::Owned(decoded)),
+                _ => Ok(Cow::Owned(unprocessed)),
+            },
         }
     }
 

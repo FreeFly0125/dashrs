@@ -157,7 +157,7 @@ pub fn parse_get_gj_comments_response(response: &str) -> Result<Vec<LevelComment
             let mut parts = fragment.split(':');
 
             if let (Some(raw_comment), Some(raw_user)) = (parts.next(), parts.next()) {
-                let mut comment = LevelComment::from_robtop_str(raw_comment)?;
+                let mut comment = LevelComment::from_gj_str(raw_comment)?;
 
                 comment.user = if raw_user == "1~~9~~10~~11~~14~~15~~16~" {
                     None

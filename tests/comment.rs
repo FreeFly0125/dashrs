@@ -33,7 +33,7 @@ const LEVEL_COMMENT1: LevelComment = LevelComment {
     time_since_post: Cow::Borrowed("5 days"),
     progress: Some(0),
     mod_level: ModLevel::Elder,
-    special_color: Some(Color::Known(75, 255, 75)),
+    special_color: Some(Thunk::Processed(Color::Known(75, 255, 75))),
 };
 
 const LEVEL_COMMENT2: LevelComment = LevelComment {
@@ -46,7 +46,7 @@ const LEVEL_COMMENT2: LevelComment = LevelComment {
     time_since_post: Cow::Borrowed("5 days"),
     progress: Some(0),
     mod_level: ModLevel::Elder,
-    special_color: Some(Color::Known(75, 255, 75)),
+    special_color: Some(Thunk::Processed(Color::Known(75, 255, 75))),
 };
 
 const LEVEL_COMMENT3: LevelComment = LevelComment {
@@ -59,7 +59,7 @@ const LEVEL_COMMENT3: LevelComment = LevelComment {
     time_since_post: Cow::Borrowed("5 days"),
     progress: Some(0),
     mod_level: ModLevel::Normal,
-    special_color: Some(Color::Known(255, 255, 255)),
+    special_color: Some(Thunk::Processed(Color::Known(255, 255, 255))),
 };
 
 const COMMENT_USER: CommentUser = CommentUser {
@@ -77,6 +77,9 @@ impl helper::ThunkProcessor for LevelComment<'_> {
         if let Some(ref mut cnt) = self.content {
             assert!(cnt.process().is_ok());
         }
+        if let Some(ref mut cnt) = self.special_color {
+            cnt.process().unwrap();
+        }
     }
 }
 
@@ -92,14 +95,14 @@ impl helper::ThunkProcessor for ProfileComment<'_> {
     }
 }
 
-load_save_roundtrip!(load_save_roundtrip1, LevelComment, LEVEL_COMMENT1_DATA, LEVEL_COMMENT1, "~", true);
-load_save_roundtrip!(load_save_roundtrip2, LevelComment, LEVEL_COMMENT2_DATA, LEVEL_COMMENT2, "~", true);
-load_save_roundtrip!(load_save_roundtrip3, LevelComment, LEVEL_COMMENT3_DATA, LEVEL_COMMENT3, "~", true);
+load_save_roundtrip2!(load_save_roundtrip1, LevelComment, LEVEL_COMMENT1_DATA, LEVEL_COMMENT1, "~", true);
+load_save_roundtrip2!(load_save_roundtrip2, LevelComment, LEVEL_COMMENT2_DATA, LEVEL_COMMENT2, "~", true);
+load_save_roundtrip2!(load_save_roundtrip3, LevelComment, LEVEL_COMMENT3_DATA, LEVEL_COMMENT3, "~", true);
 load_save_roundtrip2!(load_save_roundtrip_user, CommentUser, COMMENT_USER_DATA, COMMENT_USER, "~", true);
 
-save_load_roundtrip!(save_load_roundtrip1, LevelComment, LEVEL_COMMENT1);
-save_load_roundtrip!(save_load_roundtrip2, LevelComment, LEVEL_COMMENT2);
-save_load_roundtrip!(save_load_roundtrip3, LevelComment, LEVEL_COMMENT3);
+save_load_roundtrip2!(save_load_roundtrip1, LevelComment, LEVEL_COMMENT1);
+save_load_roundtrip2!(save_load_roundtrip2, LevelComment, LEVEL_COMMENT2);
+save_load_roundtrip2!(save_load_roundtrip3, LevelComment, LEVEL_COMMENT3);
 save_load_roundtrip2!(save_load_roundtrip_user, CommentUser, COMMENT_USER);
 
 const PROFILE_COMMENT_DATA: &str =
