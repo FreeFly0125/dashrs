@@ -24,7 +24,7 @@ use crate::{
         song::{MainSong, NewgroundsSong},
         GameVersion,
     },
-    serde::{Base64Decoder, HasRobtopFormat, ProcessError, Thunk, ThunkProcessor},
+    serde::{Base64Decoder, ProcessError, Thunk, ThunkProcessor},
     util, SerError, GJFormat,
 };
 use flate2::Compression;
@@ -725,7 +725,7 @@ impl ThunkProcessor for Objects {
             None => return Err(LevelProcessError::MissingMetadata),
         };
 
-        let meta = LevelMetadata::from_robtop_str(metadata_string).map_err(|err| LevelProcessError::Deserialize(err.to_string()))?;
+        let meta = LevelMetadata::from_gj_str(metadata_string).map_err(|err| LevelProcessError::Deserialize(err.to_string()))?;
 
         iter.map(LevelObject::from_gj_str)
             .collect::<Result<_, _>>()
@@ -736,7 +736,7 @@ impl ThunkProcessor for Objects {
     fn as_unprocessed(processed: &Objects) -> Result<Cow<str>, LevelProcessError> {
         let mut bytes = Vec::new();
 
-        processed.meta.write_robtop_data(&mut bytes)?;
+        processed.meta.write_gj(&mut bytes)?;
 
         bytes.push(b';');
 

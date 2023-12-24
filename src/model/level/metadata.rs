@@ -1,98 +1,46 @@
-use crate::model::level::object::speed::Speed;
+use crate::{model::level::object::speed::Speed, GJFormat};
+use dash_rs_derive::Dash;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, PartialEq, Clone, Default, Copy, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Clone, Default, Copy, Serialize, Deserialize, Dash)]
 pub struct LevelMetadata {
+    #[dash(index = "kA4")]
+    #[dash(default = "one")]
     pub starting_speed: Speed,
+
+    #[dash(index = "kA13")]
+    #[dash(default)]
     pub song_offset: f64,
+
+    #[dash(index = "kA15")]
+    #[dash(default)]
     pub song_fade_in: bool,
+
+    #[dash(index = "kA16")]
+    #[dash(default)]
     pub song_fade_out: bool,
+
+    #[dash(index = "kA8")]
+    #[dash(default)]
     pub dual_start: bool,
+
+    #[dash(index = "kA10")]
+    #[dash(default)]
     pub two_player_controls: bool,
+
+    #[dash(index = "kA11")]
+    #[dash(default)]
     pub start_gravity_inverted: bool,
     // ... other fields in the metadata section ...
 }
 
-mod internal {
-    use crate::{
-        model::level::{metadata::LevelMetadata, object::speed::Speed},
-        serde::{HasRobtopFormat, IndexedDeserializer, IndexedSerializer},
-        DeError, SerError,
-    };
-    use serde::{Deserialize, Serialize};
-    use std::io::Write;
+impl<'de> GJFormat<'de> for LevelMetadata {
+    const DELIMITER: &'static str = ",";
+    const MAP_LIKE: bool = true;
+}
 
-    impl<'a> HasRobtopFormat<'a> for LevelMetadata {
-        fn from_robtop_str(input: &'a str) -> Result<Self, DeError> {
-            let int = InternalLevelMetadata::deserialize(&mut IndexedDeserializer::new(input, ",", true))?;
-
-            Ok(LevelMetadata {
-                starting_speed: match int.starting_speed {
-                    0 => Speed::Slow,
-                    1 => Speed::Normal,
-                    2 => Speed::Medium,
-                    3 => Speed::Fast,
-                    4 => Speed::VeryFast,
-                    unknown => Speed::Unknown(unknown),
-                },
-                song_offset: int.song_offset,
-                song_fade_in: int.song_fade_in,
-                song_fade_out: int.song_fade_out,
-                dual_start: int.dual_start,
-                two_player_controls: int.two_player_controls,
-                start_gravity_inverted: int.start_gravity_inverted,
-            })
-        }
-
-        fn write_robtop_data<W: Write>(&self, writer: W) -> Result<(), SerError> {
-            let internal = InternalLevelMetadata {
-                starting_speed: match self.starting_speed {
-                    Speed::Slow => 0,
-                    Speed::Normal => 1,
-                    Speed::Medium => 2,
-                    Speed::Fast => 3,
-                    Speed::VeryFast => 4,
-                    Speed::Unknown(unknown) => unknown,
-                },
-                song_offset: self.song_offset,
-                song_fade_in: self.song_fade_in,
-                song_fade_out: self.song_fade_out,
-                dual_start: self.dual_start,
-                two_player_controls: self.two_player_controls,
-                start_gravity_inverted: self.start_gravity_inverted,
-            };
-
-            internal.serialize(&mut IndexedSerializer::new(",", writer, true))
-        }
-    }
-
-    #[derive(Debug, Serialize, Deserialize, Clone, Copy)]
-    pub struct InternalLevelMetadata {
-        #[serde(rename = "kA4", default = "one")]
-        starting_speed: u8,
-
-        #[serde(rename = "kA13", default)]
-        song_offset: f64,
-
-        #[serde(rename = "kA15", default)]
-        song_fade_in: bool,
-
-        #[serde(rename = "kA16", default)]
-        song_fade_out: bool,
-
-        #[serde(rename = "kA8", default)]
-        dual_start: bool,
-
-        #[serde(rename = "kA10", default)]
-        two_player_controls: bool,
-
-        #[serde(rename = "kA11", default)]
-        start_gravity_inverted: bool, //.. other fields
-    }
-
-    fn one() -> u8 {
-        1
-    }
+fn one() -> u8 {
+    1
 }
 
 // starting_speed(index = kA4),
