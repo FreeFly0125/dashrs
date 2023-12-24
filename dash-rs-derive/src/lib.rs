@@ -1,6 +1,6 @@
 use std::convert::TryFrom;
 
-use field::InternalField;
+use field::FieldMapping;
 use proc_macro::TokenStream;
 use proc_macro2::Span;
 use quote::ToTokens;
@@ -33,11 +33,11 @@ fn expand_dash_derive(input: DeriveInput) -> Result<InternalStruct> {
 
     let primary_lifetime = utils::find_unique_lifetime(&generics)?;
 
-    #[allow(clippy::manual_try_fold)] // false positive, as we explicitly do not want to short circuit here
+    #[allow(clippy::manual_try_fold)] //
     let fields = fields_named
         .named
         .into_iter()
-        .map(InternalField::try_from)
+        .map(FieldMapping::try_from)
         .fold(Ok(Vec::new()), |acc, res| match (acc, res) {
             (Ok(mut ifields), Ok(ifield)) => {
                 ifields.push(ifield);

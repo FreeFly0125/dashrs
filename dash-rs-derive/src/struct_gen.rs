@@ -1,15 +1,15 @@
 use proc_macro2::Ident;
-use quote::ToTokens;
 use quote::format_ident;
 use quote::quote;
+use quote::ToTokens;
 use syn::{Generics, LifetimeParam};
 
-use crate::field::InternalField;
+use crate::field::FieldMapping;
 
 pub struct InternalStruct {
     /// Name of the API-version of this struct
     pub name: Ident,
-    pub fields: Vec<InternalField>,
+    pub fields: Vec<FieldMapping>,
     pub generics: Generics,
     pub lifetime: LifetimeParam,
 }
@@ -31,7 +31,7 @@ impl InternalStruct {
         quote! {
             #[derive(Serialize)]
             struct #name#generics {
-                #(#fields,)*
+                #(#fields)*
             }
         }
     }
@@ -44,7 +44,7 @@ impl InternalStruct {
         quote! {
             #[derive(Deserialize)]
             struct #name#generics {
-                #(#fields,)*
+                #(#fields)*
             }
         }
     }
@@ -56,7 +56,7 @@ impl InternalStruct {
 
         quote! {
             let internal = #serialize_struct {
-                #(#initializers,)*
+                #(#initializers)*
             };
             internal.serialize(serializer)
         }
@@ -72,7 +72,7 @@ impl InternalStruct {
             let internal = #deserialize_struct::deserialize(deserializer)?;
 
             Ok(#api_struct {
-                #(#initializers,)*
+                #(#initializers)*
             })
         }
     }
