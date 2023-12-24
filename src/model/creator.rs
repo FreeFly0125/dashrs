@@ -1,11 +1,9 @@
+use dash_rs_derive::Dash;
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 
-mod internal {
-    use crate::model::creator::Creator;
+use crate::GJFormat;
 
-    include!(concat!(env!("OUT_DIR"), "/creator.boilerplate"));
-}
 
 /// Struct modelling a [`Creator`] of a level.
 ///
@@ -15,19 +13,28 @@ mod internal {
 ///
 /// Creators do not use the map-like representation, meaning the order of fields in the raw data
 /// must correspond to the order of fields in this struct.
-#[derive(Debug, Deserialize, Serialize, PartialEq, Eq, Clone)]
+#[derive(Debug, Deserialize, Serialize, PartialEq, Eq, Clone, Dash)]
 pub struct Creator<'a> {
     /// The [`Creator`]'s unique user ID
+    #[dash(index = 1)]
     pub user_id: u64,
 
     /// The [`Creator`]'s name
     #[serde(borrow)]
+    #[dash(index = 2)]
     pub name: Cow<'a, str>,
 
     /// The [`Creator`]'s unique account ID.
     ///
     /// This field is [`None`] if the creator hasn't registered for an account.
+    #[dash(index = 3)]
+    #[dash(with = "crate::util::default_to_none")]
     pub account_id: Option<u64>,
+}
+
+impl<'de> GJFormat<'de> for Creator<'de> {
+    const DELIMITER: &'static str = ":";
+    const MAP_LIKE: bool = false;
 }
 
 impl<'a> Creator<'a> {

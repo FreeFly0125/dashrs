@@ -22,8 +22,8 @@ impl helper::ThunkProcessor for Creator<'_> {
     fn process_all_thunks(&mut self) {}
 }
 
-save_load_roundtrip!(save_load_roundtrip_registered, Creator, CREATOR_REGISTERED);
-load_save_roundtrip!(
+save_load_roundtrip2!(save_load_roundtrip_registered, Creator, CREATOR_REGISTERED);
+load_save_roundtrip2!(
     load_save_roundtrip_registered,
     Creator,
     CREATOR_REGISTERED_DATA,
@@ -32,8 +32,8 @@ load_save_roundtrip!(
     false
 );
 
-save_load_roundtrip!(save_load_roundtrip_unregistered, Creator, CREATOR_UNREGISTERED);
-load_save_roundtrip!(
+save_load_roundtrip2!(save_load_roundtrip_unregistered, Creator, CREATOR_UNREGISTERED);
+load_save_roundtrip2!(
     load_save_roundtrip_unregistered,
     Creator,
     CREATOR_UNREGISTERED_DATA,
