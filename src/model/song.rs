@@ -1,4 +1,5 @@
-use crate::serde::{PercentDecoder, ProcessError, Thunk};
+use crate::serde::{PercentDecoder, ProcessError, Thunk, GJFormat};
+use dash_rs_derive::Dash;
 use serde::{Deserialize, Serialize};
 use std::{
     borrow::Cow,
@@ -6,11 +7,6 @@ use std::{
 };
 use variant_partial_eq::VariantPartialEq;
 
-mod internal {
-    use crate::model::song::NewgroundsSong;
-
-    include!(concat!(env!("OUT_DIR"), "/newgrounds_song.boilerplate"));
-}
 
 /// Struct modelling a [`NewgroundsSong`]
 ///
@@ -20,54 +16,45 @@ mod internal {
 ///
 /// ### Unused indices:
 /// The following indices aren't used by the Geometry Dash servers: `9`
-#[derive(Debug, VariantPartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, VariantPartialEq, Serialize, Deserialize, Clone, Dash)]
 pub struct NewgroundsSong<'a> {
     /// The newgrounds id of this [`NewgroundsSong`]
-    ///
-    /// ## GD Internals
-    /// This value is provided at index `1`
+    #[dash(index = 1)]
     pub song_id: u64,
 
     /// The name of this [`NewgroundsSong`]
-    ///
-    /// ## GD Internals
-    /// This value is provided at index `2`
+    #[dash(index = 2)]
     pub name: Cow<'a, str>,
 
-    /// ## GD Internals
-    /// This value is provided at index `3`
+    #[dash(index = 3)]
     pub index_3: u64,
 
     /// The artist of this [`NewgroundsSong`]
-    ///
-    /// ## GD Internals
-    /// This value is provided at index `4`
+    #[dash(index = 4)]
     pub artist: Cow<'a, str>,
 
     /// The filesize of this [`NewgroundsSong`], in megabytes
-    ///
-    /// ## GD Internals
-    /// This value is provided at index `5`
+    #[dash(index = 5)]
     pub filesize: f64,
 
-    /// ## GD Internals
-    /// This value is provided at index `6`
+    #[dash(index = 6)]
     pub index_6: Option<Cow<'a, str>>,
 
-    /// ## GD Internals
-    /// This value is provided at index `7`
+    #[dash(index = 7)]
     pub index_7: Option<Cow<'a, str>>,
 
-    /// ## GD Internals
-    /// This value is provided at index `8>`
+    #[dash(index = 8)]
     pub index_8: Cow<'a, str>,
 
     /// The direct `audio.ngfiles.com` download link for this [`NewgroundsSong`]
-    ///
-    /// ## GD Internals
-    /// This value is provided at index `10`, and is percent encoded.
     #[serde(borrow)]
+    #[dash(index = 10)]
     pub link: Thunk<'a, PercentDecoder>,
+}
+
+impl<'de> GJFormat<'de> for NewgroundsSong<'de> {
+    const DELIMITER: &'static str = "~|~";
+    const MAP_LIKE: bool = true;
 }
 
 impl<'a> NewgroundsSong<'a> {

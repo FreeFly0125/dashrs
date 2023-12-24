@@ -79,7 +79,7 @@ impl<S, U> helper::ThunkProcessor for Level<'_, (), S, U> {
 fn deserialize_too_many_fields() {
     init_log();
 
-    helper::load::<NewgroundsSong>(CREO_DUNE_DATA_TOO_MANY_FIELDS);
+    helper::load2::<NewgroundsSong>(CREO_DUNE_DATA_TOO_MANY_FIELDS);
     helper::load::<Creator>(CREATOR_REGISTERED_DATA_TOO_MANY_FIELDS);
 }
 

@@ -1,10 +1,18 @@
 #![allow(unused)]
 
-use dash_rs::HasRobtopFormat;
+use dash_rs::{GJFormat, HasRobtopFormat};
 use std::{collections::HashMap, fmt::Debug};
 
 pub fn load<'a, T: HasRobtopFormat<'a> + Debug>(input: &'a str) -> T {
     let loaded = T::from_robtop_str(input);
+
+    assert!(loaded.is_ok(), "{:?}", loaded.unwrap_err());
+
+    loaded.unwrap()
+}
+
+pub fn load2<'a, T: GJFormat<'a> + Debug>(input: &'a str) -> T {
+    let loaded = T::from_gj_str(input);
 
     assert!(loaded.is_ok(), "{:?}", loaded.unwrap_err());
 
@@ -17,12 +25,27 @@ pub fn load_processed<'a, T: HasRobtopFormat<'a> + ThunkProcessor + Debug>(input
     t
 }
 
+pub fn load_processed2<'a, T: GJFormat<'a> + ThunkProcessor + Debug>(input: &'a str) -> T {
+    let mut t: T = load2(input);
+    t.process_all_thunks();
+    t
+}
+
 pub fn save<'a, T: HasRobtopFormat<'a> + Debug>(t: &T) -> String {
     let saved = t.to_robtop_string();
 
     assert!(saved.is_ok(), "{:?}", saved.unwrap_err());
 
     saved.unwrap()
+}
+
+pub fn save2<'a, T: GJFormat<'a> + Debug>(t: &T) -> String {
+    let mut saved = Vec::new();
+    let res = t.write_gj(&mut saved);
+
+    assert!(res.is_ok(), "{:?}", res.unwrap_err());
+
+    String::from_utf8(saved).unwrap()
 }
 
 macro_rules! load_save_roundtrip {
@@ -46,6 +69,27 @@ macro_rules! load_save_roundtrip {
     };
 }
 
+macro_rules! load_save_roundtrip2 {
+    ($t:ty, $load_from:ident, $expected:ident, $sep:expr, $map_like:expr) => {
+        load_save_roundtrip2!(load_save_roundtrip, $t, $load_from, $expected, $sep, $map_like);
+    };
+
+    ($name:ident, $t:ty, $load_from:ident, $expected:ident, $sep:expr, $map_like:expr) => {
+        #[test]
+        #[allow(non_snake_case)]
+        pub fn $name() {
+            use helper::*;
+
+            let _ = env_logger::builder().is_test(true).try_init();
+
+            let loaded: $t = load_processed2($load_from);
+            assert_eq!(loaded, $expected);
+            let saved = save2(&loaded);
+            assert_eq_robtop(&saved, $load_from, $sep, $map_like);
+        }
+    };
+}
+
 macro_rules! save_load_roundtrip {
     ($t:ty, $to_save:ident) => {
         save_load_roundtrip!(save_load_roundtrip, $t, $to_save);
@@ -60,6 +104,25 @@ macro_rules! save_load_roundtrip {
 
             let saved = save(&$to_save);
             let loaded: $t = load_processed(&saved);
+            assert_eq!(loaded, $to_save);
+        }
+    };
+}
+
+macro_rules! save_load_roundtrip2 {
+    ($t:ty, $to_save:ident) => {
+        save_load_roundtrip2!(save_load_roundtrip, $t, $to_save);
+    };
+    ($name:ident, $t:ty, $to_save:ident) => {
+        #[test]
+        #[allow(non_snake_case)]
+        pub fn $name() {
+            use helper::*;
+
+            let _ = env_logger::builder().is_test(true).try_init();
+
+            let saved = save2(&$to_save);
+            let loaded: $t = load_processed2(&saved);
             assert_eq!(loaded, $to_save);
         }
     };

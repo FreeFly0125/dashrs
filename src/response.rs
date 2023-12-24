@@ -14,7 +14,7 @@ use crate::{
         song::NewgroundsSong,
         user::{profile::Profile, searched::SearchedUser},
     },
-    DeError, HasRobtopFormat,
+    DeError, HasRobtopFormat, serde::GJFormat,
 };
 
 // Since NoneError is not stabilized, we cannot do `impl From<NoneError> for ResponseError<'_>`, so
@@ -65,7 +65,7 @@ pub fn parse_get_gj_levels_response(response: &str) -> Result<Vec<ListedLevel>, 
     let songs = section!(sections)
         .split("~:~")
         .filter(|s| !s.is_empty())
-        .map(NewgroundsSong::from_robtop_str)
+        .map(NewgroundsSong::from_gj_str)
         .collect::<Result<Vec<NewgroundsSong>, _>>()?;
 
     levels
