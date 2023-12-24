@@ -5,7 +5,7 @@ use proc_macro::TokenStream;
 use proc_macro2::Span;
 use quote::ToTokens;
 use struct_gen::InternalStruct;
-use syn::{spanned::Spanned, Data, DataStruct, DeriveInput, Error, Fields, Result, parse_macro_input};
+use syn::{parse_macro_input, spanned::Spanned, Data, DataStruct, DeriveInput, Error, Fields, Result};
 
 mod field;
 mod struct_gen;
@@ -21,12 +21,7 @@ pub fn derive_dash(ts: TokenStream) -> TokenStream {
 }
 
 fn expand_dash_derive(input: DeriveInput) -> Result<InternalStruct> {
-    let DeriveInput {
-        ident,
-        generics,
-        data,
-        ..
-    } = input;
+    let DeriveInput { ident, generics, data, .. } = input;
 
     let Data::Struct(DataStruct { fields, .. }) = data else {
         return Err(Error::new(Span::call_site(), "#[derive(Dash)] only support structs"));
@@ -38,15 +33,27 @@ fn expand_dash_derive(input: DeriveInput) -> Result<InternalStruct> {
 
     let primary_lifetime = utils::find_unique_lifetime(&generics)?;
 
-    fields_named
+    #[allow(clippy::manual_try_fold)] // false positive, as we explicitly do not want to short circuit here
+    let fields = fields_named
         .named
         .into_iter()
         .map(InternalField::try_from)
-        .collect::<Result<Vec<_>>>()
-        .map(|fields| InternalStruct {
-            name: ident,
-            fields,
-            generics,
-            lifetime: primary_lifetime,
-        })
+        .fold(Ok(Vec::new()), |acc, res| match (acc, res) {
+            (Ok(mut ifields), Ok(ifield)) => {
+                ifields.push(ifield);
+                Ok(ifields)
+            },
+            (Ok(_), Err(err)) | (Err(err), Ok(_)) => Err(err),
+            (Err(mut err), Err(err2)) => {
+                err.combine(err2);
+                Err(err)
+            },
+        })?;
+
+    Ok(InternalStruct {
+        name: ident,
+        fields,
+        generics,
+        lifetime: primary_lifetime,
+    })
 }

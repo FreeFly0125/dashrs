@@ -9,6 +9,7 @@ use syn::{parse_quote, Error, Field, Lifetime, LitInt, Meta, MetaList, Result, T
 
 use crate::utils;
 
+
 pub enum InternalField {
     /// An internal field that is mapped 1:1 to an API field
     OneToOne {
