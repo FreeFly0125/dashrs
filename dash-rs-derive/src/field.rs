@@ -4,6 +4,7 @@ use proc_macro2::Ident;
 use proc_macro2::TokenStream;
 use quote::format_ident;
 use quote::quote;
+use syn::LitStr;
 use syn::parse::discouraged::Speculative;
 use syn::parse::Parse;
 use syn::spanned::Spanned;
@@ -21,9 +22,14 @@ pub enum FieldMapping {
     NoIndex { field: Ident },
 }
 
+pub enum LitIndex {
+    Int(LitInt),
+    Str(LitStr),
+}
+
 pub struct OneToOne {
     /// The index of this field in the internal data format
-    pub index: LitInt,
+    pub index: LitIndex,
 
     /// The API field to which this [`InternalField`] is mapped
     pub field: Ident,
@@ -51,8 +57,11 @@ impl OneToOne {
         }
     }
 
-    fn index(&self) -> &str {
-        self.index.base10_digits()
+    fn index(&self) -> String {
+        match &self.index {
+            LitIndex::Int(lit_int) => lit_int.base10_digits().to_string(),
+            LitIndex::Str(lit_str) => lit_str.value(),
+        }
     }
 
     fn internal_name(&self) -> Ident {
@@ -149,14 +158,14 @@ enum FieldMappingBuilder {
     #[default]
     Initial,
     OneToOne {
-        index: Option<LitInt>,
+        index: Option<LitIndex>,
         passthrough: Vec<TokenStream>,
     },
     NoIndex,
 }
 
 impl FieldMappingBuilder {
-    fn with_index(&mut self, index: LitInt) -> bool {
+    fn with_index(&mut self, index: LitIndex) -> bool {
         match std::mem::take(self) {
             FieldMappingBuilder::Initial => {
                 *self = FieldMappingBuilder::OneToOne {
@@ -250,7 +259,7 @@ impl TryFrom<Field> for FieldMapping {
 }
 
 enum DashAttribute {
-    Index(LitInt),
+    Index(LitIndex),
     NoIndex,
     PassthroughToSerde(TokenStream),
 }
@@ -267,11 +276,19 @@ impl Parse for DashAttribute {
             }
             if key == "index" {
                 let _ = fork.parse::<Token![=]>()?;
-                let lit_int = fork.parse::<LitInt>()?;
+                let lookahead = fork.lookahead1();
+
+                let lit = if lookahead.peek(LitInt) {
+                    LitIndex::Int(fork.parse()?)
+                } else if lookahead.peek(LitStr) {
+                    LitIndex::Str(fork.parse()?)
+                } else {
+                    return Err(lookahead.error())
+                };
 
                 input.advance_to(&fork);
 
-                return Ok(DashAttribute::Index(lit_int));
+                return Ok(DashAttribute::Index(lit));
             }
         }
 
