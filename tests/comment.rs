@@ -114,5 +114,5 @@ const PROFILE_COMMENT: ProfileComment = ProfileComment {
     time_since_post: Cow::Borrowed("6 days"),
 };
 
-load_save_roundtrip!(ProfileComment, PROFILE_COMMENT_DATA, PROFILE_COMMENT, "~", true);
-save_load_roundtrip!(ProfileComment, ProfileComment, PROFILE_COMMENT);
+load_save_roundtrip2!(ProfileComment, PROFILE_COMMENT_DATA, PROFILE_COMMENT, "~", true);
+save_load_roundtrip2!(ProfileComment, ProfileComment, PROFILE_COMMENT);

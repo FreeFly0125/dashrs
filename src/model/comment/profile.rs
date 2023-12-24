@@ -1,41 +1,33 @@
-use crate::serde::{Base64Decoder, Thunk};
+use crate::{serde::{Base64Decoder, Thunk}, GJFormat};
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 use variant_partial_eq::VariantPartialEq;
+use dash_rs_derive::Dash;
 
-#[derive(Debug, Serialize, Deserialize, Eq, VariantPartialEq, Clone)]
+#[derive(Debug, Serialize, Deserialize, Eq, VariantPartialEq, Clone, Dash)]
 pub struct ProfileComment<'a> {
     /// The actual content of the [`ProfileComment`] made.
-    ///
-    /// ## GD Internals
-    /// This value is provided at index `2` and base64 encoded
     #[serde(borrow)]
     #[variant_compare = "crate::util::option_variant_eq"]
+    #[dash(index = 2)]
     pub content: Option<Thunk<'a, Base64Decoder>>,
 
     /// The amount of likes this [`ProfileComment`] has received
-    ///
-    /// ## GD Internals
-    /// This value is provided at index `4`
+    #[dash(index = 4)]
     pub likes: i32,
 
     /// The unique id of this [`ProfileComment`]. Additionally, there is also no [`LevelComment`]
     /// with this idea
-    ///
-    /// ## GD Internals
-    /// This value is provided at index `6`
+    #[dash(index = 6)]
     pub comment_id: u64,
 
     /// Robtop's completely braindead way of keeping track of when this [`ProfileComment`] was
     /// posted
-    ///
-    /// ## GD Internals
-    /// This value is provided at index `9`
+    #[dash(index = 9)]
     pub time_since_post: Cow<'a, str>,
 }
 
-mod internal {
-    use crate::model::comment::profile::ProfileComment;
-
-    include!(concat!(env!("OUT_DIR"), "/profile_comment.boilerplate"));
+impl<'de> GJFormat<'de> for ProfileComment<'de> {
+    const DELIMITER: &'static str = "~";
+    const MAP_LIKE: bool = true;
 }

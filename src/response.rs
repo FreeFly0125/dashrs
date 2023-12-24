@@ -182,6 +182,6 @@ pub fn parse_get_gj_acccount_comments_response(response: &str) -> Result<Vec<Pro
 
     section!(sections)
         .split('|')
-        .map(|fragment| Ok(ProfileComment::from_robtop_str(fragment)?))
+        .map(|fragment| Ok(ProfileComment::from_gj_str(fragment)?))
         .collect()
 }
