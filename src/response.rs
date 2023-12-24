@@ -138,7 +138,7 @@ pub fn parse_get_gj_users_response(response: &str) -> Result<SearchedUser, Respo
     // In the past this used to be a paginating endpoint which performed an infix search on the user
     // name. Now, it performs a full match, and since account names are unique, this endpoint returns at
     // most one object anymore.
-    Ok(SearchedUser::from_robtop_str(section!(sections))?)
+    Ok(SearchedUser::from_gj_str(section!(sections))?)
 }
 
 pub fn parse_get_gj_comments_response(response: &str) -> Result<Vec<LevelComment>, ResponseError> {
