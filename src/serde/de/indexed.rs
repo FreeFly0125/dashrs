@@ -1,7 +1,7 @@
 //! Module containing the deserializer for robtop's indexed data format
 
 use super::error::Error;
-use log::trace;
+use log::{trace, debug};
 use serde::{
     de,
     de::{DeserializeSeed, Visitor},
@@ -29,6 +29,7 @@ pub struct IndexedDeserializer<'de> {
     input: &'de str,
     end_of_current_token: usize,
     delimiter: &'de str,
+    last_token: Option<&'de str>,
 }
 
 impl<'de> IndexedDeserializer<'de> {
@@ -48,6 +49,7 @@ impl<'de> IndexedDeserializer<'de> {
             input: source,
             end_of_current_token: source.as_ptr() as usize,
             delimiter,
+            last_token: None
         }
     }
 
@@ -62,7 +64,8 @@ impl<'de> IndexedDeserializer<'de> {
 
         trace!("Splitting off token {}, remaining input: {}", tok, &self.input[self.position()..]);
 
-        Some(tok)
+        self.last_token = Some(tok);
+        self.last_token
     }
 
     fn position(&self) -> usize {
@@ -319,9 +322,10 @@ impl<'a, 'de> Deserializer<'de> for &'a mut IndexedDeserializer<'de> {
         // indices. By the time this is called, they key itself will already have been popped in our
         // `MapAccess` implementation. This means we need to skip exactly one item! We'll feed a `None` to
         // the visitor. Because idk what we really wanna do here otherwise
+        let possibly_index = self.last_token;
         let token = self.consume_token();
 
-        trace!("Ignored token {:?}. Maybe some index is unmapped?", token);
+        debug!("Ignored token {:?}. Preceding token (potentiall an unmapped index) was {:?}", token,possibly_index);
 
         visitor.visit_none()
     }
