@@ -51,7 +51,7 @@ const TIME_PRESSURE: Level = Level {
         password: Thunk::Processed(Password::PasswordCopy(3101)),
         time_since_upload: Cow::Borrowed("5 years"),
         time_since_update: Cow::Borrowed("5 years"),
-        index_36: None,
+        index_36: Cow::Borrowed(""),
     },
 };
 
@@ -87,14 +87,14 @@ fn deserialize_too_many_fields() {
 fn deserialize_level() {
     init_log();
 
-    let _ = helper::load_processed::<Level>(include_str!("data/11774780_dark_realm_gjdownload_response"));
+    let _ = helper::load_processed2::<Level>(include_str!("data/11774780_dark_realm_gjdownload_response"));
 }
 
 #[test]
 fn deserialize_level2() {
     init_log();
 
-    let mut level = helper::load_processed::<Level>(include_str!("data/897837_time_pressure_gjdownload_response"));
+    let mut level = helper::load_processed2::<Level>(include_str!("data/897837_time_pressure_gjdownload_response"));
 
     level.level_data.level_data = Thunk::Unprocessed(Cow::Borrowed("REMOVED"));
 

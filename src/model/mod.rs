@@ -37,6 +37,7 @@ pub enum GameVersion {
     /// values in the form `major.minor`
     Version { minor: u8, major: u8 },
 }
+
 impl From<u8> for GameVersion {
     fn from(version: u8) -> Self {
         if version == 10 {
@@ -68,3 +69,5 @@ impl Display for GameVersion {
         }
     }
 }
+
+crate::into_conversion!(GameVersion, u8);

@@ -25,7 +25,7 @@ use crate::{
         GameVersion,
     },
     serde::{Base64Decoder, ProcessError, Thunk, ThunkProcessor},
-    util, SerError, GJFormat,
+    util, GJFormat, SerError, Dash,
 };
 use flate2::Compression;
 
@@ -242,6 +242,8 @@ impl From<Featured> for i32 {
         }
     }
 }
+
+crate::into_conversion!(Featured, i32);
 
 /// Enum representing a level's copyability status
 // FIXME: Find a sane implementation for (de)serialize here
@@ -613,6 +615,14 @@ pub struct Level<'a, Data = LevelData<'a>, Song = Option<u64>, User = u64> {
     pub level_data: Data,
 }
 
+impl<'de, Data, Song, User> GJFormat<'de> for Level<'de, Data, Song, User>
+where
+    Level<'de, Data, Song, User>: Dash<'de>,
+{
+    const DELIMITER: &'static str = ":";
+    const MAP_LIKE: bool = true;
+}
+
 /// Struct encapsulating the additional level data returned when actually downloading a level
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct LevelData<'a> {
@@ -650,7 +660,7 @@ pub struct LevelData<'a> {
     ///
     /// ## GD Internals:
     /// This value is provided at index `36`
-    pub index_36: Option<Cow<'a, str>>,
+    pub index_36: Cow<'a, str>,
 }
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
@@ -781,7 +791,7 @@ fn get_seconds_from_x_pos(pos: f32, start_speed: Speed, portals: &[(f32, Speed)]
     let mut speed: f32 = start_speed.into();
 
     if portals.is_empty() {
-        return pos / speed
+        return pos / speed;
     }
 
     let mut last_obj_pos = 0.0;
@@ -793,7 +803,7 @@ fn get_seconds_from_x_pos(pos: f32, start_speed: Speed, portals: &[(f32, Speed)]
 
         // break if we're past the position we want to calculate the position to
         if pos <= current_segment {
-            break
+            break;
         }
 
         // Calculate time spent in this segment and add to total time

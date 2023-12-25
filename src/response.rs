@@ -14,7 +14,7 @@ use crate::{
         song::NewgroundsSong,
         user::{profile::Profile, searched::SearchedUser},
     },
-    DeError, HasRobtopFormat, serde::GJFormat,
+    DeError, serde::GJFormat,
 };
 
 // Since NoneError is not stabilized, we cannot do `impl From<NoneError> for ResponseError<'_>`, so
@@ -71,7 +71,7 @@ pub fn parse_get_gj_levels_response(response: &str) -> Result<Vec<ListedLevel>, 
     levels
         .split('|')
         .map(|fragment| {
-            let level: Level<()> = Level::from_robtop_str(fragment)?;
+            let level: Level<()> = Level::from_gj_str(fragment)?;
             // Note: Cloning is cheap because none of the Thunks is evaluated, so we only have references lying
             // around.
             let creator = creators.iter().find(|creator| creator.user_id == level.creator).map(Clone::clone);
@@ -117,7 +117,7 @@ pub fn parse_download_gj_level_response(response: &str) -> Result<Level, Respons
 
     let mut sections = response.split('#');
 
-    Ok(Level::from_robtop_str(section!(sections))?)
+    Ok(Level::from_gj_str(section!(sections))?)
 }
 
 pub fn parse_get_gj_user_info_response(response: &str) -> Result<Profile, ResponseError> {
