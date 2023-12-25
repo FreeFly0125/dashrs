@@ -77,6 +77,13 @@ pub enum LevelLength {
     /// This variant is represented by the value `4` in both requests and
     /// responses
     ExtraLong,
+
+    /// Platformer levels (referred to as "Plat." on the level overview screens)
+    ///
+    /// ## GD Internals:
+    /// This variant is represented by the value `5` in both requests and
+    /// responses
+    Platformer,
 }
 
 /// Enum representing the possible level ratings
@@ -526,7 +533,8 @@ pub struct Level<'a, Data = LevelData<'a>, Song = Option<u64>, User = u64> {
     /// [`LevelLength`] struct at index `15`
     pub length: LevelLength,
 
-    /// The amount of stars completion of this [`Level`] awards
+    /// The amount of stars completion of this [`Level`] awards. In the case of a platformer level, this 
+    /// is instead the number of "moons" awarded.
     ///
     /// ## GD Internals:
     /// This value is provided at index `18`
@@ -613,6 +621,13 @@ pub struct Level<'a, Data = LevelData<'a>, Song = Option<u64>, User = u64> {
     ///
     /// This is [`None`] for levels retrieved via the "overview" endpoint `getGJLevels`.
     pub level_data: Data,
+}
+
+impl<'a, Data, Song, User> Level<'a, Data, Song, User> {
+    /// Returns `true` iff this level is a platformer level
+    pub fn is_platformer(&self) -> bool {
+        matches!(self.length, LevelLength::Platformer)
+    }
 }
 
 impl<'de, Data, Song, User> GJFormat<'de> for Level<'de, Data, Song, User>

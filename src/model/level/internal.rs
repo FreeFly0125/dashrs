@@ -310,6 +310,7 @@ impl InternalProxy for LevelLength {
             LevelLength::Medium => 2,
             LevelLength::Long => 3,
             LevelLength::ExtraLong => 4,
+            LevelLength::Platformer => 5,
         }
     }
 
@@ -320,6 +321,7 @@ impl InternalProxy for LevelLength {
             2 => LevelLength::Medium,
             3 => LevelLength::Long,
             4 => LevelLength::ExtraLong,
+            5 => LevelLength::Platformer,
             int => LevelLength::Unknown(int),
         }
     }
