@@ -190,17 +190,14 @@ impl<'de> Dash<'de> for Level<'de, LevelData<'de>, Option<u64>, u64> {
     fn dash_deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         let internal = InternalLevel::deserialize(deserializer)?;
 
-        dbg!(&internal);
-
         let level_data = match (internal.index_4, internal.index_27, internal.index_28, internal.index_29) {
-            (Some(idx4), Some(idx27), Some(idx28), Some(idx29)) =>
-                LevelData {
-                    level_data: InternalProxy::from_deserialize_proxy(idx4),
-                    password: InternalProxy::from_deserialize_proxy(idx27),
-                    time_since_upload: InternalProxy::from_deserialize_proxy(idx28),
-                    time_since_update: InternalProxy::from_deserialize_proxy(idx29),
-                    index_36: InternalProxy::from_deserialize_proxy(internal.index_36.unwrap_or_default()),
-                },
+            (Some(idx4), Some(idx27), Some(idx28), Some(idx29)) => LevelData {
+                level_data: InternalProxy::from_deserialize_proxy(idx4),
+                password: InternalProxy::from_deserialize_proxy(idx27),
+                time_since_upload: InternalProxy::from_deserialize_proxy(idx28),
+                time_since_update: InternalProxy::from_deserialize_proxy(idx29),
+                index_36: InternalProxy::from_deserialize_proxy(internal.index_36.unwrap_or_default()),
+            },
             _ => return Err(D::Error::custom("Missing indices for level data!")),
         };
 
