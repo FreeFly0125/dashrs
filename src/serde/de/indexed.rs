@@ -1,7 +1,7 @@
 //! Module containing the deserializer for robtop's indexed data format
 
 use super::error::Error;
-use log::{trace, debug};
+use log::{debug, trace};
 use serde::{
     de,
     de::{DeserializeSeed, Visitor},
@@ -49,7 +49,7 @@ impl<'de> IndexedDeserializer<'de> {
             input: source,
             end_of_current_token: source.as_ptr() as usize,
             delimiter,
-            last_token: None
+            last_token: None,
         }
     }
 
@@ -325,7 +325,10 @@ impl<'a, 'de> Deserializer<'de> for &'a mut IndexedDeserializer<'de> {
         let possibly_index = self.last_token;
         let token = self.consume_token();
 
-        debug!("Ignored token {:?}. Preceding token (potentiall an unmapped index) was {:?}", token,possibly_index);
+        debug!(
+            "Ignored token {:?}. Preceding token (potentiall an unmapped index) was {:?}",
+            token, possibly_index
+        );
 
         visitor.visit_none()
     }

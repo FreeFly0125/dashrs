@@ -533,8 +533,8 @@ pub struct Level<'a, Data = LevelData<'a>, Song = Option<u64>, User = u64> {
     /// [`LevelLength`] struct at index `15`
     pub length: LevelLength,
 
-    /// The amount of stars completion of this [`Level`] awards. In the case of a platformer level, this 
-    /// is instead the number of "moons" awarded.
+    /// The amount of stars completion of this [`Level`] awards. In the case of a platformer level,
+    /// this is instead the number of "moons" awarded.
     ///
     /// ## GD Internals:
     /// This value is provided at index `18`
