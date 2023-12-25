@@ -21,37 +21,43 @@ const CREATOR_REGISTERED_DATA_TOO_MANY_FIELDS: &str = "4170784:Serponge:119741:3
 const TIME_PRESSURE: Level = Level {
     level_id: 897837,
     name: Cow::Borrowed("time pressure"),
-    description: Some(Thunk::Processed(Cow::Borrowed("please rate and like  8-9 stars mabye?"))),
-    version: 2,
+    description: Some(Thunk::Processed(Cow::Borrowed("Fixed the bug at 91% 15/09/2020"))),
+    version: 1,
     creator: 842519,
     difficulty: LevelRating::Demon(DemonRating::Easy),
-    downloads: 3189574,
+    downloads: 7016929,
     main_song: Some(MainSong {
         main_song_id: 14,
         name: "Electrodynamix",
         artist: "DJ-Nate",
     }),
-    gd_version: GameVersion::Unknown,
-    likes: 198542,
+    gd_version: GameVersion::Version { minor: 1, major: 2 },
+    likes: 277829,
     length: LevelLength::Long,
     stars: 10,
     featured: Featured::Featured(700),
-    copy_of: None,
+    copy_of: Some(897837),
     two_player: false,
     custom_song: None,
     coin_amount: 0,
     coins_verified: false,
     stars_requested: None,
     is_epic: false,
-    object_amount: None,
-    index_46: None,
-    index_47: None,
+    object_amount: Some(7092),
+    index_46: Some(Cow::Borrowed("113")),
+    index_47: Some(Cow::Borrowed("0")),
     level_data: LevelData {
         level_data: Thunk::Unprocessed(Cow::Borrowed("REMOVED")),
         password: Thunk::Processed(Password::PasswordCopy(3101)),
-        time_since_upload: Cow::Borrowed("5 years"),
-        time_since_update: Cow::Borrowed("5 years"),
-        index_36: Cow::Borrowed(""),
+        time_since_upload: Cow::Borrowed("9 years"),
+        time_since_update: Cow::Borrowed("3 years"),
+        index_36: Cow::Borrowed(
+            "0_167_67_0_0_0_0_207_0_0_89_88_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0",
+        ),
+        index_40: Cow::Borrowed("0"),
+        index_52: Cow::Borrowed(""),
+        index_53: Cow::Borrowed(""),
+        index_57: Cow::Borrowed("0"),
     },
 };
 
@@ -95,6 +101,8 @@ fn deserialize_level2() {
     let mut level = helper::load_processed::<Level>(include_str!("data/897837_time_pressure_gjdownload_response"));
 
     level.level_data.level_data = Thunk::Unprocessed(Cow::Borrowed("REMOVED"));
+
+    dbg!(&level);
 
     assert_eq!(level, TIME_PRESSURE);
 }
