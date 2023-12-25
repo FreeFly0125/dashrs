@@ -4,7 +4,6 @@ use std::borrow::Cow;
 
 use crate::GJFormat;
 
-
 /// Struct modelling a [`Creator`] of a level.
 ///
 /// ## GD Internals

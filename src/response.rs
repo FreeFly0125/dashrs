@@ -14,7 +14,8 @@ use crate::{
         song::NewgroundsSong,
         user::{profile::Profile, searched::SearchedUser},
     },
-    DeError, serde::GJFormat,
+    serde::GJFormat,
+    DeError,
 };
 
 // Since NoneError is not stabilized, we cannot do `impl From<NoneError> for ResponseError<'_>`, so

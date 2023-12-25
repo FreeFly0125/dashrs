@@ -1,5 +1,6 @@
 use crate::{
-    model::level::object::{ids, speed::Speed, LevelObject, ObjectData}, Dash, GJFormat,
+    model::level::object::{ids, speed::Speed, LevelObject, ObjectData},
+    Dash, GJFormat,
 };
 use serde::{Deserialize, Serialize};
 

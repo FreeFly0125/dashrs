@@ -38,16 +38,18 @@ fn expand_dash_derive(input: DeriveInput) -> Result<InternalStruct> {
         .named
         .into_iter()
         .map(FieldMapping::try_from)
-        .fold(Ok(Vec::new()), |acc, res| match (acc, res) {
-            (Ok(mut ifields), Ok(ifield)) => {
-                ifields.push(ifield);
-                Ok(ifields)
-            },
-            (Ok(_), Err(err)) | (Err(err), Ok(_)) => Err(err),
-            (Err(mut err), Err(err2)) => {
-                err.combine(err2);
-                Err(err)
-            },
+        .fold(Ok(Vec::new()), |acc, res| {
+            match (acc, res) {
+                (Ok(mut ifields), Ok(ifield)) => {
+                    ifields.push(ifield);
+                    Ok(ifields)
+                },
+                (Ok(_), Err(err)) | (Err(err), Ok(_)) => Err(err),
+                (Err(mut err), Err(err2)) => {
+                    err.combine(err2);
+                    Err(err)
+                },
+            }
         })?;
 
     Ok(InternalStruct {

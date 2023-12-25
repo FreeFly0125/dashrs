@@ -1,8 +1,11 @@
-use crate::{serde::{Base64Decoder, Thunk}, GJFormat};
+use crate::{
+    serde::{Base64Decoder, Thunk},
+    GJFormat,
+};
+use dash_rs_derive::Dash;
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 use variant_partial_eq::VariantPartialEq;
-use dash_rs_derive::Dash;
 
 #[derive(Debug, Serialize, Deserialize, Eq, VariantPartialEq, Clone, Dash)]
 pub struct ProfileComment<'a> {

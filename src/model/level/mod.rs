@@ -25,7 +25,7 @@ use crate::{
         GameVersion,
     },
     serde::{Base64Decoder, ProcessError, Thunk, ThunkProcessor},
-    util, GJFormat, SerError, Dash,
+    util, Dash, GJFormat, SerError,
 };
 use flate2::Compression;
 

@@ -9,19 +9,19 @@ pub use thunk::{Base64Decoder, PercentDecoder, ProcessError, Thunk, ThunkProcess
 
 use std::{borrow::Cow, io::Write};
 
-
-/// Trait for objects that can be (de)serialized from some Geometry Dash data format (e.g. an indexed description).
-/// 
-/// Internally, all types supporting (de)serialization using a Geometry Dash data format do so on custom, private
-/// structs. This is mainly so that details from robtop's data
+/// Trait for objects that can be (de)serialized from some Geometry Dash data format (e.g. an
+/// indexed description).
+///
+/// Internally, all types supporting (de)serialization using a Geometry Dash data format do so on
+/// custom, private structs. This is mainly so that details from robtop's data
 /// formats don't leak into dash-rs' data representation (as this allows the types in the public API
 /// to implemente/derive Serialize/Deserialize in a way differing from the serialization required
-/// for Robtop's data formats). Then, this internal representation is converted into the types exposed by 
-/// `dash-rs`' API using either infallible conversions, or [`Thunk`]ing
-/// 
-/// The lifetime `'de` is the same lifetime that [`serde`](serde.rs) uses on its [`Deserialize`](serde::Deserialize)
-/// trait, see also [the serde documentation].
-/// 
+/// for Robtop's data formats). Then, this internal representation is converted into the types
+/// exposed by `dash-rs`' API using either infallible conversions, or [`Thunk`]ing
+///
+/// The lifetime `'de` is the same lifetime that [`serde`](serde.rs) uses on its
+/// [`Deserialize`](serde::Deserialize) trait, see also [the serde documentation].
+///
 /// [1]: https://serde.rs/lifetimes.html
 pub trait Dash<'de>: Sized {
     fn dash_deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error>;
@@ -45,10 +45,13 @@ pub trait GJFormat<'de>: Dash<'de> {
     }
 }
 
-/// Trait describing an intermediate step between the raw Geomtry Dash data format, and the APIs exposed by dash-rs
+/// Trait describing an intermediate step between the raw Geomtry Dash data format, and the APIs
+/// exposed by dash-rs
 ///
-/// Each field in a dash-rs struct that is mapped 1:1 to some index in the Geometry Dash data format is first deserialized to an intermediate proxy type (such as &'de str), before being converted
-/// into the type it has in the public API (such as Thunk<'a, PercentDecoder>). This trait handles this conversion and its reciprocal.
+/// Each field in a dash-rs struct that is mapped 1:1 to some index in the Geometry Dash data format
+/// is first deserialized to an intermediate proxy type (such as &'de str), before being converted
+/// into the type it has in the public API (such as Thunk<'a, PercentDecoder>). This trait handles
+/// this conversion and its reciprocal.
 pub trait InternalProxy {
     /// The type to which an index get deserialized in the internal representation
     type DeserializeProxy;

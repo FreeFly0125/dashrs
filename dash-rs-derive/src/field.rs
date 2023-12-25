@@ -1,14 +1,13 @@
 use std::convert::TryFrom;
 
-use proc_macro2::Ident;
-use proc_macro2::TokenStream;
-use quote::format_ident;
-use quote::quote;
-use syn::LitStr;
-use syn::parse::discouraged::Speculative;
-use syn::parse::Parse;
-use syn::spanned::Spanned;
-use syn::{parse_quote, Error, Field, Lifetime, LitInt, Meta, MetaList, Result, Token, Type};
+use proc_macro2::{Ident, TokenStream};
+use quote::{format_ident, quote};
+use syn::{
+    parse::{discouraged::Speculative, Parse},
+    parse_quote,
+    spanned::Spanned,
+    Error, Field, Lifetime, LitInt, LitStr, Meta, MetaList, Result, Token, Type,
+};
 
 use crate::utils;
 
@@ -146,9 +145,10 @@ impl FieldMapping {
     pub fn deserialize(&self) -> TokenStream {
         match self {
             FieldMapping::OneToOne(inner) => inner.deserialize(),
-            FieldMapping::NoIndex { field } => quote! {
-                #field: Default::default(),
-            },
+            FieldMapping::NoIndex { field } =>
+                quote! {
+                    #field: Default::default(),
+                },
         }
     }
 }
@@ -167,18 +167,16 @@ enum FieldMappingBuilder {
 impl FieldMappingBuilder {
     fn with_index(&mut self, index: LitIndex) -> bool {
         match std::mem::take(self) {
-            FieldMappingBuilder::Initial => {
+            FieldMappingBuilder::Initial =>
                 *self = FieldMappingBuilder::OneToOne {
                     index: Some(index),
                     passthrough: Vec::new(),
-                }
-            },
-            FieldMappingBuilder::OneToOne { index: None, passthrough } => {
+                },
+            FieldMappingBuilder::OneToOne { index: None, passthrough } =>
                 *self = FieldMappingBuilder::OneToOne {
                     index: Some(index),
                     passthrough,
-                }
-            },
+                },
             _ => return false,
         }
         true
@@ -194,12 +192,11 @@ impl FieldMappingBuilder {
 
     fn with_passthrough(&mut self, tokens: TokenStream) -> bool {
         match std::mem::take(self) {
-            FieldMappingBuilder::Initial => {
+            FieldMappingBuilder::Initial =>
                 *self = FieldMappingBuilder::OneToOne {
                     index: None,
                     passthrough: vec![tokens],
-                }
-            },
+                },
             FieldMappingBuilder::OneToOne { index, mut passthrough } => {
                 passthrough.push(tokens);
                 *self = FieldMappingBuilder::OneToOne { index, passthrough }
@@ -246,12 +243,13 @@ impl TryFrom<Field> for FieldMapping {
             FieldMappingBuilder::OneToOne {
                 index: Some(index),
                 passthrough,
-            } => Ok(FieldMapping::OneToOne(OneToOne {
-                index,
-                field,
-                api_type,
-                passthrough,
-            })),
+            } =>
+                Ok(FieldMapping::OneToOne(OneToOne {
+                    index,
+                    field,
+                    api_type,
+                    passthrough,
+                })),
             FieldMappingBuilder::OneToOne { index: None, .. } => Err(Error::new_spanned(field, "missing #[dash(index = ...)] attribute")),
             FieldMappingBuilder::NoIndex => Ok(FieldMapping::NoIndex { field }),
         }

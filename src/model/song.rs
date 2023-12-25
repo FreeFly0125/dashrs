@@ -1,4 +1,4 @@
-use crate::serde::{PercentDecoder, ProcessError, Thunk, GJFormat};
+use crate::serde::{GJFormat, PercentDecoder, ProcessError, Thunk};
 use dash_rs_derive::Dash;
 use serde::{Deserialize, Serialize};
 use std::{
@@ -6,7 +6,6 @@ use std::{
     fmt::{Display, Formatter},
 };
 use variant_partial_eq::VariantPartialEq;
-
 
 /// Struct modelling a [`NewgroundsSong`]
 ///

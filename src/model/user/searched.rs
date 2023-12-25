@@ -1,4 +1,7 @@
-use crate::{model::user::{Color, IconType}, GJFormat};
+use crate::{
+    model::user::{Color, IconType},
+    GJFormat,
+};
 use dash_rs_derive::Dash;
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;

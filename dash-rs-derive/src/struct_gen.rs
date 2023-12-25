@@ -1,10 +1,6 @@
-use proc_macro2::Ident;
-use proc_macro2::Span;
-use quote::format_ident;
-use quote::quote;
-use quote::ToTokens;
-use syn::Lifetime;
-use syn::{Generics, LifetimeParam};
+use proc_macro2::{Ident, Span};
+use quote::{format_ident, quote, ToTokens};
+use syn::{Generics, Lifetime, LifetimeParam};
 
 use crate::field::FieldMapping;
 
@@ -31,7 +27,7 @@ impl InternalStruct {
         let static_lifetime = Lifetime::new("'static", Span::call_site());
         let lifetime = match self.lifetime {
             Some(ref lifetime) => &lifetime.lifetime,
-            None => &static_lifetime
+            None => &static_lifetime,
         };
         let fields = self.fields.iter().map(|ifield| ifield.ser_field_tokens(lifetime));
         let generics = &self.generics;
@@ -96,10 +92,9 @@ impl ToTokens for InternalStruct {
         let existing_params = &self.generics.params;
         let (generic_arg_list, lifetime) = match self.lifetime {
             Some(ref lifetime) => (quote! {<#existing_params>}, &lifetime.lifetime),
-            None => (quote! {<#artificial_lifetime,#existing_params>}, &artificial_lifetime)
+            None => (quote! {<#artificial_lifetime,#existing_params>}, &artificial_lifetime),
         };
         let where_clause = &self.generics.where_clause;
-        
 
         let deserialize_impl = self.deserialize_implementation();
         let serialize_impl = self.serialize_implementation();

@@ -81,7 +81,7 @@ pub(crate) fn true_to_ten<S: Serializer>(b: &bool, serializer: S) -> Result<S::O
 
 #[macro_export]
 macro_rules! into_conversion {
-    ($for: ty, $proxy_type: ty) => {
+    ($for:ty, $proxy_type:ty) => {
         impl $crate::serde::InternalProxy for $for {
             type DeserializeProxy = $proxy_type;
             type SerializeProxy<'a> = $proxy_type where Self: 'a;
@@ -99,7 +99,7 @@ macro_rules! into_conversion {
 
 #[macro_export]
 macro_rules! dash_rs_newtype {
-    ($name: ident) => {
+    ($name:ident) => {
         #[derive(Debug, Eq, PartialEq, Clone, Serialize, Deserialize)]
         #[serde(transparent)]
         pub struct $name<'a>(pub Cow<'a, str>);
@@ -118,6 +118,5 @@ macro_rules! dash_rs_newtype {
                 $name(Cow::Borrowed(from))
             }
         }
-        
     };
 }
