@@ -54,6 +54,14 @@ pub const GD_21: BaseRequest = BaseRequest::new(
     "Wmfd2893gb7",
 );
 
+/// A `BaseRequest` instance that has all its fields set to the
+/// same values a Geometry Dash 2.2 client would use
+pub const GD_22: BaseRequest = BaseRequest::new(
+    GameVersion::Version { major: 2, minor: 2 },
+    GameVersion::Version { major: 3, minor: 8 },
+    "Wmfd2893gb7",
+);
+
 /// Base data included in every request made
 ///
 /// The fields in this struct are only relevant when making a request to the
@@ -102,7 +110,7 @@ impl BaseRequest<'_> {
 
 impl Default for BaseRequest<'static> {
     fn default() -> Self {
-        GD_21
+        GD_22
     }
 }
 
