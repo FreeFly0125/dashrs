@@ -89,6 +89,18 @@ struct InternalLevel<'src> {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(rename = "36")]
     index_36: Option<&'src str>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "40")]
+    index_40: Option<&'src str>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "52")]
+    index_52: Option<&'src str>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "53")]
+    index_53: Option<&'src str>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "57")]
+    index_57: Option<&'src str>,
 }
 
 impl<'de> Dash<'de> for Level<'de, (), Option<u64>, u64> {
@@ -181,6 +193,10 @@ impl<'de> Dash<'de> for Level<'de, (), Option<u64>, u64> {
             index_28: None,
             index_29: None,
             index_36: None,
+            index_40: None,
+            index_52: None,
+            index_53: None,
+            index_57: None,
         };
         internal.serialize(serializer)
     }
@@ -197,6 +213,10 @@ impl<'de> Dash<'de> for Level<'de, LevelData<'de>, Option<u64>, u64> {
                 time_since_upload: InternalProxy::from_deserialize_proxy(idx28),
                 time_since_update: InternalProxy::from_deserialize_proxy(idx29),
                 index_36: InternalProxy::from_deserialize_proxy(internal.index_36.unwrap_or_default()),
+                index_40: InternalProxy::from_deserialize_proxy(internal.index_40.unwrap_or_default()),
+                index_52: InternalProxy::from_deserialize_proxy(internal.index_52.unwrap_or_default()),
+                index_53: InternalProxy::from_deserialize_proxy(internal.index_53.unwrap_or_default()),
+                index_57: InternalProxy::from_deserialize_proxy(internal.index_57.unwrap_or_default()),
             },
             _ => return Err(D::Error::custom("Missing indices for level data!")),
         };
@@ -291,6 +311,10 @@ impl<'de> Dash<'de> for Level<'de, LevelData<'de>, Option<u64>, u64> {
             index_28: Some(self.level_data.time_since_upload.to_serialize_proxy()),
             index_29: Some(self.level_data.time_since_update.to_serialize_proxy()),
             index_36: Some(self.level_data.index_36.to_serialize_proxy()),
+            index_40: Some(self.level_data.index_40.to_serialize_proxy()),
+            index_52: Some(self.level_data.index_52.to_serialize_proxy()),
+            index_53: Some(self.level_data.index_53.to_serialize_proxy()),
+            index_57: Some(self.level_data.index_57.to_serialize_proxy()),
         };
         internal.serialize(serializer)
     }

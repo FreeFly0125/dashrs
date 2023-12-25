@@ -676,6 +676,14 @@ pub struct LevelData<'a> {
     /// ## GD Internals:
     /// This value is provided at index `36`
     pub index_36: Cow<'a, str>,
+
+    pub index_40: Cow<'a, str>,
+
+    pub index_52: Cow<'a, str>,
+
+    pub index_53: Cow<'a, str>,
+
+    pub index_57: Cow<'a, str>,
 }
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
