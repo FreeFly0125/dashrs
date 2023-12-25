@@ -26,5 +26,5 @@ impl<'a> helper::ThunkProcessor for NewgroundsSong<'a> {
     }
 }
 
-save_load_roundtrip2!(NewgroundsSong, CREO_DUNE);
-load_save_roundtrip2!(NewgroundsSong, CREO_DUNE_DATA, CREO_DUNE, "~|~", true);
+save_load_roundtrip!(NewgroundsSong, CREO_DUNE);
+load_save_roundtrip!(NewgroundsSong, CREO_DUNE_DATA, CREO_DUNE, "~|~", true);

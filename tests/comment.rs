@@ -95,15 +95,15 @@ impl helper::ThunkProcessor for ProfileComment<'_> {
     }
 }
 
-load_save_roundtrip2!(load_save_roundtrip1, LevelComment, LEVEL_COMMENT1_DATA, LEVEL_COMMENT1, "~", true);
-load_save_roundtrip2!(load_save_roundtrip2, LevelComment, LEVEL_COMMENT2_DATA, LEVEL_COMMENT2, "~", true);
-load_save_roundtrip2!(load_save_roundtrip3, LevelComment, LEVEL_COMMENT3_DATA, LEVEL_COMMENT3, "~", true);
-load_save_roundtrip2!(load_save_roundtrip_user, CommentUser, COMMENT_USER_DATA, COMMENT_USER, "~", true);
+load_save_roundtrip!(load_save_roundtrip1, LevelComment, LEVEL_COMMENT1_DATA, LEVEL_COMMENT1, "~", true);
+load_save_roundtrip!(load_save_roundtrip2, LevelComment, LEVEL_COMMENT2_DATA, LEVEL_COMMENT2, "~", true);
+load_save_roundtrip!(load_save_roundtrip3, LevelComment, LEVEL_COMMENT3_DATA, LEVEL_COMMENT3, "~", true);
+load_save_roundtrip!(load_save_roundtrip_user, CommentUser, COMMENT_USER_DATA, COMMENT_USER, "~", true);
 
-save_load_roundtrip2!(save_load_roundtrip1, LevelComment, LEVEL_COMMENT1);
-save_load_roundtrip2!(save_load_roundtrip2, LevelComment, LEVEL_COMMENT2);
-save_load_roundtrip2!(save_load_roundtrip3, LevelComment, LEVEL_COMMENT3);
-save_load_roundtrip2!(save_load_roundtrip_user, CommentUser, COMMENT_USER);
+save_load_roundtrip!(save_load_roundtrip1, LevelComment, LEVEL_COMMENT1);
+save_load_roundtrip!(save_load_roundtrip2, LevelComment, LEVEL_COMMENT2);
+save_load_roundtrip!(save_load_roundtrip3, LevelComment, LEVEL_COMMENT3);
+save_load_roundtrip!(save_load_roundtrip_user, CommentUser, COMMENT_USER);
 
 const PROFILE_COMMENT_DATA: &str =
     "2~QSB3aW5kb3cgdG8gdGhlIHBhc3QsIGEgZ2xpbXBzZSBvZiB0aGUgZnV0dXJlLCBBbiBPZGUgdG8gVGltZS4=~4~432~9~6 days~6~1922667";
@@ -117,5 +117,5 @@ const PROFILE_COMMENT: ProfileComment = ProfileComment {
     time_since_post: Cow::Borrowed("6 days"),
 };
 
-load_save_roundtrip2!(ProfileComment, PROFILE_COMMENT_DATA, PROFILE_COMMENT, "~", true);
-save_load_roundtrip2!(ProfileComment, ProfileComment, PROFILE_COMMENT);
+load_save_roundtrip!(ProfileComment, PROFILE_COMMENT_DATA, PROFILE_COMMENT, "~", true);
+save_load_roundtrip!(ProfileComment, ProfileComment, PROFILE_COMMENT);

@@ -51,5 +51,5 @@ impl helper::ThunkProcessor for Profile<'_> {
     fn process_all_thunks(&mut self) {}
 }
 
-save_load_roundtrip2!(Profile, PROFILE_STARDUST1971);
-load_save_roundtrip2!(Profile, PROFILE_STARDUST1971_DATA, PROFILE_STARDUST1971, ":", true);
+save_load_roundtrip!(Profile, PROFILE_STARDUST1971);
+load_save_roundtrip!(Profile, PROFILE_STARDUST1971_DATA, PROFILE_STARDUST1971, ":", true);

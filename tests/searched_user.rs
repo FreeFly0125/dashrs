@@ -26,5 +26,5 @@ impl helper::ThunkProcessor for SearchedUser<'_> {
     fn process_all_thunks(&mut self) {}
 }
 
-save_load_roundtrip2!(SearchedUser, SEARCHED_MICHIGUN);
-load_save_roundtrip2!(SearchedUser, SEARCHED_MICHIGUN_DATA, SEARCHED_MICHIGUN, ":", true);
+save_load_roundtrip!(SearchedUser, SEARCHED_MICHIGUN);
+load_save_roundtrip!(SearchedUser, SEARCHED_MICHIGUN_DATA, SEARCHED_MICHIGUN, ":", true);

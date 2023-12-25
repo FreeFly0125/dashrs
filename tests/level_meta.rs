@@ -13,8 +13,7 @@ use dash_rs::{
 mod helper;
 
 // A 1.9 level
-const DARK_REALM_DATA: &str =
-    "1:11774780:2:Dark \
+const DARK_REALM_DATA: &str = "1:11774780:2:Dark \
      Realm:5:2:6:2073761:8:10:9:30:10:90786:12:0:13:20:14:10974:17:1:43:0:25::18:10:19:11994:42:0:45:0:3:\
      TXkgYmVzdCBsZXZlbCB5ZXQuIFZpZGVvIG9uIG15IFlvdVR1YmUuIEhhdmUgZnVuIGluIHRoaXMgZmFzdC1wYWNlZCBERU1PTiA-OikgdjIgRml4ZWQgc29tZSB0aGluZ3M=:\
      15:3:30:0:31:0:37:3:38:1:39:10:46:1:47:2:35:444085";
@@ -159,17 +158,17 @@ impl<S, U> helper::ThunkProcessor for Level<'_, (), S, U> {
     }
 }
 
-save_load_roundtrip2!(save_load_roundtrip_dark_realm, Level<()>, DARK_REALM);
-load_save_roundtrip2!(load_save_roundtrip_dark_realm, Level<()>, DARK_REALM_DATA, DARK_REALM, ":", true);
+save_load_roundtrip!(save_load_roundtrip_dark_realm, Level<()>, DARK_REALM);
+load_save_roundtrip!(load_save_roundtrip_dark_realm, Level<()>, DARK_REALM_DATA, DARK_REALM, ":", true);
 
-save_load_roundtrip2!(save_load_roundtrip_demon_world, Level<()>, DEMON_WORLD);
-load_save_roundtrip2!(load_save_roundtrip_demon_world, Level<()>, DEMON_WORLD_DATA, DEMON_WORLD, ":", true);
+save_load_roundtrip!(save_load_roundtrip_demon_world, Level<()>, DEMON_WORLD);
+load_save_roundtrip!(load_save_roundtrip_demon_world, Level<()>, DEMON_WORLD_DATA, DEMON_WORLD, ":", true);
 
-save_load_roundtrip2!(save_load_roundtrip_fantasy, Level<()>, FANTASY);
-load_save_roundtrip2!(load_save_roundtrip_fantasy, Level<()>, FANTASY_DATA, FANTASY, ":", true);
+save_load_roundtrip!(save_load_roundtrip_fantasy, Level<()>, FANTASY);
+load_save_roundtrip!(load_save_roundtrip_fantasy, Level<()>, FANTASY_DATA, FANTASY, ":", true);
 
-save_load_roundtrip2!(save_load_roundtrip_duelo_maestro, Level<()>, DUELO_MAESTRO);
-load_save_roundtrip2!(
+save_load_roundtrip!(save_load_roundtrip_duelo_maestro, Level<()>, DUELO_MAESTRO);
+load_save_roundtrip!(
     load_save_roundtrip_duelo_maestro,
     Level<()>,
     DUELO_MAETSTRO_DATA,
