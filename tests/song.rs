@@ -22,7 +22,7 @@ const CREO_DUNE: NewgroundsSong<'static> = NewgroundsSong {
 
 impl<'a> helper::ThunkProcessor for NewgroundsSong<'a> {
     fn process_all_thunks(&mut self) {
-        assert!(self.link.process().is_ok());
+        self.link.process().unwrap();
     }
 }
 

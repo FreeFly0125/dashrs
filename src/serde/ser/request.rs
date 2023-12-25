@@ -465,9 +465,8 @@ mod tests {
             writer: &mut buffer,
             is_start: true,
         };
-        let result = level_request.serialize(&mut ser);
+        level_request.serialize(&mut ser).unwrap();
 
-        assert!(result.is_ok(), "{:?}", result);
         assert_eq!(
             "gameVersion=21&binaryVersion=33&secret=Wmfd2893gb7&levelID=0&inc=0&extra=0",
             String::from_utf8(buffer).unwrap()

@@ -154,7 +154,7 @@ const DUELO_MAESTRO: Level<()> = Level {
 impl<S, U> helper::ThunkProcessor for Level<'_, (), S, U> {
     fn process_all_thunks(&mut self) {
         if let Some(ref mut hunk) = self.description {
-            assert!(hunk.process().is_ok())
+            hunk.process().unwrap();
         }
     }
 }

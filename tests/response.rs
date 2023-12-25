@@ -4,11 +4,7 @@ const GET_GJ_LEVELS_RESPONSE: &str = "1:62953227:2:Noice:5:1:6:14098234:8:10:9:3
 
 #[test]
 fn process_get_gj_levels_response() {
-    let levels = dash_rs::response::parse_get_gj_levels_response(GET_GJ_LEVELS_RESPONSE);
-
-    assert!(levels.is_ok(), "{}", levels.unwrap_err());
-
-    let levels = levels.unwrap();
+    let levels = dash_rs::response::parse_get_gj_levels_response(GET_GJ_LEVELS_RESPONSE).unwrap();
 
     for level in levels {
         if level.level_id == 63292359 {

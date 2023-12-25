@@ -58,19 +58,17 @@ const TIME_PRESSURE: Level = Level {
 impl<S, U> helper::ThunkProcessor for Level<'_, LevelData<'_>, S, U> {
     fn process_all_thunks(&mut self) {
         if let Some(ref mut hunk) = self.description {
-            assert!(hunk.process().is_ok())
+            hunk.process().unwrap();
         }
-        let objects = self.level_data.level_data.process();
-        assert!(objects.is_ok(), "{:?}", objects.unwrap_err());
-        let pw = self.level_data.password.process();
-        assert!(pw.is_ok(), "{:?}", pw.unwrap_err());
+        self.level_data.level_data.process().unwrap();
+        self.level_data.password.process().unwrap();
     }
 }
 
 impl<S, U> helper::ThunkProcessor for Level<'_, (), S, U> {
     fn process_all_thunks(&mut self) {
         if let Some(ref mut hunk) = self.description {
-            assert!(hunk.process().is_ok())
+            hunk.process().unwrap();
         }
     }
 }

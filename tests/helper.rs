@@ -4,11 +4,7 @@ use dash_rs::GJFormat;
 use std::{collections::HashMap, fmt::Debug};
 
 pub fn load<'a, T: GJFormat<'a> + Debug>(input: &'a str) -> T {
-    let loaded = T::from_gj_str(input);
-
-    assert!(loaded.is_ok(), "{:?}", loaded.unwrap_err());
-
-    loaded.unwrap()
+    T::from_gj_str(input).unwrap()
 }
 
 pub fn load_processed<'a, T: GJFormat<'a> + ThunkProcessor + Debug>(input: &'a str) -> T {
@@ -19,10 +15,7 @@ pub fn load_processed<'a, T: GJFormat<'a> + ThunkProcessor + Debug>(input: &'a s
 
 pub fn save<'a, T: GJFormat<'a> + Debug>(t: &T) -> String {
     let mut saved = Vec::new();
-    let res = t.write_gj(&mut saved);
-
-    assert!(res.is_ok(), "{:?}", res.unwrap_err());
-
+    t.write_gj(&mut saved).unwrap();
     String::from_utf8(saved).unwrap()
 }
 

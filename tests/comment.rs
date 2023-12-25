@@ -75,7 +75,7 @@ const COMMENT_USER: CommentUser = CommentUser {
 impl helper::ThunkProcessor for LevelComment<'_> {
     fn process_all_thunks(&mut self) {
         if let Some(ref mut cnt) = self.content {
-            assert!(cnt.process().is_ok());
+            cnt.process().unwrap();
         }
         if let Some(ref mut cnt) = self.special_color {
             cnt.process().unwrap();
@@ -90,7 +90,7 @@ impl helper::ThunkProcessor for CommentUser<'_> {
 impl helper::ThunkProcessor for ProfileComment<'_> {
     fn process_all_thunks(&mut self) {
         if let Some(ref mut cnt) = self.content {
-            assert!(cnt.process().is_ok())
+            cnt.process().unwrap();
         }
     }
 }
