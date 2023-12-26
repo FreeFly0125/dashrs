@@ -6,8 +6,8 @@ use crate::{
 };
 use serde::Serialize;
 
-pub const GET_USER_ENDPOINT: &str = "getGJUserInfo20";
-pub const SEARCH_USER_ENDPOINT: &str = "getGJUsers20";
+pub const GET_USER_ENDPOINT: &str = "getGJUserInfo20.php";
+pub const SEARCH_USER_ENDPOINT: &str = "getGJUsers20.php";
 
 /// Struct modelled after a request to `getGJUserInfo20.php`.
 ///
