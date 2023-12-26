@@ -157,15 +157,21 @@ pub struct Profile<'a> {
 
     // TODO: figure this value out
     #[dash(index = 38)]
-    pub index_38: Cow<'a, str>,
+    #[dash(default)]
+    #[dash(skip_serializing_if = "Option::is_none")]
+    pub index_38: Option<Cow<'a, str>>,
 
     // TODO: figure this value out
     #[dash(index = 39)]
-    pub index_39: Cow<'a, str>,
+    #[dash(default)]
+    #[dash(skip_serializing_if = "Option::is_none")]
+    pub index_39: Option<Cow<'a, str>>,
 
     // TODO: figure this value out
     #[dash(index = 40)]
-    pub index_40: Cow<'a, str>,
+    #[dash(default)]
+    #[dash(skip_serializing_if = "Option::is_none")]
+    pub index_40: Option<Cow<'a, str>>,
 
     /// The 1-based index of the spider this [`Profile`] currently uses. Indexing of icons starts at
     /// the top left corner and then goes left-to-right and top-to-bottom
@@ -202,6 +208,22 @@ pub struct Profile<'a> {
     // TODO: figure this value out
     #[dash(index = 50)]
     pub index_50: Cow<'a, str>,
+
+    #[dash(index = 51)]
+    pub index_51: Cow<'a, str>,
+
+    /// The number of moons this [`Profile`] has collected
+    #[dash(index = 52)]
+    pub moons: Cow<'a, str>,
+
+    /// The 1-based index of the swing this [`Profile`] currently uses. Indexing of icons starts at
+    /// the top left corner and then goes left-to-right and top-to-bottom
+    #[dash(index = 53)]
+    pub swing_index: Cow<'a, str>,
+
+    // this is the index of the L-shaped vehicle, no idea what its called, never seen it.
+    #[dash(index = 54)]
+    pub index_54: Cow<'a, str>,
 }
 
 impl<'de> GJFormat<'de> for Profile<'de> {
