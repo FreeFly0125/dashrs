@@ -4,6 +4,7 @@ use crate::{
 };
 use dash_rs_derive::Dash;
 use serde::{Deserialize, Serialize};
+use variant_partial_eq::VariantPartialEq;
 use std::{
     borrow::Cow,
     fmt::{Display, Formatter},
@@ -40,7 +41,7 @@ impl Display for Twitter<'_> {
 /// ### Unused Indices
 /// The following indices aren't used by the Geometry Dash servers: `5`, `6`, `7`, `9`, `12`, `14`,
 /// `15`, `27`, `32`, `33`, `34`, `35`, `36`, `37`, `38`, `39`, `40`, `41`, `42`, `47`
-#[derive(Debug, Eq, PartialEq, Clone, Serialize, Deserialize, Dash)]
+#[derive(Debug, Eq, VariantPartialEq, Clone, Serialize, Deserialize, Dash)]
 pub struct Profile<'a> {
     /// The [`Profile`]'s name
     #[dash(index = 1)]
