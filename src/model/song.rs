@@ -105,7 +105,7 @@ impl MainSong {
 }
 
 /// All current [`MainSong`]s, as of Geometry Dash 2.1
-pub const MAIN_SONGS: [MainSong; 21] = [
+pub const MAIN_SONGS: [MainSong; 22] = [
     MainSong::new(0, "Stereo Madness", "ForeverBound"),
     MainSong::new(1, "Back on Track", "DJVI"),
     MainSong::new(2, "Polargeist", "Step"),
@@ -127,6 +127,7 @@ pub const MAIN_SONGS: [MainSong; 21] = [
     MainSong::new(18, "Geometrical Dominator", "Waterflame"),
     MainSong::new(19, "Deadlocked", "F-777"),
     MainSong::new(20, "Fingerdash", "MDK"),
+    MainSong::new(21, "Geomtry Dash", "MDK"),
 ];
 
 /// Placeholder value for unknown [`MainSong`]s
