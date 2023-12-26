@@ -8,9 +8,7 @@
     "Demon": "Easy"
   },
   "downloads": 7022406,
-  "main_song": {
-    "main_song_id": 14
-  },
+  "main_song": 14,
   "gd_version": 21,
   "likes": 278009,
   "length": "Long",

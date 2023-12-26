@@ -77,14 +77,16 @@ impl<'a> NewgroundsSong<'a> {
 /// This data is not provided by the API and needs to be manually kept up to
 /// date
 #[derive(Debug, Eq, PartialEq, Clone, Copy, Serialize, Deserialize)]
+#[serde(from = "u8")]
+#[serde(into = "u8")]
 pub struct MainSong {
     /// The ID of this [`MainSong`]
     pub main_song_id: u8,
 
     /// The name of this [`MainSong`]
-    #[serde(skip)]
     // even though we (de)serialize using From and Into, we have to mark these as skip so that the 'de lifetime isn't constrained by
     // 'static
+    #[serde(skip)]
     pub name: &'static str,
 
     /// The artist of this [`MainSong`]
