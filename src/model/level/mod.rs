@@ -639,7 +639,7 @@ where
 }
 
 /// Struct encapsulating the additional level data returned when actually downloading a level
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, VariantPartialEq, Serialize, Deserialize)]
 pub struct LevelData<'a> {
     /// The level's actual data.
     ///
