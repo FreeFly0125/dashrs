@@ -1,6 +1,14 @@
 use std::{fs::OpenOptions, path::Path};
 
-use dash_rs::{request::{level::LevelRequest, user::UserRequest}, response::{parse_download_gj_level_response, parse_get_gj_user_info_response}};
+use dash_rs::{
+    model::{creator::Creator, level::Level, song::NewgroundsSong},
+    request::{
+        level::{CompletionFilter, LevelRequest, LevelsRequest, SearchFilters},
+        user::UserRequest,
+    },
+    response::{parse_download_gj_level_response, parse_get_gj_levels_response, parse_get_gj_user_info_response},
+    GJFormat,
+};
 use reqwest::{
     header::{HeaderMap, CONTENT_TYPE},
     Client, Response,
@@ -19,10 +27,13 @@ async fn main() {
 
     std::fs::rename(&artifacts_path, &artifacts_backup).unwrap();
 
-    println!("Downloading levels");
+    println!("Downloading full levels");
 
     let levels_path = artifacts_path.join("level");
-    let levels_to_download = [897837 /* time pressure by aeonair */, 11774780 /* dark realm by stardust1971 */];
+    let levels_to_download = [
+        897837,   /* time pressure by aeonair */
+        11774780, /* dark realm by stardust1971 */
+    ];
 
     for level_id in levels_to_download {
         let request = LevelRequest::new(level_id);
@@ -35,6 +46,61 @@ async fn main() {
 
         std::fs::write(level_artifact_path.join("raw"), response_text.split('#').next().unwrap()).unwrap();
         dump_deserialized_artifact(level_artifact_path, &level);
+    }
+
+    println!("Downloading listed levels");
+
+    let listed_levels_path = artifacts_path.join("listed_level");
+    let creators_path = artifacts_path.join("creator");
+    let songs_path = artifacts_path.join("song");
+    let levels_to_dowload = vec![
+        72540,    /* demon world, 1.3 (?) level */
+        11774780, /* dark realm , 1.9 level*/
+        23298409, /* duelo maestro, 2.0 level */
+        63355989, /* fantasy, 2.1 level */
+        97598449, /* Loco Motive, 2.2 platformer level */
+    ];
+
+    let request = LevelsRequest::default()
+        .search_filters(SearchFilters::default().completion_filter(CompletionFilter::limit_search(levels_to_dowload)));
+
+    let response = make_request(&http_client, &request.to_url(), request.to_string()).await;
+    let response_text = response.text().await.unwrap();
+
+    // We'll have to reimplement part of the response parsing here, `parse_get_gj_levels_response` is too ergonomic for what we want
+    let mut section_iter = response_text.split('#');
+    let raw_levels = section_iter.next().unwrap();
+    let raw_creators = section_iter.next().unwrap();
+    let raw_songs = section_iter.next().unwrap();
+
+    for raw_level in raw_levels.split('|') {
+        let level = Level::<()>::from_gj_str(raw_level).unwrap();
+
+        let level_artifact_path = listed_levels_path.join(level.level_id.to_string());
+        let _ = std::fs::create_dir_all(&level_artifact_path);
+
+        std::fs::write(level_artifact_path.join("raw"), &raw_level).unwrap();
+        dump_deserialized_artifact(level_artifact_path, &level);
+    }
+
+    for raw_creator in raw_creators.split('|') {
+        let creator = Creator::from_gj_str(raw_creator).unwrap();
+
+        let creator_artifact_path = creators_path.join(creator.user_id.to_string());
+        let _ = std::fs::create_dir_all(&creator_artifact_path);
+
+        std::fs::write(creator_artifact_path.join("raw"), &raw_creator).unwrap();
+        dump_deserialized_artifact(creator_artifact_path, &creator);
+    }
+
+    for raw_song in raw_songs.split("~:~") {
+        let song = NewgroundsSong::from_gj_str(raw_song).unwrap();
+
+        let song_artifact_path = songs_path.join(song.song_id.to_string());
+        let _ = std::fs::create_dir_all(&song_artifact_path);
+
+        std::fs::write(song_artifact_path.join("raw"), &raw_song).unwrap();
+        dump_deserialized_artifact(song_artifact_path, &song);
     }
 
     println!("Downloading profiles");

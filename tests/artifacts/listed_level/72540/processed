@@ -1,0 +1,28 @@
+{
+  "level_id": 72540,
+  "name": "demon world",
+  "description": "happy new year!!",
+  "version": 7,
+  "creator": 37573,
+  "difficulty": {
+    "Demon": "Medium"
+  },
+  "downloads": 382005,
+  "main_song": 9,
+  "gd_version": 7,
+  "likes": -3110,
+  "length": "Long",
+  "stars": 10,
+  "featured": 0,
+  "copy_of": null,
+  "two_player": false,
+  "custom_song": null,
+  "coin_amount": 0,
+  "coins_verified": false,
+  "stars_requested": null,
+  "is_epic": false,
+  "object_amount": null,
+  "index_46": "1",
+  "index_47": "2",
+  "level_data": null
+}

@@ -1,0 +1,28 @@
+{
+  "level_id": 11774780,
+  "name": "Dark Realm",
+  "description": "My best level yet. Video on my YouTube. Have fun in this fast-paced DEMON >:) v2 Fixed some things",
+  "version": 2,
+  "creator": 2073761,
+  "difficulty": {
+    "Demon": "Hard"
+  },
+  "downloads": 104470,
+  "main_song": null,
+  "gd_version": 20,
+  "likes": 11487,
+  "length": "Long",
+  "stars": 10,
+  "featured": 11994,
+  "copy_of": null,
+  "two_player": false,
+  "custom_song": 444085,
+  "coin_amount": 3,
+  "coins_verified": true,
+  "stars_requested": 10,
+  "is_epic": false,
+  "object_amount": null,
+  "index_46": "1",
+  "index_47": "2",
+  "level_data": null
+}

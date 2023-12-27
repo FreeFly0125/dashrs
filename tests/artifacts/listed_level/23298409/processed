@@ -1,0 +1,28 @@
+{
+  "level_id": 23298409,
+  "name": "Duelo Maestro",
+  "description": "Nivel de 2 jugadores que puedes completar solo o con un amigo (es menos complicado). El nivel ya no tiene errores y se siente mucho mejor...",
+  "version": 4,
+  "creator": 1295392,
+  "difficulty": {
+    "Demon": "Insane"
+  },
+  "downloads": 8218784,
+  "main_song": null,
+  "gd_version": 21,
+  "likes": 415512,
+  "length": "ExtraLong",
+  "stars": 10,
+  "featured": 0,
+  "copy_of": null,
+  "two_player": true,
+  "custom_song": 645631,
+  "coin_amount": 2,
+  "coins_verified": true,
+  "stars_requested": 10,
+  "is_epic": false,
+  "object_amount": 40358,
+  "index_46": "1",
+  "index_47": "2",
+  "level_data": null
+}

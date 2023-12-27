@@ -27,7 +27,7 @@ pub trait Testable {
     /// Canonicalizes this test target object before comparisons
     /// 
     /// For example, this is where all Thunks should be evaluated
-    fn canonicalize(target: &mut Self::Target<'_>) {}
+    fn canonicalize(_target: &mut Self::Target<'_>) {}
 }
 
 pub struct TestUnit<D> {
