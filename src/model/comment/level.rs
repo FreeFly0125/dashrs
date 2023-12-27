@@ -98,7 +98,7 @@ impl ThunkProcessor for Color {
     }
 }
 
-#[derive(Debug, Eq, PartialEq, Clone, Deserialize, Serialize, Dash)]
+#[derive(Debug, Eq, VariantPartialEq, Clone, Deserialize, Serialize, Dash)]
 pub struct CommentUser<'a> {
     /// This [`CommentUser`]'s name
     #[dash(index = 1)]
