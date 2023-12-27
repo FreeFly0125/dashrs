@@ -1,13 +1,29 @@
 //! Module containing the deserializer for robtop's indexed data format
 
 use super::error::Error;
-use log::{debug, trace};
 use serde::{
     de,
     de::{DeserializeSeed, Visitor},
     Deserializer,
 };
 use std::str::Split;
+
+// Special versions of the trace and debug macros used in this module that can be staticaly disabled by the "serde_log" feature.
+// We do not want to explicitly pass "release_max_level_off" feature to log because we're in a library crate, and since
+// features are additive, that would turn off release mode logging in every crate that depends on dash-rs.
+macro_rules! trace {
+    ($($t:tt)*) => {
+        #[cfg(feature = "serde_log")]
+        log::trace($($t)*)
+    };
+}
+
+macro_rules! debug {
+    ($($t:tt)*) => {
+        #[cfg(feature = "serde_log")]
+        log::debug($($t)*)
+    };
+}
 
 /// Deserializer for RobTop's indexed data format
 ///
@@ -29,7 +45,6 @@ pub struct IndexedDeserializer<'de> {
     input: &'de str,
     end_of_current_token: usize,
     delimiter: &'de str,
-    last_token: Option<&'de str>,
 }
 
 impl<'de> IndexedDeserializer<'de> {
@@ -49,7 +64,6 @@ impl<'de> IndexedDeserializer<'de> {
             input: source,
             end_of_current_token: source.as_ptr() as usize,
             delimiter,
-            last_token: None,
         }
     }
 
@@ -64,8 +78,7 @@ impl<'de> IndexedDeserializer<'de> {
 
         trace!("Splitting off token {}, remaining input: {}", tok, &self.input[self.position()..]);
 
-        self.last_token = Some(tok);
-        self.last_token
+        Some(tok)
     }
 
     fn position(&self) -> usize {
@@ -103,12 +116,11 @@ macro_rules! delegate_to_from_str {
 
             match token.parse() {
                 Ok(parsed) => visitor.$visitor_method(parsed),
-                Err(error) =>
-                    Err(Error::Custom {
-                        message: error.to_string(),
-                        index: None,
-                        value: Some(token),
-                    }),
+                Err(error) => Err(Error::Custom {
+                    message: error.to_string(),
+                    index: None,
+                    value: Some(token),
+                }),
             }
         }
     };
@@ -162,12 +174,11 @@ impl<'a, 'de> Deserializer<'de> for &'a mut IndexedDeserializer<'de> {
         match token {
             Some("0") | Some("") | None => visitor.visit_bool(false),
             Some("1") | Some("2") | Some("10") => visitor.visit_bool(true),
-            Some(value) =>
-                Err(Error::Custom {
-                    message: "Expected 0, 1, 2, 10 or the empty string".to_owned(),
-                    index: None,
-                    value: Some(value),
-                }),
+            Some(value) => Err(Error::Custom {
+                message: "Expected 0, 1, 2, 10 or the empty string".to_owned(),
+                index: None,
+                value: Some(value),
+            }),
         }
     }
 
@@ -322,12 +333,12 @@ impl<'a, 'de> Deserializer<'de> for &'a mut IndexedDeserializer<'de> {
         // indices. By the time this is called, they key itself will already have been popped in our
         // `MapAccess` implementation. This means we need to skip exactly one item! We'll feed a `None` to
         // the visitor. Because idk what we really wanna do here otherwise
-        let possibly_index = self.last_token;
-        let token = self.consume_token();
+        let _token = self.consume_token();
 
         debug!(
             "Ignored token {:?}. Preceding token (potentially an unmapped index) was {:?}",
-            token, possibly_index
+            _token,
+            self.nth_last(1)
         );
 
         visitor.visit_none()
@@ -358,12 +369,11 @@ impl<'a, 'de> de::SeqAccess<'de> for SeqAccess<'a, 'de> {
 
         match seed.deserialize(&mut *self.deserializer) {
             Err(Error::Eof) => Ok(None),
-            Err(Error::Custom { message, value, .. }) =>
-                Err(Error::Custom {
-                    message,
-                    value: value.or_else(|| self.deserializer.nth_last(1)),
-                    index: Some(INDICES.get(self.index - 1).unwrap_or(&">=51")),
-                }),
+            Err(Error::Custom { message, value, .. }) => Err(Error::Custom {
+                message,
+                value: value.or_else(|| self.deserializer.nth_last(1)),
+                index: Some(INDICES.get(self.index - 1).unwrap_or(&">=51")),
+            }),
             Err(err) => Err(err),
             Ok(item) => Ok(Some(item)),
         }
@@ -385,12 +395,11 @@ impl<'a, 'de> de::MapAccess<'de> for MapAccess<'a, 'de> {
 
         match seed.deserialize(&mut *self.deserializer) {
             Err(Error::Eof) => Ok(None),
-            Err(Error::Custom { message, .. }) =>
-                Err(Error::Custom {
-                    message,
-                    value: None,
-                    index: self.deserializer.nth_last(1),
-                }),
+            Err(Error::Custom { message, .. }) => Err(Error::Custom {
+                message,
+                value: None,
+                index: self.deserializer.nth_last(1),
+            }),
             Err(err) => Err(err),
             Ok(item) => Ok(Some(item)),
         }
@@ -403,12 +412,11 @@ impl<'a, 'de> de::MapAccess<'de> for MapAccess<'a, 'de> {
         trace!("Processing a map value",);
 
         match seed.deserialize(&mut *self.deserializer) {
-            Err(Error::Custom { message, value, .. }) =>
-                Err(Error::Custom {
-                    message,
-                    value: value.or_else(|| self.deserializer.nth_last(1)),
-                    index: self.deserializer.nth_last(2),
-                }),
+            Err(Error::Custom { message, value, .. }) => Err(Error::Custom {
+                message,
+                value: value.or_else(|| self.deserializer.nth_last(1)),
+                index: self.deserializer.nth_last(2),
+            }),
             r => r,
         }
     }
