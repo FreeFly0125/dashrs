@@ -1,30 +1,28 @@
-use dash_rs::{model::song::NewgroundsSong, Thunk};
-use std::borrow::Cow;
+use dash_rs::model::song::NewgroundsSong;
+use framework::load_test_units;
+use std::path::Path;
 
-#[macro_use]
-mod helper;
+mod framework;
 
-const CREO_DUNE_DATA: &str = "1~|~771277~|~2~|~Creo - \
-                              Dune~|~3~|~50531~|~4~|~CreoMusic~|~5~|~8.03~|~6~|~~|~10~|~https%3A%2F%2Faudio.ngfiles.com%2F771000%\
-                              2F771277_Creo---Dune.mp3%3Ff1508708604~|~7~|~UCsCWA3Y3JppL6feQiMRgm6Q~|~8~|~1";
+enum NewgroundsSongTester {}
 
-const CREO_DUNE: NewgroundsSong<'static> = NewgroundsSong {
-    song_id: 771277,
-    name: Cow::Borrowed("Creo - Dune"),
-    index_3: 50531,
-    artist: Cow::Borrowed("CreoMusic"),
-    filesize: 8.03,
-    index_6: None,
-    index_7: Some(Cow::Borrowed("UCsCWA3Y3JppL6feQiMRgm6Q")),
-    index_8: Cow::Borrowed("1"),
-    link: Thunk::Processed(Cow::Borrowed("https://audio.ngfiles.com/771000/771277_Creo---Dune.mp3?f1508708604")),
-};
+impl framework::Testable for NewgroundsSongTester {
+    type Target<'a> = NewgroundsSong<'a>;
 
-impl<'a> helper::ThunkProcessor for NewgroundsSong<'a> {
-    fn process_all_thunks(&mut self) {
-        self.link.process().unwrap();
+    fn canonicalize(target: &mut Self::Target<'_>) {
+        target.link.process().unwrap();
     }
 }
 
-save_load_roundtrip!(NewgroundsSong, CREO_DUNE);
-load_save_roundtrip!(NewgroundsSong, CREO_DUNE_DATA, CREO_DUNE, "~|~", true);
+#[test]
+fn test_newgrounds_song() {
+    let units = load_test_units::<NewgroundsSongTester>(Path::new(env!("CARGO_MANIFEST_DIR")).join("tests").join("artifacts").join("song"));
+
+    for (path, unit) in units {
+        println!("Testing case {:?}", path);
+
+        unit.test_consistency();
+        unit.test_load_save_roundtrip();
+        unit.test_save_load_roundtrip();
+    }
+}
