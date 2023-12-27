@@ -2,7 +2,7 @@ use base64::{engine::general_purpose::URL_SAFE, Engine};
 use criterion::{criterion_group, criterion_main, Criterion};
 use dash_rs::{
     model::level::{Level, LevelData},
-    HasRobtopFormat, Thunk,
+    Thunk, GJFormat,
 };
 use flate2::read::GzDecoder;
 use std::{fs::read_to_string, io::Read};
@@ -12,7 +12,7 @@ pub fn ocular_miracle_benchmark(c: &mut Criterion) {
 
     c.bench_function("parse ocular machine", |b| {
         b.iter(|| {
-            let mut level: Level<LevelData> = Level::from_robtop_str(&response).unwrap();
+            let mut level: Level<LevelData> = Level::from_gj_str(&response).unwrap();
 
             level.level_data.level_data.process().unwrap();
         })
@@ -24,7 +24,7 @@ pub fn spacial_rend_benchmark(c: &mut Criterion) {
 
     c.bench_function("parse spacial rend", |b| {
         b.iter(|| {
-            let mut level: Level<LevelData> = Level::from_robtop_str(&response).unwrap();
+            let mut level: Level<LevelData> = Level::from_gj_str(&response).unwrap();
 
             level.level_data.level_data.process().unwrap();
         })
@@ -36,7 +36,7 @@ pub fn decoding_ocular_miracle_benchmark(c: &mut Criterion) {
 
     c.bench_function("decode ocular miracle", |b| {
         b.iter(|| {
-            let level: Level<LevelData> = Level::from_robtop_str(&response).unwrap();
+            let level: Level<LevelData> = Level::from_gj_str(&response).unwrap();
             match level.level_data.level_data {
                 Thunk::Unprocessed(unprocessed) => {
                     let decoded = URL_SAFE.decode(&*unprocessed).unwrap();
@@ -56,7 +56,7 @@ pub fn decoding_spacial_rend_benchmark(c: &mut Criterion) {
 
     c.bench_function("decode spacial rend", |b| {
         b.iter(|| {
-            let level: Level<LevelData> = Level::from_robtop_str(&response).unwrap();
+            let level: Level<LevelData> = Level::from_gj_str(&response).unwrap();
             match level.level_data.level_data {
                 Thunk::Unprocessed(unprocessed) => {
                     let decoded = URL_SAFE.decode(&*unprocessed).unwrap();
