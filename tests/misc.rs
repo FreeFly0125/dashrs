@@ -1,7 +1,6 @@
-use dash_rs::model::{creator::Creator, song::NewgroundsSong};
+use dash_rs::{model::{creator::Creator, song::NewgroundsSong}, GJFormat};
 
 mod framework;
-mod helper;
 
 const CREO_DUNE_DATA_TOO_MANY_FIELDS: &str = "1~|~771277~|~54~|~should be ignored~|~2~|~Creo - \
                                               Dune~|~3~|~50531~|~4~|~CreoMusic~|~5~|~8.\
@@ -12,15 +11,7 @@ const CREATOR_REGISTERED_DATA_TOO_MANY_FIELDS: &str = "4170784:Serponge:119741:3
 
 #[test]
 fn deserialize_too_many_fields() {
-    init_log();
-
-    helper::load::<NewgroundsSong>(CREO_DUNE_DATA_TOO_MANY_FIELDS);
-    helper::load::<Creator>(CREATOR_REGISTERED_DATA_TOO_MANY_FIELDS);
-}
-
-fn init_log() {
-    if let Err(err) = env_logger::builder().is_test(true).try_init() {
-        // nothing to make the tests fail over
-        eprintln!("Error setting up env_logger: {:?}", err)
-    }
+    // Superfluous fields should just be ignored
+    NewgroundsSong::from_gj_str(CREO_DUNE_DATA_TOO_MANY_FIELDS).unwrap();
+    Creator::from_gj_str(CREATOR_REGISTERED_DATA_TOO_MANY_FIELDS).unwrap();
 }
