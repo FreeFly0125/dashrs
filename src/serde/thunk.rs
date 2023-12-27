@@ -127,8 +127,8 @@ pub trait ThunkProcessor {
     /// Since the lifetime associated with the output is assumed to be originating from some `&'a str`,
     /// and should only describe subslices of said input string, enforcing covariance on this trait should
     /// cause no limitations in praxis (e.g. all implementations here should just be able to return `output`
-    /// identically). 
-    /// 
+    /// identically).
+    ///
     /// We need this function due to a limitation of GATs, where for soundness reasons they have to be assumed
     /// to be invariant, yet the language provides no way for a trait to explicitly require different variance.
     fn downcast_output_lifetime<'b: 'c, 'c, 's>(output: &'s Self::Output<'b>) -> &'s Self::Output<'c>;
