@@ -34,7 +34,7 @@ pub struct SearchedUser<'a> {
     #[dash(index = 6)]
     pub index_6: Option<Cow<'a, str>>,
 
-    /// This [`SearchedUsers`] creator points
+    /// This [`SearchedUser`]'s creator points
     #[dash(index = 8)]
     pub creator_points: u16,
 
@@ -80,7 +80,7 @@ pub struct SearchedUser<'a> {
     #[dash(index = 17)]
     pub user_coins: u16,
 
-    /// The number of moons this [`Profile`] has collected. Currently always zero due to a
+    /// The number of moons this [`SearchedUser`] has collected. Currently always zero due to a
     /// server bug (similar to how the game always displays 0 diamonds here)
     #[dash(index = 52)]
     pub moons: u32,

@@ -32,8 +32,8 @@ pub struct LevelComment<'a> {
     #[dash(index = 4)]
     pub likes: i32,
 
-    /// The unique id of this [`LevelComment`]. Additionally, there is also no [`ProfileComment`]
-    /// with this idea
+    /// The unique id of this [`LevelComment`]. Additionally, there is also no [`ProfileComment`](crate::model::comment::profile::ProfileComment)
+    /// with this id
     #[dash(index = 6)]
     pub comment_id: u64,
 

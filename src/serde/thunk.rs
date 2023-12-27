@@ -14,9 +14,9 @@ use thiserror::Error;
 ///
 /// ## Why is this a seperate enum
 /// One might wonder why this enum exists, and why we don't simply reuse
-/// [`Error`](::serde::de::error::Error). The main reason is that I do not want to include variants
+/// [`Error`](::serde::de::Error). The main reason is that I do not want to include variants
 /// in that enum that do not occur during the actual deserialization phase. The second reason has to
-/// do with lifetimes: Just using `Error<'a>` for the return type in the [`ThunkContent`] functions
+/// do with lifetimes: Just using `Error<'a>` for the return type in the [`ThunkProcessor`] functions
 /// used by [`Thunk`] is not possible. The reason for that is that processing errors are returned in
 /// contexts where data is transformed into owned representations. This means we cannot simply reuse
 /// the lifetime the input data is bound to for our errors, as the errors potentially have to
@@ -62,7 +62,7 @@ impl From<DecodeError> for ProcessError {
 /// This is often used if further processing would require an allocation (for instance when using
 /// base64 decoding) or be very long (for instance parsing level data).
 ///
-/// The required further processing should happen in the [`ThunkContent`] implementation, which is
+/// The required further processing should happen in the [`ThunkProcessor`] implementation, which is
 /// invoked by calling [`Thunk::process`]. Think of it as [`Cow`] with extra steps and potential new
 /// allocations instead of cloning.
 #[derive(Debug, Eq, Clone, Deserialize)]
@@ -135,7 +135,7 @@ pub trait ThunkProcessor {
 }
 
 impl<'a, C: ThunkProcessor> Thunk<'a, C> {
-    /// If this is a [`Thunk::Unprocessed`] variant, calls [`ThunkContent::from_unprocessed`] and
+    /// If this is a [`Thunk::Unprocessed`] variant, calls [`ThunkProcessor::from_unprocessed`] and
     /// returns [`Thunk::Processed`]. Simply returns `self` if this is a [`Thunk::Processed`]
     /// variant
     pub fn process(&mut self) -> Result<&mut C::Output<'a>, C::Error> {
