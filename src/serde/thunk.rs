@@ -138,7 +138,7 @@ impl<'a, C: ThunkProcessor> Thunk<'a, C> {
     /// If this is a [`Thunk::Unprocessed`] variant, calls [`ThunkContent::from_unprocessed`] and
     /// returns [`Thunk::Processed`]. Simply returns `self` if this is a [`Thunk::Processed`]
     /// variant
-    pub fn process(&mut self) -> Result<&C::Output<'a>, C::Error> {
+    pub fn process(&mut self) -> Result<&mut C::Output<'a>, C::Error> {
         if let Thunk::Unprocessed(raw_data) = self {
             *self = Thunk::Processed(C::from_unprocessed(mem::take(raw_data))?)
         }
