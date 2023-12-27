@@ -1,3 +1,5 @@
+#![allow(dead_code)] // not all test modules use all functions
+
 use std::collections::BTreeMap;
 use std::fmt::Debug;
 use std::path::Path;

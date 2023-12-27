@@ -2,9 +2,6 @@ use dash_rs::model::user::searched::SearchedUser;
 use framework::load_test_units;
 use std::path::Path;
 
-#[macro_use]
-mod helper;
-
 mod framework;
 
 enum SearchedUserTester {}
