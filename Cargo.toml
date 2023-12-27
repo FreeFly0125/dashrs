@@ -7,10 +7,6 @@ version = "0.1.0"
 authors = ["stadust <43299462+stadust@users.noreply.github.com>"]
 edition = "2018"
 
-[features]
-# Enables logging in IndexedDeserializer (will have performance impact)
-serde_log = []
-
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
