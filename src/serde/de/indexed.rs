@@ -8,9 +8,10 @@ use serde::{
 };
 use std::str::Split;
 
-// Special versions of the trace and debug macros used in this module that are statically disabled in release mode.
-// We do not want to explicitly pass "release_max_level_off" feature to log because we're in a library crate, and since
-// features are additive, that would turn off release mode logging in every crate that depends on dash-rs.
+// Special versions of the trace and debug macros used in this module that are statically disabled
+// in release mode. We do not want to explicitly pass "release_max_level_off" feature to log because
+// we're in a library crate, and since features are additive, that would turn off release mode
+// logging in every crate that depends on dash-rs.
 macro_rules! trace {
     ($($t:tt)*) => {
         #[cfg(debug_assertions)]
