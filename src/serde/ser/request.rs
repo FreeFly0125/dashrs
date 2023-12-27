@@ -349,7 +349,7 @@ impl<'ser, 'a, W: Write> Serializer for &'a mut ValueSerializer<'ser, W> {
 
     fn serialize_seq(self, _len: Option<usize>) -> Result<Self::SerializeSeq, Self::Error> {
         if self.key.is_none() {
-            return Err(Error::Unsupported("Nested sequences"))
+            return Err(Error::Unsupported("Nested sequences"));
         }
 
         self.write_key()?;
@@ -387,7 +387,7 @@ impl<'ser, 'a, W: Write> Serializer for &'a mut ValueSerializer<'ser, W> {
 
     fn serialize_struct(self, _name: &'static str, _len: usize) -> Result<Self::SerializeStruct, Self::Error> {
         if self.key.is_none() {
-            return Err(Error::Unsupported("struct inside sequence"))
+            return Err(Error::Unsupported("struct inside sequence"));
         }
 
         // If we inline a struct, that struct might not be the first field we serialize. However, we do not

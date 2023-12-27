@@ -52,7 +52,7 @@ impl<'a> From<DeError<'a>> for ResponseError<'a> {
 
 pub fn parse_get_gj_levels_response(response: &str) -> Result<Vec<ListedLevel>, ResponseError> {
     if response == "-1" {
-        return Err(ResponseError::NotFound)
+        return Err(ResponseError::NotFound);
     }
 
     let mut sections = response.split('#');
@@ -113,7 +113,7 @@ pub fn parse_get_gj_levels_response(response: &str) -> Result<Vec<ListedLevel>, 
 
 pub fn parse_download_gj_level_response(response: &str) -> Result<Level, ResponseError> {
     if response == "-1" {
-        return Err(ResponseError::NotFound)
+        return Err(ResponseError::NotFound);
     }
 
     let mut sections = response.split('#');
@@ -123,7 +123,7 @@ pub fn parse_download_gj_level_response(response: &str) -> Result<Level, Respons
 
 pub fn parse_get_gj_user_info_response(response: &str) -> Result<Profile, ResponseError> {
     if response == "-1" {
-        return Err(ResponseError::NotFound)
+        return Err(ResponseError::NotFound);
     }
 
     Ok(Profile::from_gj_str(response)?)
@@ -131,7 +131,7 @@ pub fn parse_get_gj_user_info_response(response: &str) -> Result<Profile, Respon
 
 pub fn parse_get_gj_users_response(response: &str) -> Result<SearchedUser, ResponseError> {
     if response == "-1" {
-        return Err(ResponseError::NotFound)
+        return Err(ResponseError::NotFound);
     }
 
     let mut sections = response.split('#');
@@ -144,7 +144,7 @@ pub fn parse_get_gj_users_response(response: &str) -> Result<SearchedUser, Respo
 
 pub fn parse_get_gj_comments_response(response: &str) -> Result<Vec<LevelComment>, ResponseError> {
     if response == "-1" {
-        return Err(ResponseError::NotFound)
+        return Err(ResponseError::NotFound);
     }
 
     let mut sections = response.split('#');
@@ -176,7 +176,7 @@ pub fn parse_get_gj_comments_response(response: &str) -> Result<Vec<LevelComment
 
 pub fn parse_get_gj_acccount_comments_response(response: &str) -> Result<Vec<ProfileComment>, ResponseError> {
     if response == "-1" {
-        return Err(ResponseError::NotFound)
+        return Err(ResponseError::NotFound);
     }
 
     let mut sections = response.split('#');

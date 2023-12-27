@@ -117,12 +117,11 @@ macro_rules! delegate_to_from_str {
 
             match token.parse() {
                 Ok(parsed) => visitor.$visitor_method(parsed),
-                Err(error) =>
-                    Err(Error::Custom {
-                        message: error.to_string(),
-                        index: None,
-                        value: Some(token),
-                    }),
+                Err(error) => Err(Error::Custom {
+                    message: error.to_string(),
+                    index: None,
+                    value: Some(token),
+                }),
             }
         }
     };
@@ -176,12 +175,11 @@ impl<'a, 'de> Deserializer<'de> for &'a mut IndexedDeserializer<'de> {
         match token {
             Some("0") | Some("") | None => visitor.visit_bool(false),
             Some("1") | Some("2") | Some("10") => visitor.visit_bool(true),
-            Some(value) =>
-                Err(Error::Custom {
-                    message: "Expected 0, 1, 2, 10 or the empty string".to_owned(),
-                    index: None,
-                    value: Some(value),
-                }),
+            Some(value) => Err(Error::Custom {
+                message: "Expected 0, 1, 2, 10 or the empty string".to_owned(),
+                index: None,
+                value: Some(value),
+            }),
         }
     }
 
@@ -372,12 +370,11 @@ impl<'a, 'de> de::SeqAccess<'de> for SeqAccess<'a, 'de> {
 
         match seed.deserialize(&mut *self.deserializer) {
             Err(Error::Eof) => Ok(None),
-            Err(Error::Custom { message, value, .. }) =>
-                Err(Error::Custom {
-                    message,
-                    value: value.or_else(|| self.deserializer.nth_last(1)),
-                    index: Some(INDICES.get(self.index - 1).unwrap_or(&">=51")),
-                }),
+            Err(Error::Custom { message, value, .. }) => Err(Error::Custom {
+                message,
+                value: value.or_else(|| self.deserializer.nth_last(1)),
+                index: Some(INDICES.get(self.index - 1).unwrap_or(&">=51")),
+            }),
             Err(err) => Err(err),
             Ok(item) => Ok(Some(item)),
         }
@@ -399,12 +396,11 @@ impl<'a, 'de> de::MapAccess<'de> for MapAccess<'a, 'de> {
 
         match seed.deserialize(&mut *self.deserializer) {
             Err(Error::Eof) => Ok(None),
-            Err(Error::Custom { message, .. }) =>
-                Err(Error::Custom {
-                    message,
-                    value: None,
-                    index: self.deserializer.nth_last(1),
-                }),
+            Err(Error::Custom { message, .. }) => Err(Error::Custom {
+                message,
+                value: None,
+                index: self.deserializer.nth_last(1),
+            }),
             Err(err) => Err(err),
             Ok(item) => Ok(Some(item)),
         }
@@ -417,12 +413,11 @@ impl<'a, 'de> de::MapAccess<'de> for MapAccess<'a, 'de> {
         trace!("Processing a map value",);
 
         match seed.deserialize(&mut *self.deserializer) {
-            Err(Error::Custom { message, value, .. }) =>
-                Err(Error::Custom {
-                    message,
-                    value: value.or_else(|| self.deserializer.nth_last(1)),
-                    index: self.deserializer.nth_last(2),
-                }),
+            Err(Error::Custom { message, value, .. }) => Err(Error::Custom {
+                message,
+                value: value.or_else(|| self.deserializer.nth_last(1)),
+                index: self.deserializer.nth_last(2),
+            }),
             r => r,
         }
     }

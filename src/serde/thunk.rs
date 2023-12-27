@@ -89,10 +89,9 @@ where
         S: Serializer,
     {
         match self {
-            Thunk::Unprocessed(unprocessed) =>
-                C::from_unprocessed(Cow::Borrowed(unprocessed))
-                    .map_err(S::Error::custom)?
-                    .serialize(serializer),
+            Thunk::Unprocessed(unprocessed) => C::from_unprocessed(Cow::Borrowed(unprocessed))
+                .map_err(S::Error::custom)?
+                .serialize(serializer),
             Thunk::Processed(processed) => processed.serialize(serializer),
         }
     }
@@ -168,11 +167,10 @@ impl ThunkProcessor for PercentDecoder {
     fn from_unprocessed(unprocessed: Cow<str>) -> Result<Self::Output<'_>, Self::Error> {
         match unprocessed {
             Cow::Borrowed(unprocessed) => percent_decode_str(unprocessed).decode_utf8().map_err(ProcessError::Utf8),
-            Cow::Owned(unprocessed) =>
-                match percent_decode_str(&unprocessed).decode_utf8().map_err(ProcessError::Utf8)? {
-                    Cow::Owned(decoded) => Ok(Cow::Owned(decoded)),
-                    _ => Ok(Cow::Owned(unprocessed)),
-                },
+            Cow::Owned(unprocessed) => match percent_decode_str(&unprocessed).decode_utf8().map_err(ProcessError::Utf8)? {
+                Cow::Owned(decoded) => Ok(Cow::Owned(decoded)),
+                _ => Ok(Cow::Owned(unprocessed)),
+            },
         }
     }
 

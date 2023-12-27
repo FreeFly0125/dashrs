@@ -145,10 +145,9 @@ impl FieldMapping {
     pub fn deserialize(&self) -> TokenStream {
         match self {
             FieldMapping::OneToOne(inner) => inner.deserialize(),
-            FieldMapping::NoIndex { field } =>
-                quote! {
-                    #field: Default::default(),
-                },
+            FieldMapping::NoIndex { field } => quote! {
+                #field: Default::default(),
+            },
         }
     }
 }
@@ -167,16 +166,18 @@ enum FieldMappingBuilder {
 impl FieldMappingBuilder {
     fn with_index(&mut self, index: LitIndex) -> bool {
         match std::mem::take(self) {
-            FieldMappingBuilder::Initial =>
+            FieldMappingBuilder::Initial => {
                 *self = FieldMappingBuilder::OneToOne {
                     index: Some(index),
                     passthrough: Vec::new(),
-                },
-            FieldMappingBuilder::OneToOne { index: None, passthrough } =>
+                }
+            },
+            FieldMappingBuilder::OneToOne { index: None, passthrough } => {
                 *self = FieldMappingBuilder::OneToOne {
                     index: Some(index),
                     passthrough,
-                },
+                }
+            },
             _ => return false,
         }
         true
@@ -192,11 +193,12 @@ impl FieldMappingBuilder {
 
     fn with_passthrough(&mut self, tokens: TokenStream) -> bool {
         match std::mem::take(self) {
-            FieldMappingBuilder::Initial =>
+            FieldMappingBuilder::Initial => {
                 *self = FieldMappingBuilder::OneToOne {
                     index: None,
                     passthrough: vec![tokens],
-                },
+                }
+            },
             FieldMappingBuilder::OneToOne { index, mut passthrough } => {
                 passthrough.push(tokens);
                 *self = FieldMappingBuilder::OneToOne { index, passthrough }
@@ -243,13 +245,12 @@ impl TryFrom<Field> for FieldMapping {
             FieldMappingBuilder::OneToOne {
                 index: Some(index),
                 passthrough,
-            } =>
-                Ok(FieldMapping::OneToOne(OneToOne {
-                    index,
-                    field,
-                    api_type,
-                    passthrough,
-                })),
+            } => Ok(FieldMapping::OneToOne(OneToOne {
+                index,
+                field,
+                api_type,
+                passthrough,
+            })),
             FieldMappingBuilder::OneToOne { index: None, .. } => Err(Error::new_spanned(field, "missing #[dash(index = ...)] attribute")),
             FieldMappingBuilder::NoIndex => Ok(FieldMapping::NoIndex { field }),
         }
@@ -281,7 +282,7 @@ impl Parse for DashAttribute {
                 } else if lookahead.peek(LitStr) {
                     LitIndex::Str(fork.parse()?)
                 } else {
-                    return Err(lookahead.error())
+                    return Err(lookahead.error());
                 };
 
                 input.advance_to(&fork);

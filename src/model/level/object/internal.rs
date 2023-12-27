@@ -36,26 +36,22 @@ impl<'de> Dash<'de> for LevelObject {
         let internal = InternalLevelObject::deserialize(deserializer)?;
 
         let metadata = match internal.id {
-            ids::SLOW_PORTAL =>
-                ObjectData::SpeedPortal {
-                    checked: internal.checked,
-                    speed: Speed::Slow,
-                },
-            ids::NORMAL_PORTAL =>
-                ObjectData::SpeedPortal {
-                    checked: internal.checked,
-                    speed: Speed::Normal,
-                },
-            ids::FAST_PORTAL =>
-                ObjectData::SpeedPortal {
-                    checked: internal.checked,
-                    speed: Speed::Fast,
-                },
-            ids::VERY_FAST_PORTAL =>
-                ObjectData::SpeedPortal {
-                    checked: internal.checked,
-                    speed: Speed::VeryFast,
-                },
+            ids::SLOW_PORTAL => ObjectData::SpeedPortal {
+                checked: internal.checked,
+                speed: Speed::Slow,
+            },
+            ids::NORMAL_PORTAL => ObjectData::SpeedPortal {
+                checked: internal.checked,
+                speed: Speed::Normal,
+            },
+            ids::FAST_PORTAL => ObjectData::SpeedPortal {
+                checked: internal.checked,
+                speed: Speed::Fast,
+            },
+            ids::VERY_FAST_PORTAL => ObjectData::SpeedPortal {
+                checked: internal.checked,
+                speed: Speed::VeryFast,
+            },
             _ => ObjectData::Unknown,
         };
 
