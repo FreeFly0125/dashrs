@@ -1,0 +1,29 @@
+{
+  "name": "stardust1971",
+  "user_id": 2073761,
+  "stars": 13728,
+  "demons": 483,
+  "index_6": "0",
+  "creator_points": 19,
+  "icon_index": 95,
+  "primary_color": {
+    "Known": [
+      255,
+      0,
+      0
+    ]
+  },
+  "secondary_color": {
+    "Known": [
+      255,
+      125,
+      0
+    ]
+  },
+  "secret_coins": 151,
+  "icon_type": "Cube",
+  "has_glow": true,
+  "account_id": 8451,
+  "user_coins": 498,
+  "moons": 0
+}

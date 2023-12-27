@@ -1,30 +1,32 @@
-use dash_rs::model::user::{searched::SearchedUser, Color, IconType};
-use std::borrow::Cow;
+use dash_rs::model::user::searched::SearchedUser;
+use framework::load_test_units;
+use std::path::Path;
 
 #[macro_use]
 mod helper;
 
-const SEARCHED_MICHIGUN_DATA: &str = "1:Michigun:2:703929:13:149:17:12312:6::9:22:10:15:11:12:14:0:15:2:16:34499:3:61161:8:16:4:997";
-const SEARCHED_MICHIGUN: SearchedUser = SearchedUser {
-    name: Cow::Borrowed("Michigun"),
-    user_id: 703929,
-    stars: 61161,
-    demons: 997,
-    index_6: None,
-    creator_points: 16,
-    icon_index: 22,
-    primary_color: Color::Known(0, 0, 0),
-    secondary_color: Color::Known(255, 255, 255),
-    secret_coins: 149,
-    icon_type: IconType::Cube,
-    has_glow: true,
-    account_id: 34499,
-    user_coins: 12312,
-};
+mod framework;
 
-impl helper::ThunkProcessor for SearchedUser<'_> {
-    fn process_all_thunks(&mut self) {}
+enum SearchedUserTester {}
+
+impl framework::Testable for SearchedUserTester {
+    type Target<'a> = SearchedUser<'a>;
 }
 
-save_load_roundtrip!(SearchedUser, SEARCHED_MICHIGUN);
-load_save_roundtrip!(SearchedUser, SEARCHED_MICHIGUN_DATA, SEARCHED_MICHIGUN, ":", true);
+#[test]
+fn test_searched_user() {
+    let units = load_test_units::<SearchedUserTester>(
+        Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("tests")
+            .join("artifacts")
+            .join("searched_user"),
+    );
+
+    for (path, unit) in units {
+        println!("Testing case {:?}", path);
+
+        unit.test_consistency();
+        unit.test_load_save_roundtrip();
+        unit.test_save_load_roundtrip();
+    }
+}

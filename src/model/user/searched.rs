@@ -4,6 +4,7 @@ use crate::{
 };
 use dash_rs_derive::Dash;
 use serde::{Deserialize, Serialize};
+use variant_partial_eq::VariantPartialEq;
 use std::borrow::Cow;
 
 /// Struct modelling the partial user data returned by the `getGJUsers` endpoint.
@@ -11,7 +12,7 @@ use std::borrow::Cow;
 /// Note that no field `diamonds` exists here. This is consistent with Geometry Dash's behavior, as
 /// the GD server exhibit a bug where they do not provide diamonds information, although the client
 /// has the UI for it.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Dash)]
+#[derive(Debug, Clone, VariantPartialEq, Eq, Serialize, Deserialize, Dash)]
 pub struct SearchedUser<'a> {
     /// This [`SearchedUser`]'s name
     #[dash(index = 1)]
