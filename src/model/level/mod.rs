@@ -396,6 +396,10 @@ impl ThunkProcessor for Password {
             },
         }
     }
+
+    fn downcast_output_lifetime<'b: 'c, 'c, 's>(output: &'s Self::Output<'b>) -> &'s Self::Output<'c> {
+        output
+    }
 }
 
 impl Display for Password {
@@ -788,6 +792,10 @@ impl ThunkProcessor for Objects {
         encoder.read_to_end(&mut compressed)?;
 
         Ok(Cow::Owned(URL_SAFE.encode(compressed)))
+    }
+
+    fn downcast_output_lifetime<'b: 'c, 'c, 's>(output: &'s Self::Output<'b>) -> &'s Self::Output<'c> {
+        output
     }
 }
 

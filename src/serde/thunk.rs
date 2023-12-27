@@ -1,7 +1,13 @@
 use base64::{engine::general_purpose::URL_SAFE, DecodeError, DecodeSliceError, Engine};
 use percent_encoding::{percent_decode_str, utf8_percent_encode, AsciiSet, CONTROLS};
 use serde::{ser::Error as _, Deserialize, Serialize, Serializer};
-use std::{borrow::Cow, mem, num::ParseIntError, str::Utf8Error, string::FromUtf8Error};
+use std::{
+    borrow::{Borrow, Cow},
+    mem,
+    num::ParseIntError,
+    str::Utf8Error,
+    string::FromUtf8Error,
+};
 use thiserror::Error;
 
 /// Enum modelling the different errors that can occur during processing of a [`Thunk`]
@@ -113,6 +119,19 @@ pub trait ThunkProcessor {
 
     /// Takes some processed thunk value and converts it into RobTop-representation
     fn as_unprocessed<'b>(processed: &'b Self::Output<'_>) -> Result<Cow<'b, str>, Self::Error>;
+
+    /// The presence of this function essentially forces [`ThunkProcessor::Output`] to be covariant
+    /// in its lifetime.
+    ///
+    /// We need it to be covariant so that functions like [`Thunk::as_unprocessed`] can be implemented.
+    /// Since the lifetime associated with the output is assumed to be originating from some `&'a str`,
+    /// and should only describe subslices of said input string, enforcing covariance on this trait should
+    /// cause no limitations in praxis (e.g. all implementations here should just be able to return `output`
+    /// identically). 
+    /// 
+    /// We need this function due to a limitation of GATs, where for soundness reasons they have to be assumed
+    /// to be invariant, yet the language provides no way for a trait to explicitly require different variance.
+    fn downcast_output_lifetime<'b: 'c, 'c, 's>(output: &'s Self::Output<'b>) -> &'s Self::Output<'c>;
 }
 
 impl<'a, C: ThunkProcessor> Thunk<'a, C> {
@@ -142,6 +161,16 @@ impl<'a, C: ThunkProcessor> Thunk<'a, C> {
         match self {
             Thunk::Unprocessed(unprocessed) => C::from_unprocessed(unprocessed),
             Thunk::Processed(p) => Ok(p),
+        }
+    }
+
+    pub fn as_processed<'b>(&'b self) -> Result<Cow<'b, C::Output<'b>>, C::Error>
+    where
+        C::Output<'b>: Clone,
+    {
+        match self {
+            Thunk::Unprocessed(unprocessed) => C::from_unprocessed(Cow::Borrowed(unprocessed.borrow())).map(Cow::Owned),
+            Thunk::Processed(processed) => Ok(Cow::Borrowed(C::downcast_output_lifetime(processed))),
         }
     }
 }
@@ -177,6 +206,10 @@ impl ThunkProcessor for PercentDecoder {
     fn as_unprocessed<'b>(processed: &'b Self::Output<'_>) -> Result<Cow<'b, str>, Self::Error> {
         Ok(utf8_percent_encode(processed.as_ref(), ROBTOP_SET).into())
     }
+
+    fn downcast_output_lifetime<'b: 'c, 'c, 's>(output: &'s Self::Output<'b>) -> &'s Self::Output<'c> {
+        output
+    }
 }
 
 #[derive(Debug, Eq, PartialEq, Serialize, Deserialize, Clone, Copy)]
@@ -195,5 +228,9 @@ impl ThunkProcessor for Base64Decoder {
 
     fn as_unprocessed<'b>(processed: &'b Self::Output<'_>) -> Result<Cow<'b, str>, Self::Error> {
         Ok(Cow::Owned(URL_SAFE.encode(&**processed)))
+    }
+
+    fn downcast_output_lifetime<'b: 'c, 'c, 's>(output: &'s Self::Output<'b>) -> &'s Self::Output<'c> {
+        output
     }
 }

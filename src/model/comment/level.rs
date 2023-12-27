@@ -96,6 +96,10 @@ impl ThunkProcessor for Color {
             _ => Err(ProcessError::Unrepresentable),
         }
     }
+
+    fn downcast_output_lifetime<'b: 'c, 'c, 's>(output: &'s Self::Output<'b>) -> &'s Self::Output<'c> {
+        output
+    }
 }
 
 #[derive(Debug, Eq, VariantPartialEq, Clone, Deserialize, Serialize, Dash)]
