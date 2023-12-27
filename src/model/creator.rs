@@ -1,6 +1,7 @@
 use dash_rs_derive::Dash;
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
+use variant_partial_eq::VariantPartialEq;
 
 use crate::GJFormat;
 
@@ -12,7 +13,7 @@ use crate::GJFormat;
 ///
 /// Creators do not use the map-like representation, meaning the order of fields in the raw data
 /// must correspond to the order of fields in this struct.
-#[derive(Debug, Deserialize, Serialize, PartialEq, Eq, Clone, Dash)]
+#[derive(Debug, Deserialize, Serialize, VariantPartialEq, Eq, Clone, Dash)]
 pub struct Creator<'a> {
     /// The [`Creator`]'s unique user ID
     #[dash(index = 1)]

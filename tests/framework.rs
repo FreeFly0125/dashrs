@@ -25,7 +25,7 @@ pub trait Testable {
     type Target<'a>: GJFormat<'a> + Deserialize<'a> + Debug + for<'b> PartialEq<Self::Target<'b>>;
 
     /// Canonicalizes this test target object before comparisons
-    /// 
+    ///
     /// For example, this is where all Thunks should be evaluated
     fn canonicalize(_target: &mut Self::Target<'_>) {}
 }
@@ -103,11 +103,18 @@ where
 
 fn assert_indexed_strings_equal<'a, D: GJFormat<'a>>(a: &str, b: &str) {
     let mut deserializer_a = IndexedDeserializer::new(a, D::DELIMITER, D::MAP_LIKE);
-    let map_a = BTreeMap::<&str, &str>::deserialize(&mut deserializer_a).unwrap();
-
     let mut deserializer_b = IndexedDeserializer::new(b, D::DELIMITER, D::MAP_LIKE);
-    let map_b = BTreeMap::<&str, &str>::deserialize(&mut deserializer_b).unwrap();
 
-    // BTreeMap + pretty_assertions will make sure that this is easily interpretable
-    assert_eq!(map_a, map_b);
+    if D::MAP_LIKE {
+        let map_a = BTreeMap::<&str, &str>::deserialize(&mut deserializer_a).unwrap();
+        let map_b = BTreeMap::<&str, &str>::deserialize(&mut deserializer_b).unwrap();
+
+        // BTreeMap + pretty_assertions will make sure that this is easily interpretable
+        assert_eq!(map_a, map_b);
+    } else {
+        let vec_a = Vec::<&str>::deserialize(&mut deserializer_a).unwrap();
+        let vec_b = Vec::<&str>::deserialize(&mut deserializer_b).unwrap();
+
+        assert_eq!(vec_a, vec_b);
+    }
 }

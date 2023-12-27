@@ -1,43 +1,29 @@
 use dash_rs::model::creator::Creator;
-use std::borrow::Cow;
+use framework::load_test_units;
+use std::path::Path;
 
-#[macro_use]
-mod helper;
+mod framework;
 
-const CREATOR_REGISTERED_DATA: &str = "4170784:Serponge:119741";
-const CREATOR_REGISTERED: Creator = Creator {
-    user_id: 4170784,
-    name: Cow::Borrowed("Serponge"),
-    account_id: Some(119741),
-};
+enum CreatorTester {}
 
-const CREATOR_UNREGISTERED_DATA: &str = "4170784:Serponge:0";
-const CREATOR_UNREGISTERED: Creator = Creator {
-    user_id: 4170784,
-    name: Cow::Borrowed("Serponge"),
-    account_id: None,
-};
-
-impl helper::ThunkProcessor for Creator<'_> {
-    fn process_all_thunks(&mut self) {}
+impl framework::Testable for CreatorTester {
+    type Target<'a> = Creator<'a>;
 }
 
-save_load_roundtrip!(save_load_roundtrip_registered, Creator, CREATOR_REGISTERED);
-load_save_roundtrip!(
-    load_save_roundtrip_registered,
-    Creator,
-    CREATOR_REGISTERED_DATA,
-    CREATOR_REGISTERED,
-    ":",
-    false
-);
+#[test]
+fn test_creator() {
+    let units = load_test_units::<CreatorTester>(
+        Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("tests")
+            .join("artifacts")
+            .join("creator"),
+    );
 
-save_load_roundtrip!(save_load_roundtrip_unregistered, Creator, CREATOR_UNREGISTERED);
-load_save_roundtrip!(
-    load_save_roundtrip_unregistered,
-    Creator,
-    CREATOR_UNREGISTERED_DATA,
-    CREATOR_UNREGISTERED,
-    ":",
-    false
-);
+    for (path, unit) in units {
+        println!("Testing case {:?}", path);
+
+        unit.test_consistency();
+        unit.test_load_save_roundtrip();
+        unit.test_save_load_roundtrip();
+    }
+}
