@@ -326,7 +326,7 @@ impl<'a, 'de> Deserializer<'de> for &'a mut IndexedDeserializer<'de> {
         let token = self.consume_token();
 
         debug!(
-            "Ignored token {:?}. Preceding token (potentiall an unmapped index) was {:?}",
+            "Ignored token {:?}. Preceding token (potentially an unmapped index) was {:?}",
             token, possibly_index
         );
 

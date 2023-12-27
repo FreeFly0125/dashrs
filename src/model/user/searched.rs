@@ -78,6 +78,11 @@ pub struct SearchedUser<'a> {
     /// The amount of user coins this [`SearchedUser`] has collected.
     #[dash(index = 17)]
     pub user_coins: u16,
+
+    /// The number of moons this [`Profile`] has collected. Currently always zero due to a 
+    /// server bug (similar to how the game always displays 0 diamonds here)
+    #[dash(index = 52)]
+    pub moons: u32,
 }
 
 impl<'de> GJFormat<'de> for SearchedUser<'de> {
