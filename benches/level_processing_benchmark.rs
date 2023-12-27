@@ -2,7 +2,7 @@ use base64::{engine::general_purpose::URL_SAFE, Engine};
 use criterion::{criterion_group, criterion_main, Criterion};
 use dash_rs::{
     model::level::{Level, LevelData},
-    Thunk, GJFormat,
+    GJFormat, Thunk,
 };
 use flate2::read::GzDecoder;
 use std::{fs::read_to_string, io::Read};
