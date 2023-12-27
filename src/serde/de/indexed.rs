@@ -435,6 +435,18 @@ mod tests {
     }
 
     #[test]
+    fn test_deserialize_map_like_last_empty() {
+        // Illustrates how to deserialize some arbitrary RobTop string into a HashMap, for easier analysis.
+        let mut deserializer = IndexedDeserializer::new("1:hello:2:", ":", true);
+
+        let map = HashMap::<&str, &str>::deserialize(&mut deserializer).unwrap();
+
+        assert_eq!(map.len(), 2);
+        assert_eq!(map.get("1"), Some(&"hello"));
+        assert_eq!(map.get("2"), Some(&""));
+    }
+
+    #[test]
     fn test_deserialize_to_vec() {
         let mut deserializer = IndexedDeserializer::new(INPUT, ":", false);
 
