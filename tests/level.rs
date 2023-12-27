@@ -57,6 +57,7 @@ fn test_full_level() {
         println!("Testing case {:?}", path);
 
         unit.test_consistency();
-        // Cannot do round trip testing for onw, as the level data handling in dash-rs is incomplete (to put it nicely)
+        // Cannot do round trip testing for onw, as the level data handling in dash-rs is incomplete
+        // (to put it nicely)
     }
 }

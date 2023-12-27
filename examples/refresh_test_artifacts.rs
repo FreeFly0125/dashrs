@@ -1,4 +1,7 @@
-use std::{fs::OpenOptions, path::{Path, PathBuf}};
+use std::{
+    fs::OpenOptions,
+    path::{Path, PathBuf},
+};
 
 use dash_rs::{
     model::{creator::Creator, level::Level, song::NewgroundsSong},
@@ -41,8 +44,8 @@ async fn refresh_full_levels(artifacts_path: &PathBuf, http_client: &Client) {
 
     let levels_path = artifacts_path.join("level");
     let levels_to_download = [
-        897837,   /* time pressure by aeonair */
-        11774780, /* dark realm by stardust1971 */
+        897837,   // time pressure by aeonair
+        11774780, // dark realm by stardust1971
     ];
 
     for level_id in levels_to_download {
@@ -66,11 +69,11 @@ async fn refresh_listed_levels(artifacts_path: &PathBuf, http_client: &Client) {
     let creators_path = artifacts_path.join("creator");
     let songs_path = artifacts_path.join("song");
     let levels_to_dowload = vec![
-        72540,    /* demon world, 1.3 (?) level */
-        11774780, /* dark realm , 1.9 level*/
-        23298409, /* duelo maestro, 2.0 level */
-        63355989, /* fantasy, 2.1 level */
-        97598449, /* Loco Motive, 2.2 platformer level */
+        72540,    // demon world, 1.3 (?) level
+        11774780, // dark realm , 1.9 level
+        23298409, // duelo maestro, 2.0 level
+        63355989, // fantasy, 2.1 level
+        97598449, // Loco Motive, 2.2 platformer level
     ];
 
     let request = LevelsRequest::default()
@@ -79,7 +82,8 @@ async fn refresh_listed_levels(artifacts_path: &PathBuf, http_client: &Client) {
     let response = make_request(&http_client, &request.to_url(), request.to_string()).await;
     let response_text = response.text().await.unwrap();
 
-    // We'll have to reimplement part of the response parsing here, `parse_get_gj_levels_response` is too ergonomic for what we want
+    // We'll have to reimplement part of the response parsing here, `parse_get_gj_levels_response` is
+    // too ergonomic for what we want
     let mut section_iter = response_text.split('#');
     let raw_levels = section_iter.next().unwrap();
     let raw_creators = section_iter.next().unwrap();

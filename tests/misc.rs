@@ -1,4 +1,7 @@
-use dash_rs::{model::{creator::Creator, song::NewgroundsSong}, GJFormat};
+use dash_rs::{
+    model::{creator::Creator, song::NewgroundsSong},
+    GJFormat,
+};
 
 mod framework;
 

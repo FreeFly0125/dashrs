@@ -1,9 +1,11 @@
 #![allow(dead_code)] // not all test modules use all functions
 
-use std::collections::BTreeMap;
-use std::fmt::Debug;
-use std::path::Path;
-use std::{marker::PhantomData, path::PathBuf};
+use std::{
+    collections::BTreeMap,
+    fmt::Debug,
+    marker::PhantomData,
+    path::{Path, PathBuf},
+};
 
 use dash_rs::{GJFormat, IndexedDeserializer};
 use pretty_assertions::assert_eq;

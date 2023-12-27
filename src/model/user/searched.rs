@@ -4,8 +4,8 @@ use crate::{
 };
 use dash_rs_derive::Dash;
 use serde::{Deserialize, Serialize};
-use variant_partial_eq::VariantPartialEq;
 use std::borrow::Cow;
+use variant_partial_eq::VariantPartialEq;
 
 /// Struct modelling the partial user data returned by the `getGJUsers` endpoint.
 ///
@@ -80,7 +80,7 @@ pub struct SearchedUser<'a> {
     #[dash(index = 17)]
     pub user_coins: u16,
 
-    /// The number of moons this [`Profile`] has collected. Currently always zero due to a 
+    /// The number of moons this [`Profile`] has collected. Currently always zero due to a
     /// server bug (similar to how the game always displays 0 diamonds here)
     #[dash(index = 52)]
     pub moons: u32,
